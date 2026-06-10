@@ -48,14 +48,19 @@ if [ "$HERMES_HEALTH" = "200" ]; then
     log_ok "Hermes API Server corriendo en :8642"
 else
     log_warn "Hermes API Server no responde en :8642"
-    log_info "Intentando habilitarlo..."
+    log_info "Habilitando API Server en config del perfil actual..."
     hermes config set api_server.enabled true 2>/dev/null || true
-    sleep 1
+    hermes config set api_server.port 8642 2>/dev/null || true
+    hermes config set api_server.api_server_key "agenthub-local" 2>/dev/null || true
+    hermes config set api_server.cors_origins '["http://localhost:3000"]' 2>/dev/null || true
+    log_info "Reiniciando gateway para aplicar cambios..."
+    hermes gateway restart 2>/dev/null || log_warn "No se pudo reiniciar el gateway automáticamente. Ejecuta: hermes gateway restart"
+    sleep 3
     HERMES_HEALTH2=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8642/health 2>/dev/null || echo "000")
     if [ "$HERMES_HEALTH2" = "200" ]; then
-        log_ok "Hermes API Server habilitado y corriendo"
+        log_ok "Hermes API Server habilitado y corriendo en :8642"
     else
-        log_warn "Hermes API Server no disponible. Los scripts seguirán pero algunos features pueden fallar."
+        log_warn "Hermes API Server aún no disponible. Verifica con: hermes gateway status"
     fi
 fi
 

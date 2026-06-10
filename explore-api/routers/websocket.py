@@ -164,7 +164,7 @@ _event_stream_task: asyncio.Task | None = None
 
 async def stream_hermes_events(base_url: str = "http://localhost:8642", api_key: str = "agenthub-local") -> None:
     """Subscribe to the Hermes API Server SSE event stream and relay events."""
-    headers = {"X-API-Key": api_key, "Accept": "text/event-stream"}
+    headers = {"Authorization": f"Bearer {api_key}", "Accept": "text/event-stream"}
 
     while True:
         try:

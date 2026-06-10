@@ -15,7 +15,7 @@ class HermesClient:
         self.api_key = api_key or HERMES_API_KEY
         self._client = httpx.AsyncClient(
             base_url=self.base_url,
-            headers={"X-API-Key": self.api_key},
+            headers={"Authorization": f"Bearer {self.api_key}"},
             timeout=httpx.Timeout(10.0),
         )
 
@@ -28,15 +28,92 @@ class HermesClient:
         except httpx.HTTPError as exc:
             return {"status": "unhealthy", "error": str(exc)}
 
+    # ── Jobs CRUD ───────────────────────────────────────────────
+
     async def get_jobs(self, limit: int = 50) -> list[dict]:
-        """GET /api/system/jobs — list jobs from the API Server."""
+        """GET /jobs — list all jobs."""
         try:
-            resp = await self._client.get("/api/system/jobs", params={"limit": limit})
+            resp = await self._client.get("/api/jobs", params={"limit": limit})
             resp.raise_for_status()
             data = resp.json()
             return data if isinstance(data, list) else data.get("jobs", [])
-        except httpx.HTTPError as exc:
+        except httpx.HTTPError:
             return []
+
+    async def get_job(self, job_id: str) -> dict | None:
+        """GET /jobs/{id} — get a single job."""
+        try:
+            resp = await self._client.get(f"/api/jobs/{job_id}")
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPError:
+            return None
+
+    async def create_job(self, data: dict) -> dict | None:
+        """POST /jobs — create a new job."""
+        try:
+            resp = await self._client.post("/api/jobs", json=data)
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPError:
+            return None
+
+    async def update_job(self, job_id: str, data: dict) -> dict | None:
+        """PATCH /jobs/{id} — update a job."""
+        try:
+            resp = await self._client.patch(f"/api/jobs/{job_id}", json=data)
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPError:
+            return None
+
+    async def delete_job(self, job_id: str) -> bool:
+        """DELETE /jobs/{id} — delete a job."""
+        try:
+            resp = await self._client.delete(f"/api/jobs/{job_id}")
+            resp.raise_for_status()
+            return True
+        except httpx.HTTPError:
+            return False
+
+    async def pause_job(self, job_id: str) -> dict | None:
+        """POST /jobs/{id}/pause — pause a job."""
+        try:
+            resp = await self._client.post(f"/api/jobs/{job_id}/pause")
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPError:
+            return None
+
+    async def resume_job(self, job_id: str) -> dict | None:
+        """POST /jobs/{id}/resume — resume a job."""
+        try:
+            resp = await self._client.post(f"/api/jobs/{job_id}/resume")
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPError:
+            return None
+
+    async def trigger_job(self, job_id: str) -> dict | None:
+        """POST /jobs/{id}/trigger — trigger a job run."""
+        try:
+            resp = await self._client.post(f"/api/jobs/{job_id}/trigger")
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPError:
+            return None
+
+    async def get_job_outputs(self, job_id: str) -> list[dict]:
+        """GET /jobs/{id}/outputs — get outputs for a job."""
+        try:
+            resp = await self._client.get(f"/api/jobs/{job_id}/outputs")
+            resp.raise_for_status()
+            data = resp.json()
+            return data if isinstance(data, list) else data.get("outputs", [])
+        except httpx.HTTPError:
+            return []
+
+    # ── System info ─────────────────────────────────────────────
 
     async def get_skills(self) -> list[dict]:
         """GET /api/system/skills — list installed skills."""

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { getTemplates, previewTemplate, createJob } from "@/lib/api";
 import { Template, Agent } from "@/lib/types";
 import { TemplateCard } from "@/components/builder/TemplateCard";
+import { TemplateCardSkeleton } from "@/components/builder/TemplateCardSkeleton";
 import { WizardStepper } from "@/components/builder/WizardStepper";
 import { DynamicParam } from "@/components/builder/DynamicParam";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -175,9 +176,20 @@ function CreateAgentWizard() {
 
   if (loadingTemplates && wizard.step === 1) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Cargando catálogo de templates...</p>
+      <div className="max-w-5xl mx-auto pb-20">
+        <header className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="h-8 w-52 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-72 bg-muted rounded animate-pulse" />
+          </div>
+          <div className="h-10 w-24 bg-muted rounded animate-pulse" />
+        </header>
+        <div className="h-6 w-48 bg-muted rounded animate-pulse mb-6" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <TemplateCardSkeleton />
+          <TemplateCardSkeleton />
+          <TemplateCardSkeleton />
+        </div>
       </div>
     );
   }

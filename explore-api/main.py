@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from config import CORS_ORIGINS, EXPLORE_API_PORT
-from routers import system, profiles, templates, sessions, extras
+from routers import system, profiles, templates, sessions, extras, jobs
 from routers import websocket as websocket_router
 from routers import executions
 from services.hermes_client import close_client
@@ -70,6 +70,7 @@ app.include_router(profiles.router)
 app.include_router(templates.router)
 app.include_router(sessions.router)
 app.include_router(extras.router)
+app.include_router(jobs.router)
 app.include_router(websocket_router.router)
 app.include_router(executions.router)
 

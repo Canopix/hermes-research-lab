@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { Agent, Execution } from "@/lib/types";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { AgentCardWithSSE } from "@/components/dashboard/AgentCardWithSSE";
+import { AgentCardSkeleton } from "@/components/dashboard/AgentCardSkeleton";
+import { StatsSkeleton } from "@/components/dashboard/StatsSkeleton";
+import { AnimateIn } from "@/components/AnimateIn";
 import { getJobs, getJobOutputs } from "@/lib/api";
 import { 
   Users, 
@@ -14,6 +17,7 @@ import {
   Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
 export default function AgentsPage() {
@@ -73,16 +77,70 @@ export default function AgentsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <p className="text-muted-foreground">Cargando agentes...</p>
+      <div className="space-y-8">
+        {/* Header skeleton */}
+        <AnimateIn direction="fade" duration={300}>
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-40" />
+              <Skeleton className="h-4 w-72" />
+            </div>
+            <Skeleton className="h-10 w-36 rounded" />
+          </div>
+        </AnimateIn>
+
+        {/* Stats skeleton */}
+        <AnimateIn direction="fade" delay={100} duration={300}>
+          <StatsSkeleton />
+        </AnimateIn>
+
+        {/* Agent cards skeleton */}
+        <AnimateIn direction="fade" delay={200} duration={300}>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <AgentCardSkeleton key={i} />
+            ))}
+          </div>
+        </AnimateIn>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-8">
+      <AnimateIn direction="fade" duration={300}>
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">Agentes</h2>
+              <p className="text-muted-foreground">Gestiona tus agentes de automatización activos.</p>
+            </div>
+            <Button asChild>
+              <Link href="/create">
+                <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
+              </Link>
+            </Button>
+          </div>
+          <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4 rounded-lg border border-destructive/20 bg-destructive/5 p-8">
+            <div className="text-destructive">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div className="text-center space-y-2 max-w-md">
+              <h3 className="text-lg font-semibold text-destructive">Error de conexión</h3>
+              <p className="text-sm text-muted-foreground">{error}</p>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Reintentar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </AnimateIn>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <AnimateIn direction="fade" delay={0} duration={300}>
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Agentes</h2>
@@ -94,70 +152,46 @@ export default function AgentsPage() {
             </Link>
           </Button>
         </div>
-        <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4 rounded-lg border border-destructive/20 bg-destructive/5 p-8">
-          <div className="text-destructive">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          </div>
-          <div className="text-center space-y-2 max-w-md">
-            <h3 className="text-lg font-semibold text-destructive">Error de conexión</h3>
-            <p className="text-sm text-muted-foreground">{error}</p>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              Reintentar
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Agentes</h2>
-          <p className="text-muted-foreground">Gestiona tus agentes de automatización activos.</p>
-        </div>
-        <Button asChild>
-          <Link href="/create">
-            <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
-          </Link>
-        </Button>
-      </div>
-
-      <StatsBar stats={[
-        { title: "Agentes Activos", value: String(activeCount), icon: Users },
-        { title: "Total Agentes", value: String(totalCount), icon: Zap },
-        { title: "Tasa Éxito", value: `${successRate}%`, icon: CheckCircle2 },
-        { title: "Última Ejecución", value: formatLastExecution(lastExecution), icon: Clock },
-      ]} />
+      </AnimateIn>
 
       {agents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center min-h-[300px] space-y-6 rounded-lg border-2 border-dashed border-muted-foreground/20 p-12">
-          <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center">
-            <Bot className="h-8 w-8 text-muted-foreground" />
+        <AnimateIn direction="fade" delay={200} duration={400}>
+          <div className="flex flex-col items-center justify-center min-h-[300px] space-y-6 rounded-lg border-2 border-dashed border-muted-foreground/20 p-12">
+            <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center">
+              <Bot className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <div className="text-center space-y-2 max-w-md">
+              <h3 className="text-xl font-semibold">No hay agentes</h3>
+              <p className="text-muted-foreground">
+                No hay agentes configurados. Crea tu primer agente para empezar a automatizar.
+              </p>
+              <Link href="/create">
+                <Button size="lg">
+                  <Plus className="mr-2 h-4 w-4" /> Crear primer agente
+                </Button>
+              </Link>
+            </div>
           </div>
-          <div className="text-center space-y-2 max-w-md">
-            <h3 className="text-xl font-semibold">No hay agentes</h3>
-            <p className="text-muted-foreground">
-              No hay agentes configurados. Crea tu primer agente para empezar a automatizar.
-            </p>
-            <Link href="/create">
-              <Button size="lg">
-                <Plus className="mr-2 h-4 w-4" /> Crear primer agente
-              </Button>
-            </Link>
-          </div>
-        </div>
+        </AnimateIn>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {agents.map((agent) => (
-            <AgentCardWithSSE
-              key={agent.id}
-              agent={agent}
-              onStatusChange={handleStatusChange}
-            />
-          ))}
-        </div>
+        <>
+          <StatsBar stats={[
+            { title: "Agentes Activos", value: String(activeCount), icon: Users, accentColor: "blue" },
+            { title: "Total Agentes", value: String(totalCount), icon: Zap, accentColor: "green" },
+            { title: "Tasa Éxito", value: `${successRate}%`, icon: CheckCircle2, accentColor: "purple" },
+            { title: "Última Ejecución", value: formatLastExecution(lastExecution), icon: Clock, accentColor: "amber" },
+          ]} />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {agents.map((agent, i) => (
+              <AgentCardWithSSE
+                key={agent.id}
+                agent={agent}
+                onStatusChange={handleStatusChange}
+                index={i}
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

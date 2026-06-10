@@ -94,12 +94,10 @@ export default function TemplatesPage() {
     // Try real API first, fall back to mock
     async function load() {
       try {
-        const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "agenthub-local";
-        const EXPLORE_API = process.env.NEXT_PUBLIC_EXPLORE_API || "http://localhost:8643";
-        const res = await fetch(`${EXPLORE_API}/api/templates`, {
+        const res = await fetch("/api/explore/api/templates", {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_KEY}`,
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_KEY || "agenthub-local"}`,
           },
         });
         if (res.ok) {

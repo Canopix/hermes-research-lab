@@ -4,15 +4,15 @@ import { useEffect, useState, useCallback } from "react";
 import { Agent } from "@/lib/types";
 import { AgentCard } from "./AgentCard";
 import { useSSE, SSEEvent } from "@/hooks/useSSE";
-import { HERMES_API } from "@/lib/api";
+import { EXPLORE_API } from "@/lib/api";
 
 interface AgentCardWithSSEProps {
   agent: Agent;
-  hermesApi: string;
   onStatusChange?: (agentId: string, newStatus: string) => void;
+  index?: number;
 }
 
-export function AgentCardWithSSE({ agent, hermesApi, onStatusChange }: AgentCardWithSSEProps) {
+export function AgentCardWithSSE({ agent, onStatusChange, index = 0 }: AgentCardWithSSEProps) {
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [activeTool, setActiveTool] = useState<string | undefined>(undefined);
 
@@ -54,7 +54,7 @@ export function AgentCardWithSSE({ agent, hermesApi, onStatusChange }: AgentCard
   }, []);
 
   const { isConnected, error } = useSSE(
-    hermesApi,
+    EXPLORE_API,
     runId,
     handleEvent,
     isRunning,
@@ -74,6 +74,7 @@ export function AgentCardWithSSE({ agent, hermesApi, onStatusChange }: AgentCard
       activeTool={activeTool}
       runId={runId}
       onStatusChange={onStatusChange}
+      index={index}
     />
   );
 }

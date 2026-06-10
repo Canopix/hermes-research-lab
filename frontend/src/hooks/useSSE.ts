@@ -30,9 +30,14 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+/**
+ * Build SSE URL.
+ * baseUrl is the proxy prefix (e.g. "/api/explore") which resolves
+ * relative to the same origin — works from any network.
+ */
 function buildSSEUrl(baseUrl: string, runId: string): string {
   const separator = baseUrl.includes('?') ? '&' : '?'
-  return `${baseUrl}/v1/runs/${runId}/events${separator}encoding=json`
+  return `${baseUrl}/api/jobs/${runId}/events${separator}encoding=json`
 }
 
 // --- Hook ---
@@ -180,14 +185,15 @@ export function useSSE(
     }
   }, [baseUrl, runId, stopConnection])
 
-  // Fallback polling: query /v1/runs/{id} every 5s when SSE is unavailable
+  // Fallback polling: query /api/jobs/{id}/run every 5s when SSE is unavailable
   const startPolling = useCallback(() => {
     if (!runId) return
+    const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'agenthub-local'
 
     const fetchStatus = async () => {
       try {
-        const res = await fetch(`${baseUrl}/v1/runs/${runId}`, {
-          headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_KEY || 'agenthub-local'}` },
+        const res = await fetch(`${baseUrl}/api/jobs/${runId}/run`, {
+          headers: { 'Authorization': `Bearer ${API_KEY}` },
         })
         if (!res.ok) return
 
