@@ -12,13 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, CheckCircle2, Loader2, Code, Settings2, Sparkles, FileText } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Code, Settings2, Sparkles, FileText, ArrowLeft, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 type Step = 1 | 2 | 3 | 4;
 
 const DEFAULT_SCHEDULE = "0 */6 * * *";
 const DEFAULT_DELIVER = "local";
+
+type ErrorType = "network" | "http" | "other" | null;
 
 interface WizardState {
   step: Step;
@@ -28,6 +30,7 @@ interface WizardState {
   preview: string | null;
   isCreating: boolean;
   error: string | null;
+  errorType: ErrorType;
   schedule: string;
   deliver: string;
 }
@@ -53,6 +56,7 @@ function CreateAgentWizard() {
     preview: null,
     isCreating: false,
     error: null,
+    errorType: null,
     schedule: DEFAULT_SCHEDULE,
     deliver: DEFAULT_DELIVER,
   });
@@ -130,8 +134,36 @@ function CreateAgentWizard() {
         toast.success("Agente creado con éxito");
         router.push("/agents");
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : "Error desconocido";
-        setWizard(prev => ({ ...prev, isCreating: false, error: "Error al crear el agente: " + errMsg }));
+        const isNetworkError = !err || (err instanceof Error && (
+          err.message.includes("fetch") ||
+          err.message.includes("NetworkError") ||
+          err.message.includes("Failed to fetch") ||
+          err.message.includes("ECONNREFUSED") ||
+          err.message.includes("ECONNRESET") ||
+          err.message.includes("ENOTFOUND") ||
+          err.message.includes("timeout") ||
+          err.message.includes("timeout of")
+        ));
+        
+        let errorType: ErrorType = "other";
+        let errMsg = "Error desconocido";
+        
+        if (err instanceof Error) {
+          errMsg = err.message;
+          const status = (err as any).status;
+          if (isNetworkError) {
+            errorType = "network";
+          } else if (status) {
+            errorType = "http";
+          }
+        }
+        
+        setWizard(prev => ({ 
+          ...prev, 
+          isCreating: false, 
+          error: errMsg,
+          errorType 
+        }));
         toast.error("Error al crear el agente");
       }
     }
@@ -348,12 +380,49 @@ function CreateAgentWizard() {
                 </>
               ) : wizard.error ? (
                 <>
-                  <AlertCircle className="h-12 w-12 text-destructive" />
-                  <div>
-                    <h2 className="text-2xl font-bold">Ups, algo salió mal</h2>
-                    <p className="text-muted-foreground mt-2">{wizard.error}</p>
+                  {wizard.errorType === "network" ? (
+                    <AlertTriangle className="h-12 w-12 text-amber-500" />
+                  ) : (
+                    <AlertCircle className="h-12 w-12 text-destructive" />
+                  )}
+                  <div className="space-y-3 max-w-md">
+                    <h2 className="text-2xl font-bold">
+                      {wizard.errorType === "network" ? "Error de conexión" : "Ups, algo salió mal"}
+                    </h2>
+                    {wizard.errorType === "network" ? (
+                      <div className="space-y-2">
+                        <p className="text-muted-foreground">
+                          No se pudo conectar con el servidor. Verifica que Exploration API esté corriendo en :8643.
+                        </p>
+                        <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-2 rounded">
+                          {wizard.error}
+                        </p>
+                      </div>
+                    ) : wizard.errorType === "http" ? (
+                      <div className="space-y-2">
+                        <p className="text-muted-foreground">
+                          El servidor respondió con un error. Revisa la configuración e intenta de nuevo.
+                        </p>
+                        <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-2 rounded">
+                          {wizard.error}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        {wizard.error}
+                      </p>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <Button onClick={nextStep} className="flex-1 sm:flex-initial" variant="default">
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Reintentar
+                      </Button>
+                      <Button onClick={prevStep} className="flex-1 sm:flex-initial" variant="outline">
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Volver al Paso 3
+                      </Button>
+                    </div>
                   </div>
-                  <Button onClick={nextStep}>Reintentar</Button>
                 </>
               ) : (
                 <>
