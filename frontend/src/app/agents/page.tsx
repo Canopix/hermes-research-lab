@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { Agent, Execution } from "@/lib/types";
 import { StatsBar } from "@/components/dashboard/StatsBar";
-import { AgentCard } from "@/components/dashboard/AgentCard";
-import { getJobs, getJobOutputs } from "@/lib/api";
+import { AgentCardWithSSE } from "@/components/dashboard/AgentCardWithSSE";
+import { getJobs, getJobOutputs, HERMES_API } from "@/lib/api";
 import { 
   Users, 
   Zap, 
@@ -151,7 +151,12 @@ export default function AgentsPage() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {agents.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} onStatusChange={handleStatusChange} />
+            <AgentCardWithSSE
+              key={agent.id}
+              agent={agent}
+              hermesApi={HERMES_API}
+              onStatusChange={handleStatusChange}
+            />
           ))}
         </div>
       )}

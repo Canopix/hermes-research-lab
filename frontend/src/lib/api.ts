@@ -1,6 +1,6 @@
 import { Agent, Template, Execution } from '../lib/types'
 
-const HERMES_API = process.env.NEXT_PUBLIC_HERMES_API || 'http://localhost:8642'
+export const HERMES_API = process.env.NEXT_PUBLIC_HERMES_API || 'http://localhost:8642'
 const EXPLORE_API = process.env.NEXT_PUBLIC_EXPLORE_API || 'http://localhost:8643'
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'agenthub-local'
 
