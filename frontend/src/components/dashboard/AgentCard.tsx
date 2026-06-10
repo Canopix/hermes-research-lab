@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Agent } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -14,6 +15,8 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react"
+import { pauseJob, resumeJob, triggerJob } from "@/lib/api"
+import { toast } from "sonner"
 
 interface AgentCardProps {
   agent: Agent
@@ -21,12 +24,50 @@ interface AgentCardProps {
   activeTool?: string
   runId?: string | null
   onRunIdChange?: (runId: string | null) => void
+  onStatusChange?: (agentId: string, newStatus: string) => void
 }
 
-export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange }: AgentCardProps) {
+export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, onStatusChange }: AgentCardProps) {
   const isRunning = agent.status === 'active'
   const hasProgress = progress !== undefined && progress !== null
   const progressPercent = hasProgress ? Math.round(progress * 100) : 0
+  const [loading, setLoading] = useState<string | null>(null)
+
+  const handlePauseResume = async () => {
+    if (loading) return
+    try {
+      if (agent.status === 'active') {
+        setLoading('pause')
+        await pauseJob(agent.id)
+        toast.success(`${agent.name} paused`)
+        onStatusChange?.(agent.id, 'paused')
+      } else {
+        setLoading('resume')
+        await resumeJob(agent.id)
+        toast.success(`${agent.name} resumed`)
+        onStatusChange?.(agent.id, 'active')
+      }
+    } catch (err) {
+      console.error("Pause/Resume failed:", err)
+      toast.error(`Failed to ${agent.status === 'active' ? 'pause' : 'resume'} ${agent.name}`)
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handleTrigger = async () => {
+    if (loading) return
+    try {
+      setLoading('trigger')
+      await triggerJob(agent.id)
+      toast.success(`Triggered ${agent.name}`)
+    } catch (err) {
+      console.error("Trigger failed:", err)
+      toast.error(`Failed to trigger ${agent.name}`)
+    } finally {
+      setLoading(null)
+    }
+  }
 
   return (
     <Card className={cn(
@@ -126,11 +167,31 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange }:
 
       <CardFooter className="flex items-center justify-between border-t bg-muted/20 pt-3">
         <div className="flex gap-1">
-          <Button variant="outline" size="icon" title="Pause/Resume">
-            {agent.status === 'active' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          <Button 
+            variant="outline" 
+            size="icon" 
+            title={agent.status === 'active' ? "Pause" : "Resume"}
+            onClick={handlePauseResume}
+            disabled={!!loading}
+          >
+            {agent.status === 'active' ? (
+              loading === 'pause' ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Pause className="h-4 w-4" />
+            ) : (
+              loading === 'resume' ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Play className="h-4 w-4" />
+            )}
           </Button>
-          <Button variant="outline" size="icon" title="Trigger Now">
-            <RotateCcw className="h-4 w-4" />
+          <Button 
+            variant="outline" 
+            size="icon" 
+            title="Trigger Now"
+            onClick={handleTrigger}
+            disabled={!!loading}
+          >
+            {loading === 'trigger' ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : (
+              <RotateCcw className="h-4 w-4" />
+            )}
           </Button>
         </div>
         <Button variant="ghost" size="icon">

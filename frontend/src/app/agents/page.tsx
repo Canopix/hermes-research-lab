@@ -21,6 +21,10 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const handleStatusChange = (agentId: string, newStatus: string) => {
+    setAgents(prev => prev.map(a => a.id === agentId ? { ...a, status: newStatus as any } : a));
+  };
+
   useEffect(() => {
     async function load() {
       try {
@@ -117,7 +121,7 @@ export default function AgentsPage() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {agents.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} />
+            <AgentCard key={agent.id} agent={agent} onStatusChange={handleStatusChange} />
           ))}
         </div>
       )}
