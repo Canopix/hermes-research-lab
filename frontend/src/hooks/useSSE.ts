@@ -78,10 +78,13 @@ export function useSSE(url: string | null): UseSSEResult {
     });
 
     es.onerror = () => {
-      if (es.readyState === EventSource.CLOSED) {
-        setConnected(false);
-        setError("Connection closed unexpectedly");
-      }
+      // EventSource auto-reconnects on error by default. For a one-shot run
+      // stream (terminated by the `done` event) that turns any mid-stream drop
+      // into an infinite silent retry loop. Close it and surface the error.
+      setConnected(false);
+      setError("Connection lost");
+      es.close();
+      esRef.current = null;
     };
 
     return () => {

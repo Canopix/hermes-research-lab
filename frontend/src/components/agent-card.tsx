@@ -7,9 +7,12 @@ import { RunProgress } from "./run-progress";
 
 interface AgentCardProps {
   job: Job;
+  /** Called after a successful action so the parent can refetch its data
+   *  instead of triggering a full-page reload. */
+  onChanged?: () => void;
 }
 
-export function AgentCard({ job }: AgentCardProps) {
+export function AgentCard({ job, onChanged }: AgentCardProps) {
   const [showRunProgress, setShowRunProgress] = useState(false);
   const statusColors = {
     active: "bg-green-500",
@@ -24,7 +27,7 @@ export function AgentCard({ job }: AgentCardProps) {
       } else {
         await hermes.resumeJob(job.id);
       }
-      window.location.reload();
+      onChanged?.();
     } catch (err) {
       console.error("Failed to toggle job status:", err);
     }
