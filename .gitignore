@@ -36,3 +36,6 @@ npm-debug.log*
 
 # Coverage
 coverage/
+
+# Planning (local only, not shared via git)
+PHASES.md

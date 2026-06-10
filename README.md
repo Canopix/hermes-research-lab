@@ -1,79 +1,76 @@
-# 🎯 AgentHub
+# AgentHub
 
-Plataforma web para crear, configurar y monitorizar agentes de IA autónomos construida sobre [Hermes Agent](https://github.com/NousResearch/hermes-agent).
+> Plataforma de gestin multi-agente sobre Hermes Agent. Crea, configura, monitorea y explora tus agentes AI desde una interfaz web unificada.
 
-## Qué hace
+## Descripcin
 
-AgentHub se instala **encima de tu Hermes existente** y te da interfaz web para:
+AgentHub es un sistema completo para gestionar agentes AI basados en Hermes Agent. Proporciona:
 
-- **Crear agentes** combinando templates + configuración vía wizard
-- **Monitorizar** ejecuciones en tiempo real (SSE streaming)
-- **Explorar** skills, tools, profiles, memoria y sesiones de forma visual
-- **Gestionar** el ciclo de vida: crear → ejecutar → pausar → revisar outputs
-
-## Quick Start
-
-```bash
-# Requisito: Hermes ya instalado y corriendo
-pip install agenthub
-agenthub start
-```
-
-Abre http://localhost:3000
+- **Dashboard** - Visualiza todos tus agentes activos con mtricas en tiempo real
+- **Wizard de creacin** - Crea agentes desde templates predefinidos con configuracin guiada
+- **Historial** - Revisa outputs de ejecuciones anteriores con markdown rendering
+- **Exploracin** - Navega profiles, skills, toolsets, hooks, MCP servers, cron jobs y config de Hermes
+- **Streaming SSE** - Monitorea la ejecucin de agentes en tiempo real
+- **CLI unificada** - Scripts de gestin para setup, start, stop y status
 
 ## Arquitectura
 
-```
-Frontend (Next.js :3000)
-        │
-        ├──→ Hermes API Server (:8642)  ← runtime, jobs, sessions
-        │
-        └──→ Exploration API (:8643)    ← system overview, templates
-                    │
-                    └──→ Hermes nativo (skills, profiles, memory, cron)
-```
+    Frontend (:3000) --> Exploration API (:8643) --> Hermes Agent (:8642)
 
-- **Frontend** — Next.js 14 + shadcn/ui + TypeScript
-- **Hermes API Server** — Runtime, jobs, sessions, streaming
-- **Exploration API** — FastAPI, system overview, templates, búsqueda
+## Requisitos
 
-Ver [docs/arquitectura.md](docs/arquitectura.md) para detalles.
+- **Hermes Agent** v0.12.0+ instalado y corriendo
+- **Python** 3.10+
+- **Node.js** 18+
+- **npm** o **pnpm**
 
-## Templates
+## Quick Start
 
-| Template | Descripción | Tools |
-|----------|-------------|-------|
-| 🔬 AI Researcher | Web → resumen diario de IA | web, tts |
-| 📦 Repo Monitor | GitHub → digest de PRs/issues | web, terminal |
-| 📄 Paper Summarizer | arXiv → resumen semanal | web |
-| 👀 Competitor Watcher | URLs → detección de cambios | web |
+    agenthub setup && agenthub start
 
-Ver [docs/templates.md](docs/templates.md) para el formato SKILL.md.
+## Scripts CLI (agenthub)
 
-## Equipo
+| Comando      | Descripcin                                                |
+|-------------|-----------------------------------------------------------|
+| agenthub setup   | Instala dependencias, configura Hermes, venv, npm, templates, hooks |
+| agenthub start   | Arranca Exploration API + Frontend en background          |
+| agenthub stop    | Detiene todos los servicios                               |
+| agenthub status  | Verifica estado de Hermes, Explore API y Frontend         |
+| agenthub demo    | Ejecuta demo de 5 pasos                                   |
 
-| Persona | Rol | Focus |
-|---------|-----|-------|
-| P1 | Frontend | Dashboard, Builder, Historial, Exploración |
-| P2 | Backend | Exploration API, hooks de monitoreo |
-| P3 | Templates + DevOps | Skills, scripts, deployment |
+## Templates Disponibles
 
-Ver [docs/tareas.md](docs/tareas.md) para el reparto detallado.
+| Template          | Descripcin                                           | Toolsets      |
+|-------------------|------------------------------------------------------|---------------|
+| AI Researcher     | Monitorea web/RSS, genera resmenes + podcast TTS     | web, tts      |
+| Repo Monitor      | Monitorea repos GitHub: PRs, issues, releases        | web, terminal |
+| Paper Summarizer  | Monitorea arXiv por categora, resmenes tcnicos       | web           |
+| Competitor Watcher| Monitorea URLs de competidores y detecta cambios       | web           |
 
-## Documentación
+## Endpoints
 
-| Doc | Contenido |
-|-----|-----------|
-| [Concepto](docs/concepto.md) | Visión, scope, público objetivo |
-| [Arquitectura](docs/arquitectura.md) | Diagrama, endpoints, decisiones |
-| [Componentes Hermes](docs/componentes.md) | Mapa Hermes → AgentHub |
-| [Frontend](docs/frontend.md) | P1: las 4 vistas |
-| [Backend](docs/backend.md) | P2: Exploration API + hooks |
-| [Templates](docs/templates.md) | P3: skills como templates |
-| [Wizard](docs/wizard.md) | Builder detallado (4 pasos) |
-| [Deployment](docs/deployment.md) | Instalación y uso |
-| [Tareas](docs/tareas.md) | Reparto 3 roles × 4 días |
+| Servicio           | Puerto | URL                        |
+|--------------------|--------|----------------------------|
+| Hermes API Server  | 8642   | http://localhost:8642      |
+| Exploration API    | 8643   | http://localhost:8643      |
+| Frontend           | 3000   | http://localhost:3000      |
 
-## License
+## Estructura del Proyecto
+
+    agenthub/
+    +-- frontend/              # Next.js 15 + TypeScript + Tailwind
+    +-- explore-api/           # FastAPI - Exploration API
+    +-- scripts/               # CLI scripts + agenthub.py
+    +-- docs/                  # Documentacin
+    +-- README.md
+    +-- PHASES.md
+
+## Docs
+
+- [Hermes Agent Docs](https://hermes-agent.nousresearch.com/docs)
+- [Next.js Docs](https://nextjs.org/docs)
+- [FastAPI Docs](https://fastapi.tiangolo.com/)
+
+## Licencia
 
 MIT
