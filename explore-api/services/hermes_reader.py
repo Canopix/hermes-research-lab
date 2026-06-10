@@ -6,6 +6,17 @@ from typing import Any, Optional
 
 HERMES_DIR = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
 
+# Only these model fields are safe to expose over the API. Anything else
+# (api_key, base_url, auth, headers, ...) is a secret and must never leak.
+SAFE_MODEL_FIELDS = {"default", "provider", "model", "max_tokens", "temperature"}
+
+
+def _sanitize_model(model: Any) -> Any:
+    """Strip secret-bearing fields (api_key, base_url, ...) from a model config."""
+    if isinstance(model, dict):
+        return {k: v for k, v in model.items() if k in SAFE_MODEL_FIELDS}
+    return model
+
 
 def get_hermes_dir() -> Path:
     return HERMES_DIR
@@ -63,7 +74,7 @@ def list_profiles() -> list[dict]:
 
         result.append({
             "name": p.name,
-            "model": config.get("model"),
+            "model": _sanitize_model(config.get("model")),
             "provider": config.get("provider"),
             "soul": read_file(p / "SOUL.md"),
             "memory_preview": memory_preview,
@@ -84,8 +95,11 @@ def get_profile(name: str) -> Optional[dict]:
 
 
 def get_profile_memory(name: str) -> Optional[dict]:
-    profile_dir = HERMES_DIR / "profiles" / name
-    if not profile_dir.exists():
+    profiles_dir = (HERMES_DIR / "profiles").resolve()
+    profile_dir = (profiles_dir / name).resolve()
+    # Guard against path traversal (e.g. name="../../etc"): the resolved
+    # directory must be a direct child of the profiles dir.
+    if profiles_dir not in profile_dir.parents or not profile_dir.is_dir():
         return None
 
     memory = read_file(profile_dir / "MEMORY.md") or ""
@@ -112,7 +126,19 @@ def list_hooks() -> list[dict]:
 
 def get_mcp_servers() -> list[dict]:
     config = load_yaml(HERMES_DIR / "config.yaml")
-    return config.get("mcp", {}).get("servers", [])
+    servers = config.get("mcp_servers", config.get("mcp", {}).get("servers", []))
+    # Hermes stores mcp_servers as {name: {command, args, env}}. Normalize to a
+    # list and drop `env` (it commonly holds API keys/tokens — never expose it).
+    if isinstance(servers, dict):
+        return [
+            {
+                "name": name,
+                "command": cfg.get("command") if isinstance(cfg, dict) else None,
+                "args": cfg.get("args", []) if isinstance(cfg, dict) else [],
+            }
+            for name, cfg in servers.items()
+        ]
+    return servers if isinstance(servers, list) else []
 
 
 def get_activity(limit: int = 50) -> list[dict]:

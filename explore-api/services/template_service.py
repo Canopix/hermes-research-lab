@@ -57,7 +57,12 @@ class TemplateService:
     @classmethod
     def preview(cls, template_id: str, params: dict) -> Optional[dict]:
         hermes_dir = get_hermes_dir()
-        skill_file = hermes_dir / "skills" / template_id / "SKILL.md"
+        skills_dir = (hermes_dir / "skills").resolve()
+        skill_dir = (skills_dir / template_id).resolve()
+        # Guard against path traversal in template_id (e.g. "../../etc").
+        if skills_dir not in skill_dir.parents:
+            return None
+        skill_file = skill_dir / "SKILL.md"
         if not skill_file.exists():
             return None
 

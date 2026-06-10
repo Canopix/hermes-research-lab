@@ -5,8 +5,8 @@ from services.hermes_reader import (
     get_provider,
     list_profiles,
     list_hooks,
-    get_mcp_servers,
-    get_activity,
+    get_mcp_servers as read_mcp_servers,
+    get_activity as read_activity,
 )
 from services.template_service import TemplateService
 
@@ -44,9 +44,9 @@ async def get_hooks():
 
 @router.get("/mcp-servers")
 async def get_mcp_servers():
-    return get_mcp_servers()
+    return read_mcp_servers()
 
 
 @router.get("/activity")
 async def get_activity(limit: int = 50):
-    return get_activity(limit)
+    return read_activity(limit)

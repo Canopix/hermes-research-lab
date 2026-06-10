@@ -1,6 +1,10 @@
 from fastapi import APIRouter, HTTPException
 
-from services.hermes_reader import list_profiles, get_profile, get_profile_memory
+from services.hermes_reader import (
+    list_profiles,
+    get_profile,
+    get_profile_memory as read_profile_memory,
+)
 
 router = APIRouter()
 
@@ -20,7 +24,7 @@ async def get_profile_detail(name: str):
 
 @router.get("/{name}/memory")
 async def get_profile_memory(name: str):
-    memory = get_profile_memory(name)
+    memory = read_profile_memory(name)
     if not memory:
         raise HTTPException(404, f"Profile '{name}' not found")
     return memory
