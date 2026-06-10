@@ -103,7 +103,7 @@ export async function getToolsets() {
 }
 
 export async function searchSessions(query: string) {
-  const res = await fetch(`${EXPLORE_API}/api/system/sessions/search=${encodeURIComponent(query)}`, { headers })
+  const res = await fetch(`${EXPLORE_API}/api/system/sessions/search?q=${encodeURIComponent(query)}`, { headers })
   if (!res.ok) throw new Error('Failed to search sessions')
   return res.json()
 }
