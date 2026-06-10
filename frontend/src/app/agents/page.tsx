@@ -89,7 +89,7 @@ export default function AgentsPage() {
             <p className="text-muted-foreground">Gestiona tus agentes de automatización activos.</p>
           </div>
           <Button asChild>
-            <Link href="/create">
+            <Link href="/agents/new">
               <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
             </Link>
           </Button>
@@ -118,7 +118,7 @@ export default function AgentsPage() {
           <p className="text-muted-foreground">Gestiona tus agentes de automatización activos.</p>
         </div>
         <Button asChild>
-          <Link href="/create">
+          <Link href="/agents/new">
             <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
           </Link>
         </Button>
@@ -141,7 +141,7 @@ export default function AgentsPage() {
             <p className="text-muted-foreground">
               No hay agentes configurados. Crea tu primer agente para empezar a automatizar.
             </p>
-            <Link href="/create">
+            <Link href="/agents/new">
               <Button size="lg">
                 <Plus className="mr-2 h-4 w-4" /> Crear primer agente
               </Button>
