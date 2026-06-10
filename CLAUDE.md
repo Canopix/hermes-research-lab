@@ -59,6 +59,6 @@ bash scripts/demo.sh     # Run demo against live API
 
 ## Team Roles
 
-- **P1 (Frontend)**: Next.js dashboard, builder wizard, history, exploration views
+- **P1 (Frontend)**: Next.js dashboard, builder wizard, history, exploration views — DONE (feat/frontend-p1-core branch)
 - **P2 (Backend)**: Exploration API + monitoring hook — DONE (this branch)
 - **P3 (Templates + DevOps)**: SKILL.md templates + scripts — DONE (this branch)
