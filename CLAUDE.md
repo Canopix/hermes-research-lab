@@ -65,5 +65,6 @@ bash scripts/demo.sh     # Run demo against live API
 
 ## Latest Integration
 
+- `feat/final-polish-hackathon` (2026-06-11): Pre-deadline polish — root `.env.example`, improved `demo.sh` with colored output and template preview, verified frontend build + API compilation, zero hardcoded secrets
 - `feat/sse-streaming` merged into `main` (2026-06-10): SSE streaming, agent detail page `/agents/[id]`, auto-refresh 30s, RunProgress modal, .env.example
 - All 3 roles integrated on `main` — ready for final team review before June 13 deadline

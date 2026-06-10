@@ -13,10 +13,36 @@ AgentHub se instala **encima de tu Hermes existente** y te da interfaz web para:
 
 ## Quick Start
 
+### Prerequisites
+
+- **Hermes Agent** installed and running (api server on :8642)
+- **Node.js 18+** (for frontend build)
+- **Python 3.10+** (for Exploration API)
+
+### Setup
+
 ```bash
-# Requisito: Hermes ya instalado y corriendo
-pip install agenthub
-agenthub start
+# 1. Copy environment config
+cp .env.example .env
+
+# 2. Install all dependencies
+bash scripts/setup.sh
+
+# 3. Start API + Frontend
+bash scripts/start.sh
+
+# 4. Run demo
+bash scripts/demo.sh
+```
+
+### Or via npm/yarn
+
+```bash
+# Frontend only
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev     # → http://localhost:3000
 ```
 
 Abre http://localhost:3000
