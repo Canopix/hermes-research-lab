@@ -1,4 +1,6 @@
 fastapi
-uvicorn
+uvicorn[standard]
 httpx
 pyyaml
+websockets
+pydantic
