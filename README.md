@@ -1,17 +1,17 @@
 # AgentHub
 
-> Plataforma de gestin multi-agente sobre Hermes Agent. Crea, configura, monitorea y explora tus agentes AI desde una interfaz web unificada.
+> Plataforma de gestión multi-agente sobre Hermes Agent. Crea, configura, monitorea y explora tus agentes AI desde una interfaz web unificada.
 
-## Descripcin
+## Descripción
 
 AgentHub es un sistema completo para gestionar agentes AI basados en Hermes Agent. Proporciona:
 
-- **Dashboard** - Visualiza todos tus agentes activos con mtricas en tiempo real
-- **Wizard de creacin** - Crea agentes desde templates predefinidos con configuracin guiada
+- **Dashboard** - Visualiza todos tus agentes activos con métricas en tiempo real
+- **Wizard de creación** - Crea agentes desde templates predefinidos con configuración guiada
 - **Historial** - Revisa outputs de ejecuciones anteriores con markdown rendering
-- **Exploracin** - Navega profiles, skills, toolsets, hooks, MCP servers, cron jobs y config de Hermes
-- **Streaming SSE** - Monitorea la ejecucin de agentes en tiempo real
-- **CLI unificada** - Scripts de gestin para setup, start, stop y status
+- **Exploración** - Navega profiles, skills, toolsets, hooks, MCP servers, cron jobs y config de Hermes
+- **Streaming SSE** - Monitorea la ejecución de agentes en tiempo real
+- **CLI unificada** - Scripts de gestión para setup, start, stop y status
 
 ## Arquitectura
 
@@ -30,7 +30,7 @@ AgentHub es un sistema completo para gestionar agentes AI basados en Hermes Agen
 
 ## Scripts CLI (agenthub)
 
-| Comando      | Descripcin                                                |
+| Comando      | Descripción                                                |
 |-------------|-----------------------------------------------------------|
 | agenthub setup   | Instala dependencias, configura Hermes, venv, npm, templates, hooks |
 | agenthub start   | Arranca Exploration API + Frontend en background          |
@@ -40,11 +40,11 @@ AgentHub es un sistema completo para gestionar agentes AI basados en Hermes Agen
 
 ## Templates Disponibles
 
-| Template          | Descripcin                                           | Toolsets      |
+| Template          | Descripción                                           | Toolsets      |
 |-------------------|------------------------------------------------------|---------------|
-| AI Researcher     | Monitorea web/RSS, genera resmenes + podcast TTS     | web, tts      |
+| AI Researcher     | Monitorea web/RSS, genera resúmenes + podcast TTS     | web, tts      |
 | Repo Monitor      | Monitorea repos GitHub: PRs, issues, releases        | web, terminal |
-| Paper Summarizer  | Monitorea arXiv por categora, resmenes tcnicos       | web           |
+| Paper Summarizer  | Monitorea arXiv por categoría, resúmenes técnicos       | web           |
 | Competitor Watcher| Monitorea URLs de competidores y detecta cambios       | web           |
 
 ## Endpoints
@@ -61,7 +61,7 @@ AgentHub es un sistema completo para gestionar agentes AI basados en Hermes Agen
     +-- frontend/              # Next.js 15 + TypeScript + Tailwind
     +-- explore-api/           # FastAPI - Exploration API
     +-- scripts/               # CLI scripts + agenthub.py
-    +-- docs/                  # Documentacin
+    +-- docs/                  # Documentación
     +-- README.md
     +-- PHASES.md
 
