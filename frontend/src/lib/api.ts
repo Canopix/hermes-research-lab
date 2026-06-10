@@ -88,4 +88,6 @@ export const explore = {
     get<ActivityEntry[]>(`${EXPLORE_URL}/api/system/activity`, {
       limit: String(limit),
     }),
+  createAgent: (templateId: string, body: { config: Record<string, string>; delivery?: string; delivery_target?: string }) =>
+    post<unknown>(`${EXPLORE_URL}/api/templates/${templateId}/create-agent`, body),
 };

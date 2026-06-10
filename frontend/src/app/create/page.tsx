@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTemplates } from "@/hooks/useQueries";
 import { Template, TemplateParam } from "@/lib/types";
-import { hermes, explore } from "@/lib/api";
+import { explore } from "@/lib/api";
 
 type WizardStep = "template" | "params" | "summary" | "creating" | "done";
 
@@ -32,19 +32,19 @@ export default function CreatePage() {
   };
 
   const handleCreate = async () => {
-    if (!selectedTemplate || !jobName) return;
+    if (!selectedTemplate) return;
 
     setStep("creating");
     try {
-      const job = await hermes.createJob({
-        name: jobName,
-        template_id: selectedTemplate.id,
-        params,
-      });
-      setCreatedJobId(job.id);
+      const result = await explore.createAgent(selectedTemplate.id, { config: params }) as { job?: { id: string }; profile_created: boolean; job_created: boolean };
+      if (result.job_created && result.job) {
+        setCreatedJobId(result.job.id);
+      } else {
+        setCreatedJobId("profile-only");
+      }
       setStep("done");
     } catch (err) {
-      console.error("Failed to create job:", err);
+      console.error("Failed to create agent:", err);
       setStep("summary");
     }
   };

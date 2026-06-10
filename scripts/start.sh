@@ -6,6 +6,17 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo "=== Starting AgentHub ==="
 
+# Ensure Hermes API Server is configured
+if command -v hermes >/dev/null 2>&1; then
+    if ! curl -fsS http://localhost:8642/health >/dev/null 2>&1; then
+        echo "[PRE] Configuring Hermes API Server..."
+        hermes config set api_server.enabled true || true
+        hermes config set api_server.port 8642 || true
+        hermes config set api_server.cors_origins '["http://localhost:3000"]' || true
+        echo "[PRE] Hermes API Server configured. Start it in another terminal with: hermes gateway run"
+    fi
+fi
+
 # Start Exploration API
 echo "[1/2] Starting Exploration API on :8643..."
 cd "$ROOT_DIR/explore-api"
