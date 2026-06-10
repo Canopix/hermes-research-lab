@@ -30,7 +30,11 @@ export async function getTemplate(id: string): Promise<Template> {
 }
 
 export async function previewTemplate(id: string, config: Record<string, any>): Promise<string> {
-  const res = await fetch(`${EXPLORE_API}/api/templates/${id}/preview`, { headers })
+  const res = await fetch(`${EXPLORE_API}/api/templates/${id}/preview`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ config }),
+  })
   if (!res.ok) throw new Error('Failed to preview template')
   const data = await res.json()
   return data.prompt

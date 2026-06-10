@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 
 from services.template_parser import parse_skill_md, scan_templates, render_preview
 
@@ -47,11 +47,12 @@ async def get_template(template_id: str) -> dict:
     }
 
 
-@router.get("/api/templates/{template_id}/preview")
-async def preview_template(template_id: str) -> dict:
-    """GET /api/templates/{template_id}/preview — preview with default param values.
+@router.post("/api/templates/{template_id}/preview")
+async def preview_template(template_id: str, config: dict = Body(default={})) -> dict:
+    """POST /api/templates/{template_id}/preview — preview with user-provided config.
 
-    Renders the prompt replacing {{param_name}} with defaults from the template."""
+    Renders the prompt replacing {{param_name}} with user-provided config values,
+    falling back to template defaults for any missing keys."""
     import os
     templates_dir = os.path.join(
         os.path.expanduser("~/.hermes"), "skills", "agenthub-templates", template_id
@@ -69,7 +70,11 @@ async def preview_template(template_id: str) -> dict:
             )
         raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
 
-    rendered = render_preview(skill_md)
+    # Merge user config with template defaults: user values override defaults
+    defaults = {p["name"]: p.get("default", "") for p in parsed.get("params", [])}
+    merged = {**defaults, **config}
+
+    rendered = render_preview(skill_md, params=merged)
 
     return {
         "template_id": template_id,
@@ -77,5 +82,6 @@ async def preview_template(template_id: str) -> dict:
         "config": {
             "params": parsed["params"],
             "hermesConfig": parsed["hermes_config"],
+            "merged": merged,
         },
     }
