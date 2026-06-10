@@ -4,7 +4,7 @@ Hackathon project: AgentHub is a web platform for creating, configuring, and mon
 
 ## Stack
 
-- **Frontend**: Next.js 14 + shadcn/ui + TypeScript (P1 — pending)
+- **Frontend**: Next.js 14 + shadcn/ui + TypeScript (P1 — DONE)
 - **Backend**: FastAPI (Exploration API on :8643) + Hermes API Server (:8642)
 - **Templates**: 4 SKILL.md templates for agent creation
 - **Monitoring**: Gateway hook for activity logging
@@ -59,6 +59,6 @@ bash scripts/demo.sh     # Run demo against live API
 
 ## Team Roles
 
-- **P1 (Frontend)**: Next.js dashboard, builder wizard, history, exploration views — DONE (feat/frontend-p1-core branch)
+- **P1 (Frontend)**: Next.js dashboard, builder wizard, history, exploration views, agent detail, SSE streaming — DONE (feat/sse-streaming branch)
 - **P2 (Backend)**: Exploration API + monitoring hook — DONE (this branch)
 - **P3 (Templates + DevOps)**: SKILL.md templates + scripts — DONE (this branch)
