@@ -23,11 +23,14 @@ export function useProfiles() {
 }
 
 export function useProfile(name: string) {
-  return useApi<Profile>(() => explore.getProfile(name));
+  return useApi<Profile>(() => explore.getProfile(name), [name]);
 }
 
 export function useMemory(name: string) {
-  return useApi<{ name: string; memory: string }>(() => explore.getMemory(name));
+  return useApi<{ name: string; memory: string }>(
+    () => explore.getMemory(name),
+    [name]
+  );
 }
 
 export function useTemplates() {
@@ -35,7 +38,7 @@ export function useTemplates() {
 }
 
 export function useTemplate(id: string) {
-  return useApi<Template>(() => explore.getTemplate(id));
+  return useApi<Template>(() => explore.getTemplate(id), [id]);
 }
 
 export function useHooks() {
@@ -47,7 +50,7 @@ export function useMcpServers() {
 }
 
 export function useActivity(limit?: number) {
-  return useApi<ActivityEntry[]>(() => explore.getActivity(limit));
+  return useApi<ActivityEntry[]>(() => explore.getActivity(limit), [limit]);
 }
 
 export function useJobs() {
@@ -55,7 +58,7 @@ export function useJobs() {
 }
 
 export function useJobOutputs(jobId: string) {
-  return useApi<JobOutput[]>(() => hermes.getJobOutputs(jobId));
+  return useApi<JobOutput[]>(() => hermes.getJobOutputs(jobId), [jobId]);
 }
 
 export function useSessions() {
@@ -63,5 +66,5 @@ export function useSessions() {
 }
 
 export function useSearchSessions(query: string) {
-  return useApi<Session[]>(() => explore.searchSessions(query));
+  return useApi<Session[]>(() => explore.searchSessions(query), [query]);
 }

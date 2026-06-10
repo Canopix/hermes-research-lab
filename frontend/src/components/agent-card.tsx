@@ -3,9 +3,12 @@ import { hermes } from "@/lib/api";
 
 interface AgentCardProps {
   job: Job;
+  /** Called after a successful action so the parent can refetch its data
+   *  instead of triggering a full-page reload. */
+  onChanged?: () => void;
 }
 
-export function AgentCard({ job }: AgentCardProps) {
+export function AgentCard({ job, onChanged }: AgentCardProps) {
   const statusColors = {
     active: "bg-green-500",
     paused: "bg-yellow-500",
@@ -15,7 +18,7 @@ export function AgentCard({ job }: AgentCardProps) {
   const handleRun = async () => {
     try {
       await hermes.triggerJob(job.id);
-      window.location.reload();
+      onChanged?.();
     } catch (err) {
       console.error("Failed to trigger job:", err);
     }
@@ -28,7 +31,7 @@ export function AgentCard({ job }: AgentCardProps) {
       } else {
         await hermes.resumeJob(job.id);
       }
-      window.location.reload();
+      onChanged?.();
     } catch (err) {
       console.error("Failed to toggle job status:", err);
     }

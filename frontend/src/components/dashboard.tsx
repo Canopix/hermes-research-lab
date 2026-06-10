@@ -5,7 +5,12 @@ import { AgentCard } from "./agent-card";
 import { StatsOverview } from "./stats-overview";
 
 export function Dashboard() {
-  const { data: jobs, loading: jobsLoading, error: jobsError } = useJobs();
+  const {
+    data: jobs,
+    loading: jobsLoading,
+    error: jobsError,
+    refetch: refetchJobs,
+  } = useJobs();
   const { data: overview, loading: overviewLoading } = useOverview();
 
   if (jobsLoading || overviewLoading) {
@@ -45,7 +50,7 @@ export function Dashboard() {
         {jobs && jobs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {jobs.map((job) => (
-              <AgentCard key={job.id} job={job} />
+              <AgentCard key={job.id} job={job} onChanged={refetchJobs} />
             ))}
           </div>
         ) : (
