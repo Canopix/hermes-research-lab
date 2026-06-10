@@ -57,6 +57,11 @@ else
     log_ok "Exploration API arrancando en :$EXPLORE_PORT (PID: $EXPLORE_PID)"
 fi
 
+# Kill any stale Next.js on non-standard ports
+for port in 3001 3002 3003; do
+    kill $(lsof -ti:$port 2>/dev/null) 2>/dev/null || true
+done
+
 log_info "Arrancando Frontend en :$FRONTEND_PORT..."
 if kill $(lsof -ti:$FRONTEND_PORT 2>/dev/null) &>/dev/null; then
     log_ok "Frontend ya corriendo en :$FRONTEND_PORT"
