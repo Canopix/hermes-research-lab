@@ -50,6 +50,15 @@ call_api() {
     return 0
 }
 
+# Pretty-print JSON when possible, otherwise echo the raw response. Always
+# succeeds: under `set -euo pipefail` a bare `... | python3 -m json.tool` on a
+# non-JSON error body (e.g. an endpoint returning "Internal Server Error")
+# fails the pipe and aborts the whole demo. This keeps the demo going.
+print_json() {
+    echo "$1" | python3 -m json.tool 2>/dev/null || echo "$1"
+    return 0
+}
+
 # ── Startup ─────────────────────────────────────────────────────────────────
 echo -e "${BOLD}${CYAN}"
 echo "    _          _   _           _    _           _   "
@@ -87,7 +96,7 @@ fi
 header "2. System Overview"
 OVERVIEW=$(call_api "${EXPLORE_URL}/api/system/overview" "System Overview") || true
 if [[ -n "$OVERVIEW" ]]; then
-    echo "$OVERVIEW" | python3 -m json.tool
+    print_json "$OVERVIEW"
     PROFILES_COUNT=$(echo "$OVERVIEW" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('profiles',[])))" 2>/dev/null || echo "?")
     TEMPLATES_COUNT=$(echo "$OVERVIEW" | python3 -c "import sys,json; print(json.load(sys.stdin).get('templates_count','?'))" 2>/dev/null || echo "?")
     SKILLS_COUNT=$(echo "$OVERVIEW" | python3 -c "import sys,json; print(json.load(sys.stdin).get('total_skills','?'))" 2>/dev/null || echo "?")
@@ -101,7 +110,7 @@ PROFILES=$(call_api "${EXPLORE_URL}/api/system/profiles" "Profiles") || true
 if [[ -n "$PROFILES" ]]; then
     COUNT=$(echo "$PROFILES" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
     if [[ "$COUNT" -gt 0 ]]; then
-        echo "$PROFILES" | python3 -m json.tool | head -60
+        print_json "$PROFILES" | head -60
         info "Displaying profiles (${COUNT} total)"
     else
         info "No Hermes profiles configured yet."
@@ -115,7 +124,7 @@ TEMPLATES=$(call_api "${EXPLORE_URL}/api/templates" "Templates") || true
 if [[ -n "$TEMPLATES" ]]; then
     COUNT=$(echo "$TEMPLATES" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
     if [[ "$COUNT" -gt 0 ]]; then
-        echo "$TEMPLATES" | python3 -m json.tool
+        print_json "$TEMPLATES"
         info "Available templates: ${COUNT}"
 
         # Show first template detail
@@ -127,11 +136,11 @@ if t: print(t[0]['id'])
         if [[ -n "$FIRST_ID" ]]; then
             header "4b. Template Detail: ${FIRST_ID}"
             DETAIL=$(call_api "${EXPLORE_URL}/api/templates/${FIRST_ID}" "${FIRST_ID}") || true
-            [[ -n "$DETAIL" ]] && echo "$DETAIL" | python3 -m json.tool
+            [[ -n "$DETAIL" ]] && print_json "$DETAIL"
 
             header "4c. Template Preview: ${FIRST_ID}"
             PREVIEW=$(call_api "${EXPLORE_URL}/api/templates/${FIRST_ID}/preview?topics=LLM%2C+agents&sources=all&max_results=5" "Preview") || true
-            [[ -n "$PREVIEW" ]] && echo "$PREVIEW" | python3 -m json.tool
+            [[ -n "$PREVIEW" ]] && print_json "$PREVIEW"
         fi
     else
         info "No templates loaded. Templates are bundled as SKILL.md files in templates/"
@@ -142,21 +151,21 @@ fi
 header "5. Gateway Hooks"
 HOOKS=$(call_api "${EXPLORE_URL}/api/system/hooks" "Hooks") || true
 if [[ -n "$HOOKS" ]]; then
-    echo "$HOOKS" | python3 -m json.tool
+    print_json "$HOOKS"
 fi
 
 # ── MCP Servers ─────────────────────────────────────────────────────────────
 header "6. MCP Servers"
 MCP=$(call_api "${EXPLORE_URL}/api/system/mcp-servers" "MCP Servers") || true
 if [[ -n "$MCP" ]]; then
-    echo "$MCP" | python3 -m json.tool
+    print_json "$MCP"
 fi
 
 # ── Activity ────────────────────────────────────────────────────────────────
 header "7. Recent Activity"
 ACTIVITY=$(call_api "${EXPLORE_URL}/api/system/activity?limit=5" "Activity") || true
 if [[ -n "$ACTIVITY" ]]; then
-    echo "$ACTIVITY" | python3 -m json.tool
+    print_json "$ACTIVITY"
 fi
 
 # ── Frontend check ──────────────────────────────────────────────────────────
