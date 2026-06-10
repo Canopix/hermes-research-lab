@@ -69,7 +69,7 @@ export function TemplateCard({ template, onSelect }: TemplateCardProps) {
           </Button>
         ) : (
           <Button asChild variant="outline" className="w-full">
-            <Link href={`/agents/new?template=${template.id}`}>
+            <Link href={`/create?template=${template.id}`}>
               Usar este template
             </Link>
           </Button>

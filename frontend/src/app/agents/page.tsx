@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Agent, Execution } from "@/lib/types";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { AgentCardWithSSE } from "@/components/dashboard/AgentCardWithSSE";
-import { getJobs, getJobOutputs, HERMES_API } from "@/lib/api";
+import { getJobs, getJobOutputs } from "@/lib/api";
 import { 
   Users, 
   Zap, 
@@ -89,7 +89,7 @@ export default function AgentsPage() {
             <p className="text-muted-foreground">Gestiona tus agentes de automatización activos.</p>
           </div>
           <Button asChild>
-            <Link href="/agents/new">
+            <Link href="/create">
               <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
             </Link>
           </Button>
@@ -118,7 +118,7 @@ export default function AgentsPage() {
           <p className="text-muted-foreground">Gestiona tus agentes de automatización activos.</p>
         </div>
         <Button asChild>
-          <Link href="/agents/new">
+          <Link href="/create">
             <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
           </Link>
         </Button>
@@ -141,7 +141,7 @@ export default function AgentsPage() {
             <p className="text-muted-foreground">
               No hay agentes configurados. Crea tu primer agente para empezar a automatizar.
             </p>
-            <Link href="/agents/new">
+            <Link href="/create">
               <Button size="lg">
                 <Plus className="mr-2 h-4 w-4" /> Crear primer agente
               </Button>
@@ -154,7 +154,6 @@ export default function AgentsPage() {
             <AgentCardWithSSE
               key={agent.id}
               agent={agent}
-              hermesApi={HERMES_API}
               onStatusChange={handleStatusChange}
             />
           ))}
