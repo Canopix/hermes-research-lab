@@ -15,8 +15,8 @@ echo "  AgentHub - Service Status"
 echo "=============================================="
 echo ""
 
-echo -n "  Hermes API Server (:8642)  ... "
-HERMES_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8642/health 2>/dev/null || echo "000")
+echo -n "  Hermes API Server (:8000)  ... "
+HERMES_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/ 2>/dev/null || echo "000")
 if [ "$HERMES_STATUS" = "200" ]; then
     log_ok "OK"
 else
