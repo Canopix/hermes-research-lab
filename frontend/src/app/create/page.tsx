@@ -11,18 +11,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { AlertCircle, CheckCircle2, Loader2, Code, Settings2, Sparkles, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 type Step = 1 | 2 | 3 | 4;
 
+const DEFAULT_SCHEDULE = "0 */6 * * *";
+const DEFAULT_DELIVER = "local";
+
 interface WizardState {
   step: Step;
   selectedTemplate: Template | null;
+  agentName: string;
   config: Record<string, any>;
   preview: string | null;
   isCreating: boolean;
   error: string | null;
+  schedule: string;
+  deliver: string;
 }
 
 const STEPS = [
@@ -41,10 +48,13 @@ function CreateAgentWizard() {
   const [wizard, setWizard] = useState<WizardState>({
     step: 1,
     selectedTemplate: null,
+    agentName: "",
     config: {},
     preview: null,
     isCreating: false,
     error: null,
+    schedule: DEFAULT_SCHEDULE,
+    deliver: DEFAULT_DELIVER,
   });
 
   const wizardRef = useRef(wizard);
@@ -60,7 +70,7 @@ function CreateAgentWizard() {
         if (templateId) {
           const selected = data.find(t => t.id === templateId);
           if (selected) {
-            setWizard(prev => ({ ...prev, selectedTemplate: selected, step: 2 }));
+            setWizard(prev => ({ ...prev, selectedTemplate: selected, agentName: selected.name, step: 2 }));
           }
         }
       } catch (err) {
@@ -79,6 +89,7 @@ function CreateAgentWizard() {
     setWizard({
       ...wizard,
       selectedTemplate: template,
+      agentName: template.name,
       step: hasParams ? 2 : 3,
       config: template.params.reduce((acc, p) => ({
         ...acc,
@@ -92,6 +103,11 @@ function CreateAgentWizard() {
     if (!current.selectedTemplate) return;
 
     if (current.step === 2) {
+      // Validate agent name is not empty
+      if (!current.agentName || current.agentName.trim() === "") {
+        toast.error("El nombre del agente es obligatorio");
+        return;
+      }
       try {
         setWizard(prev => ({ ...prev, step: 3 }));
         const previewText = await previewTemplate(current.selectedTemplate.id, current.config);
@@ -104,9 +120,12 @@ function CreateAgentWizard() {
       try {
         setWizard(prev => ({ ...prev, step: 4, isCreating: true }));
         await createJob({
+          name: wizard.agentName || current.selectedTemplate.name,
           template: current.selectedTemplate.id,
           config: current.config,
           prompt: current.preview || "",
+          schedule: DEFAULT_SCHEDULE,
+          deliver: DEFAULT_DELIVER,
         });
         toast.success("Agente creado con éxito");
         router.push("/agents");
@@ -187,6 +206,25 @@ function CreateAgentWizard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Nombre del agente */}
+              <div className="space-y-2">
+                <label htmlFor="agentName" className="text-sm font-medium">
+                  Nombre del agente <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  id="agentName"
+                  type="text"
+                  placeholder={wizard.selectedTemplate.name}
+                  value={wizard.agentName}
+                  onChange={(e) => setWizard(prev => ({ ...prev, agentName: e.target.value }))}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Este será el nombre de tu agente personalizado. Por defecto se usa el nombre del template.
+                </p>
+              </div>
+              <Separator />
+              {/* Parámetros dinámicos */}
               {wizard.selectedTemplate.params.map((p) => (
                 <DynamicParam
                   key={p.name}
@@ -236,6 +274,12 @@ function CreateAgentWizard() {
                   <CardTitle className="text-lg">Resumen de Configuración</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Nombre del agente */}
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Nombre del Agente</p>
+                    <p className="text-sm font-medium">{wizard.agentName}</p>
+                  </div>
+                  <Separator />
                   <div>
                     <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Template</p>
                     <p className="text-sm font-medium">{wizard.selectedTemplate?.name}</p>
@@ -265,6 +309,16 @@ function CreateAgentWizard() {
                       ))}
                     </div>
                   </div>
+                  <Separator />
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Schedule</p>
+                    <p className="text-sm font-medium font-mono">{wizard.schedule}</p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Deliver</p>
+                    <p className="text-sm font-medium">{wizard.deliver}</p>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -289,6 +343,7 @@ function CreateAgentWizard() {
                   <div>
                     <h2 className="text-2xl font-bold">Creando tu agente...</h2>
                     <p className="text-muted-foreground mt-2">Estamos preparando todo el entorno.</p>
+                    <p className="text-sm text-muted-foreground mt-1 font-medium">{wizard.agentName}</p>
                   </div>
                 </>
               ) : wizard.error ? (
@@ -305,7 +360,7 @@ function CreateAgentWizard() {
                   <CheckCircle2 className="h-12 w-12 text-green-500" />
                   <div>
                     <h2 className="text-2xl font-bold">¡Agente creado!</h2>
-                    <p className="text-muted-foreground mt-2">Tu nuevo agente ya está listo para trabajar.</p>
+                    <p className="text-muted-foreground mt-2">Tu nuevo agente <strong>{wizard.agentName}</strong> ya está listo para trabajar.</p>
                   </div>
                   <Button onClick={() => router.push("/agents")} size="lg">
                     Ir al Dashboard
