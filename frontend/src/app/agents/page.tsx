@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { Agent } from "@/lib/types";
+import { Agent, Execution } from "@/lib/types";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { AgentCard } from "@/components/dashboard/AgentCard";
-import { getJobs } from "@/lib/api";
+import { getJobs, getJobOutputs } from "@/lib/api";
 import { 
   Users, 
   Zap, 
@@ -18,6 +18,7 @@ import Link from "next/link";
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [allOutputs, setAllOutputs] = useState<Execution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,8 +29,16 @@ export default function AgentsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getJobs();
-        setAgents(data);
+        const agentsData = await getJobs();
+        setAgents(agentsData);
+
+        // Fetch outputs for every agent and flatten
+        const outputsResults = await Promise.all(
+          agentsData.map(a => getJobOutputs(a.id).catch(() => []))
+        );
+        const flattened = outputsResults.flat();
+        setAllOutputs(flattened);
+
         setError(null);
       } catch (err) {
         console.error("Failed to load agents:", err);
@@ -40,6 +49,27 @@ export default function AgentsPage() {
     }
     load();
   }, []);
+
+  // Calculate real stats from outputs
+  const activeCount = agents.filter(a => a.status === 'active').length;
+  const totalCount = agents.length;
+
+  const totalOutputs = allOutputs.length;
+  const completedOutputs = allOutputs.filter(o => o.status === 'completed').length;
+  const successRate = totalOutputs > 0 ? Math.round((completedOutputs / totalOutputs) * 100) : 0;
+
+  const lastExecution = allOutputs.length > 0
+    ? allOutputs
+        .filter(o => o.startedAt)
+        .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())[0]
+        .startedAt
+    : null;
+
+  const formatLastExecution = (dateStr: string | null) => {
+    if (!dateStr) return "N/A";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  };
 
   if (loading) {
     return (
@@ -95,10 +125,10 @@ export default function AgentsPage() {
       </div>
 
       <StatsBar stats={[
-        { title: "Agentes Activos", value: String(agents.filter(a => a.status === 'active').length), icon: Users },
-        { title: "Total Agentes", value: String(agents.length), icon: Zap },
-        { title: "Tasa Éxito", value: "N/A", icon: CheckCircle2 },
-        { title: "Última Ejecución", value: "N/A", icon: Clock },
+        { title: "Agentes Activos", value: String(activeCount), icon: Users },
+        { title: "Total Agentes", value: String(totalCount), icon: Zap },
+        { title: "Tasa Éxito", value: `${successRate}%`, icon: CheckCircle2 },
+        { title: "Última Ejecución", value: formatLastExecution(lastExecution), icon: Clock },
       ]} />
 
       {agents.length === 0 ? (
