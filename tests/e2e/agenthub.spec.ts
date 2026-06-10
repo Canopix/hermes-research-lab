@@ -60,3 +60,24 @@ test("AgentHub tab renders the 4 templates", async ({ page }) => {
   await expect(cards).toHaveCount(4);
   await expect(root).toContainText("AI Researcher");
 });
+
+test("Create tab shows the wizard", async ({ page }) => {
+  await page.goto(`${BASE}/`);
+  await page.goto(`${BASE}/agenthub`);
+
+  const root = page.locator('[data-testid="agenthub-root"]');
+  await expect(root).toBeVisible({ timeout: 20000 });
+
+  // Click the Create tab
+  await page.locator('[data-testid="tab-create"]').click();
+
+  // Click the AI Researcher template card
+  const cards = page.locator('[data-testid="tpl-card"]');
+  await expect(cards).toHaveCount(4);
+  await cards.filter({ hasText: "AI Researcher" }).click();
+
+  // Assert wizard form, agent name input, and create button are visible
+  await expect(page.locator('[data-testid="wizard-form"]')).toBeVisible();
+  await expect(page.locator('[data-testid="agent-name"]')).toBeVisible();
+  await expect(page.locator('[data-testid="create-btn"]')).toBeVisible();
+});
