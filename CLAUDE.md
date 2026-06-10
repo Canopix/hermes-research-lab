@@ -4,7 +4,7 @@ Hackathon project: AgentHub is a web platform for creating, configuring, and mon
 
 ## Stack
 
-- **Frontend**: Next.js 14 + shadcn/ui + TypeScript (P1 — pending)
+- **Frontend**: moving into the native Hermes dashboard as a drop-in plugin (see `docs/hermes-ui-integration.md`). The standalone Next.js app has been removed.
 - **Backend**: FastAPI (Exploration API on :8643) + Hermes API Server (:8642)
 - **Templates**: 4 SKILL.md templates for agent creation
 - **Monitoring**: Gateway hook for activity logging
@@ -25,7 +25,6 @@ hooks/                 — Gateway hooks for monitoring
   agent-monitor/       — Activity logging hook
 scripts/               — Setup, start, demo scripts
 docs/                  — Architecture and task docs
-frontend/              — Next.js frontend (pending P1)
 ```
 
 ## Quick Start
@@ -59,6 +58,6 @@ bash scripts/demo.sh     # Run demo against live API
 
 ## Team Roles
 
-- **P1 (Frontend)**: Next.js dashboard, builder wizard, history, exploration views — DONE (feat/frontend-p1-core branch)
+- **P1 (Frontend)**: being re-platformed as a Hermes dashboard plugin (see `docs/hermes-ui-integration.md`); standalone Next.js app removed
 - **P2 (Backend)**: Exploration API + monitoring hook — DONE (this branch)
 - **P3 (Templates + DevOps)**: SKILL.md templates + scripts — DONE (this branch)
