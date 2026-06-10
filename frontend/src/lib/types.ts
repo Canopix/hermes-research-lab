@@ -93,3 +93,14 @@ export interface GlobalConfig {
   content: string
   parsed: Record<string, any>
 }
+
+// --- Job creation payload ---
+
+export interface CreateJobPayload {
+  name: string
+  template: string
+  config: Record<string, any>
+  prompt: string
+  schedule: string
+  deliver: string
+}
