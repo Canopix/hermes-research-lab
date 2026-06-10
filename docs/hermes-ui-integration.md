@@ -127,4 +127,28 @@ Per `docs/templates.md`/`wizard.md`: render the prompt → create the profile di
 + `SOUL.md` → `POST /api/jobs` (real shape above) → Hermes creates the cron job.
 A working `POST /api/templates/{id}/create-agent` (verified to write
 `~/.hermes/profiles/agent-<id>/SOUL.md` and create a real cron job in Hermes)
-lives on `oc/create-flow`; the plugin's `plugin_api.py` should fold this in.
+was prototyped on the now-superseded deepseek line; the plugin's `plugin_api.py`
+should fold this in (using the real `/api/jobs` shape from §1).
+
+---
+
+## 5. Security findings to re-verify against the surviving backend
+
+These were found and fixed in the (now-discarded) deepseek `explore-api`. The
+surviving backend (Nuria's `feature/dashboardv1` and/or the plugin's
+`plugin_api.py`) **must be checked for the same classes of bug**:
+
+- **API-key leakage**: the deepseek `/overview` and `/profiles` serialized the
+  profile's whole `model` config, exposing `api_key`/`base_url` in plaintext.
+  Allowlist the fields you return; never echo `api_key`/`base_url`/`env`.
+- **Path traversal**: `…/profiles/{name}/memory` and template `preview` built
+  filesystem paths straight from the URL param. Validate the param against the
+  known list (or resolve and assert it stays under the base dir).
+- **Endpoint recursion / shadowing**: handlers named identically to the
+  imported reader functions recursed into themselves → HTTP 500. Alias imports.
+
+## Assets preserved off `main`
+
+The 4 agent templates (`templates/`) and the monitoring hook
+(`hooks/agent-monitor/`) are **not** in `feature/dashboardv1`; they live on the
+`keep/agenthub-templates-hook` branch and should be grafted into the plugin.
