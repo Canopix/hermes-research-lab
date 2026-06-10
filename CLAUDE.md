@@ -59,6 +59,11 @@ bash scripts/demo.sh     # Run demo against live API
 
 ## Team Roles
 
-- **P1 (Frontend)**: Next.js dashboard, builder wizard, history, exploration views, agent detail, SSE streaming — DONE (feat/sse-streaming branch)
-- **P2 (Backend)**: Exploration API + monitoring hook — DONE (this branch)
-- **P3 (Templates + DevOps)**: SKILL.md templates + scripts — DONE (this branch)
+- **P1 (Frontend)**: Next.js dashboard, builder wizard, history, exploration views, agent detail, SSE streaming — ✅ COMPLETED (feat/sse-streaming → main)
+- **P2 (Backend)**: Exploration API + monitoring hook — ✅ COMPLETED
+- **P3 (Templates + DevOps)**: SKILL.md templates + scripts — ✅ COMPLETED
+
+## Latest Integration
+
+- `feat/sse-streaming` merged into `main` (2026-06-10): SSE streaming, agent detail page `/agents/[id]`, auto-refresh 30s, RunProgress modal, .env.example
+- All 3 roles integrated on `main` — ready for final team review before June 13 deadline
