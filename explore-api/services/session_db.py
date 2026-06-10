@@ -7,6 +7,11 @@ from pathlib import Path
 
 from config import HERMES_HOME
 
+# Whitelisted FTS columns and table names — only these are allowed in queries
+# to prevent SQL injection via interpolated identifiers.
+VALID_FTS_COLUMNS = {"content", "title", "query", "message", "text", "description"}
+VALID_TABLES = {"sessions_fts", "sessions", "task_sessions"}
+
 
 def _get_db_path() -> Path:
     """Return the path to the hermes state database."""
@@ -33,11 +38,8 @@ def search_sessions(query: str, limit: int = 20) -> list[dict]:
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
 
-        # Try FTS5 search first — common table names
-        fts_tables = ["sessions_fts", "sessions", "task_sessions"]
-        fts_columns = ["content", "title", "query", "message", "text", "description"]
-
-        for table in fts_tables:
+        # Try FTS5 search first — only whitelisted tables/columns are allowed
+        for table in VALID_TABLES:
             try:
                 cur.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
@@ -46,8 +48,8 @@ def search_sessions(query: str, limit: int = 20) -> list[dict]:
                 if cur.fetchone() is None:
                     continue
 
-                col = fts_columns[0]
-                for c in fts_columns:
+                col = next(iter(VALID_FTS_COLUMNS))
+                for c in VALID_FTS_COLUMNS:
                     try:
                         cur.execute(
                             f"SELECT {c} FROM {table} WHERE {table} MATCH ?",
@@ -70,7 +72,7 @@ def search_sessions(query: str, limit: int = 20) -> list[dict]:
             except sqlite3.OperationalError:
                 continue
 
-        # Fallback: try a LIKE search on any table with 'session' in the name
+        # Fallback: try a LIKE search on any whitelisted table with 'session' in the name
         if not results:
             try:
                 cur.execute(
@@ -78,6 +80,9 @@ def search_sessions(query: str, limit: int = 20) -> list[dict]:
                 )
                 tables = [row[0] for row in cur.fetchall()]
                 for table in tables:
+                    # Whitelist check: only allow known tables
+                    if table not in VALID_TABLES:
+                        continue
                     try:
                         cur.execute(
                             f"SELECT * FROM {table} WHERE content LIKE ? LIMIT ?",
