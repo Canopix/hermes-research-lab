@@ -1,38 +1,63 @@
+import { Job } from "@/lib/types";
+import { hermes } from "@/lib/api";
+
 interface AgentCardProps {
-  agent: {
-    id: string;
-    name: string;
-    status: "running" | "stopped" | "error";
-    lastRun: string;
-    template: string;
-  };
+  job: Job;
 }
 
-export function AgentCard({ agent }: AgentCardProps) {
+export function AgentCard({ job }: AgentCardProps) {
   const statusColors = {
-    running: "bg-green-500",
-    stopped: "bg-gray-500",
+    active: "bg-green-500",
+    paused: "bg-yellow-500",
     error: "bg-red-500",
+  };
+
+  const handleRun = async () => {
+    try {
+      await hermes.triggerJob(job.id);
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to trigger job:", err);
+    }
+  };
+
+  const handlePauseResume = async () => {
+    try {
+      if (job.status === "active") {
+        await hermes.pauseJob(job.id);
+      } else {
+        await hermes.resumeJob(job.id);
+      }
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to toggle job status:", err);
+    }
   };
 
   return (
     <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-medium text-white">{agent.name}</h3>
+        <h3 className="text-lg font-medium text-white">{job.name}</h3>
         <span
-          className={`w-2 h-2 rounded-full ${statusColors[agent.status]}`}
+          className={`w-2 h-2 rounded-full ${statusColors[job.status]}`}
         />
       </div>
-      <p className="text-sm text-gray-400 mb-2">Template: {agent.template}</p>
+      <p className="text-sm text-gray-400 mb-2">Template: {job.template_id}</p>
       <p className="text-sm text-gray-400">
-        Last run: {new Date(agent.lastRun).toLocaleString()}
+        Next run: {new Date(job.next_run).toLocaleString()}
       </p>
       <div className="mt-4 flex gap-2">
-        <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-          Run
+        <button
+          onClick={handleRun}
+          className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Run Now
         </button>
-        <button className="px-3 py-1 text-sm bg-gray-700 text-white rounded hover:bg-gray-600">
-          Configure
+        <button
+          onClick={handlePauseResume}
+          className="px-3 py-1 text-sm bg-gray-700 text-white rounded hover:bg-gray-600"
+        >
+          {job.status === "active" ? "Pause" : "Resume"}
         </button>
       </div>
     </div>
