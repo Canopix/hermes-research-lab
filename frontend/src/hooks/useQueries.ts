@@ -50,8 +50,8 @@ export function useActivity(limit?: number) {
   return useApi<ActivityEntry[]>(() => explore.getActivity(limit));
 }
 
-export function useJobs() {
-  return useApi<Job[]>(() => hermes.getJobs());
+export function useJobs(pollIntervalMs?: number) {
+  return useApi<Job[]>(() => hermes.getJobs(), pollIntervalMs);
 }
 
 export function useJobOutputs(jobId: string) {

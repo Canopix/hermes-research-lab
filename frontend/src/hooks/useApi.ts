@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface UseApiResult<T> {
   data: T | null;
@@ -9,10 +9,14 @@ interface UseApiResult<T> {
   refetch: () => void;
 }
 
-export function useApi<T>(fetcher: () => Promise<T>): UseApiResult<T> {
+export function useApi<T>(
+  fetcher: () => Promise<T>,
+  pollIntervalMs?: number
+): UseApiResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -29,7 +33,18 @@ export function useApi<T>(fetcher: () => Promise<T>): UseApiResult<T> {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+
+    if (pollIntervalMs && pollIntervalMs > 0) {
+      intervalRef.current = setInterval(fetchData, pollIntervalMs);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [fetchData, pollIntervalMs]);
 
   return { data, loading, error, refetch: fetchData };
 }

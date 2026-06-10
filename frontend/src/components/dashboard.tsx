@@ -5,7 +5,7 @@ import { AgentCard } from "./agent-card";
 import { StatsOverview } from "./stats-overview";
 
 export function Dashboard() {
-  const { data: jobs, loading: jobsLoading, error: jobsError } = useJobs();
+  const { data: jobs, loading: jobsLoading, error: jobsError } = useJobs(30000);
   const { data: overview, loading: overviewLoading } = useOverview();
 
   if (jobsLoading || overviewLoading) {
