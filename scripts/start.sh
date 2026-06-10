@@ -6,7 +6,7 @@ EXPLORE_API_DIR="$BASE_DIR/explore-api"
 FRONTEND_DIR="$BASE_DIR/frontend"
 VENV="$EXPLORE_API_DIR/.venv/bin/python"
 
-HERMES_PORT=8642
+HERMES_PORT=8000
 EXPLORE_PORT=8643
 FRONTEND_PORT=3000
 
@@ -26,7 +26,7 @@ echo "=============================================="
 echo ""
 
 log_info "Verificando Hermes API Server ($HERMES_PORT)..."
-HERMES_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$HERMES_PORT/health 2>/dev/null || echo "000")
+HERMES_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$HERMES_PORT/ 2>/dev/null || echo "000")
 if [ "$HERMES_STATUS" = "200" ]; then
     log_ok "Hermes API Server corriendo en :$HERMES_PORT"
 else
@@ -47,10 +47,11 @@ if kill $(lsof -ti:$EXPLORE_PORT 2>/dev/null) &>/dev/null; then
     log_ok "Exploration API ya corriendo en :$EXPLORE_PORT"
 else
     cd "$EXPLORE_API_DIR"
+    source .venv/bin/activate
     HERMES_API_URL=http://localhost:$HERMES_PORT \
     HERMES_API_KEY=agenthub-local \
     EXPLORE_API_URL=http://localhost:$EXPLORE_PORT \
-    $VENV -m uvicorn main:app --host 0.0.0.0 --port $EXPLORE_PORT --app-dir . --reload > /tmp/explore-api.log 2>&1 &
+    python -m uvicorn main:app --host 0.0.0.0 --port $EXPLORE_PORT --app-dir . --reload > /tmp/explore-api.log 2>&1 &
     EXPLORE_PID=$!
     echo "$EXPLORE_PID" > /tmp/agenthub-explore.pid
     log_ok "Exploration API arrancando en :$EXPLORE_PORT (PID: $EXPLORE_PID)"
