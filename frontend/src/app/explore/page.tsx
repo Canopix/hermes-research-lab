@@ -9,28 +9,27 @@ import HooksTab from "@/components/explore/HooksTab"
 import McpTab from "@/components/explore/McpTab"
 import CronTab from "@/components/explore/CronTab"
 import ConfigTab from "@/components/explore/ConfigTab"
-import { Terminal, Users, Code, Wrench, Server, Clock, Settings, SearchX } from "lucide-react"
 
 export default function ExplorePage() {
   return (
-    <div className="min-h-screen">
+    <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Exploración del Sistema</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Exploración del Sistema</h1>
+        <p className="text-muted-foreground text-sm mt-1">
           Explora todo lo que Hermes tiene configurado: profiles, skills, toolsets, hooks, MCP servers, cron y config.
         </p>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="flex flex-wrap w-full justify-start gap-1">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="profiles">Profiles</TabsTrigger>
-          <TabsTrigger value="skills">Skills</TabsTrigger>
-          <TabsTrigger value="toolsets">Toolsets</TabsTrigger>
-          <TabsTrigger value="hooks">Hooks</TabsTrigger>
-          <TabsTrigger value="mcp">MCP</TabsTrigger>
-          <TabsTrigger value="cron">Cron</TabsTrigger>
-          <TabsTrigger value="config">Config</TabsTrigger>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="flex flex-wrap w-full justify-start gap-1 h-auto p-1 bg-muted/50">
+          <TabsTrigger value="overview" className="text-xs font-medium">Overview</TabsTrigger>
+          <TabsTrigger value="profiles" className="text-xs font-medium">Profiles</TabsTrigger>
+          <TabsTrigger value="skills" className="text-xs font-medium">Skills</TabsTrigger>
+          <TabsTrigger value="toolsets" className="text-xs font-medium">Toolsets</TabsTrigger>
+          <TabsTrigger value="hooks" className="text-xs font-medium">Hooks</TabsTrigger>
+          <TabsTrigger value="mcp" className="text-xs font-medium">MCP</TabsTrigger>
+          <TabsTrigger value="cron" className="text-xs font-medium">Cron</TabsTrigger>
+          <TabsTrigger value="config" className="text-xs font-medium">Config</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">

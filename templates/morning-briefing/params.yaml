@@ -1,0 +1,40 @@
+- name: telegram_bot_token
+  label: Token del bot de Telegram
+  type: secret
+  required: true
+  help: "Creas el bot con @BotFather en Telegram y copias el token"
+
+- name: telegram_chat_id
+  label: Tu ID de Telegram
+  type: text
+  required: true
+  help: "Obtén tu ID con @userinfobot en Telegram"
+
+- name: sources
+  label: Fuentes (URLs, una por línea)
+  type: text
+  required: true
+  help: "Ej: https://elpais.com, https://www.xataka.com, https://feeds.bbci.co.uk"
+
+- name: topics
+  label: Temas de interés
+  type: text
+  required: true
+  help: "Ej: tecnología, bolsa española, inteligencia artificial"
+
+- name: schedule
+  label: Hora del briefing matutino
+  type: select
+  options:
+    - "07:00"
+    - "08:00"
+    - "09:00"
+  default: "08:00"
+
+- name: language
+  label: Idioma
+  type: select
+  options:
+    - español
+    - english
+  default: español

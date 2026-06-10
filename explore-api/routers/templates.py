@@ -1,87 +1,54 @@
-"""Template endpoints: list, detail, preview."""
+"""Template endpoints: list, detail, preview.
+
+Templates live in /root/agenthub/templates/<template_id>/
+Each template has:
+  - soul.md       (required) — the agent's personality + prompt with {{placeholders}}
+  - params.yaml   (optional) — parameter definitions
+  - hermes.yaml   (optional) — technical config (model, toolsets, deliver)
+"""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Body
 
-from services.template_parser import parse_skill_md, scan_templates, render_preview
+from services.template_parser import scan_templates, get_template, render_preview
 
 router = APIRouter(tags=["templates"])
 
 
 @router.get("/api/templates")
 async def list_templates() -> list[dict]:
-    """GET /api/templates — list all available templates (catalog)."""
+    """GET /api/templates — list all available templates."""
     return scan_templates()
 
 
 @router.get("/api/templates/{template_id}")
-async def get_template(template_id: str) -> dict:
-    """GET /api/templates/{template_id} — get template details.
-
-    template_id is the directory name under agenthub-templates."""
-    import os
-    templates_dir = os.path.join(
-        os.path.expanduser("~/.hermes"), "skills", "agenthub-templates", template_id
-    )
-    skill_md = os.path.join(templates_dir, "SKILL.md")
-
-    parsed = parse_skill_md(skill_md)
-    if parsed is None:
-        # Check if file exists but has YAML error vs file not found
-        if os.path.isfile(skill_md):
-            raise HTTPException(
-                status_code=500,
-                detail=f"Template '{template_id}' has a YAML parsing error in SKILL.md",
-            )
+async def get_template_detail(template_id: str) -> dict:
+    """GET /api/templates/{template_id} — get full template details."""
+    tmpl = get_template(template_id)
+    if tmpl is None:
         raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
-
-    return {
-        "id": template_id,
-        "name": parsed["name"],
-        "version": parsed["version"],
-        "description": parsed["description"],
-        "params": parsed["params"],
-        "hermesConfig": parsed["hermes_config"],
-        "body": parsed["body"],
-    }
+    return tmpl
 
 
 @router.post("/api/templates/{template_id}/preview")
 async def preview_template(template_id: str, config: dict = Body(default={})) -> dict:
-    """POST /api/templates/{template_id}/preview — preview with user-provided config.
+    """POST /api/templates/{template_id}/preview — render soul.md with config.
 
-    Renders the prompt replacing {{param_name}} with user-provided config values,
-    falling back to template defaults for any missing keys."""
-    import os
-    templates_dir = os.path.join(
-        os.path.expanduser("~/.hermes"), "skills", "agenthub-templates", template_id
-    )
-    skill_md = os.path.join(templates_dir, "SKILL.md")
-
-    # Parse to get params and defaults
-    parsed = parse_skill_md(skill_md)
-    if parsed is None:
-        # Check if file exists but has YAML error vs file not found
-        if os.path.isfile(skill_md):
-            raise HTTPException(
-                status_code=500,
-                detail=f"Template '{template_id}' has a YAML parsing error in SKILL.md",
-            )
+    Replaces {{param_name}} placeholders with user-provided values,
+    falling back to defaults from params.yaml for any missing keys.
+    """
+    tmpl = get_template(template_id)
+    if tmpl is None:
         raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
 
-    # Merge user config with template defaults: user values override defaults
-    defaults = {p["name"]: p.get("default", "") for p in parsed.get("params", [])}
-    merged = {**defaults, **config}
-
-    rendered = render_preview(skill_md, params=merged)
+    rendered = render_preview(template_id, config)
 
     return {
         "template_id": template_id,
         "prompt": rendered,
         "config": {
-            "params": parsed["params"],
-            "hermesConfig": parsed["hermes_config"],
-            "merged": merged,
+            "params": tmpl["params"],
+            "hermesConfig": tmpl["hermesConfig"],
         },
     }

@@ -1,11 +1,7 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
-  generateBuildId: () => 'build',
-  experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-  },
-}
+  generateBuildId: () => "build",
+};
 
-export default nextConfig
+export default nextConfig;

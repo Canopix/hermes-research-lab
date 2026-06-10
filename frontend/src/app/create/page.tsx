@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Code, Settings2, Sparkles, FileText, ArrowLeft, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { ErrorState } from "@/components/ErrorState";
+import { AnimateIn } from "@/components/AnimateIn";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -210,6 +212,7 @@ function CreateAgentWizard() {
 
       <div className="mt-8 sm:mt-12">
         {wizard.step === 1 && (
+          <AnimateIn key={wizard.step} direction="up" delay={100} duration={300}>
           <div className="space-y-6">
             <div className="flex items-center gap-2 text-lg font-medium">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -236,9 +239,11 @@ function CreateAgentWizard() {
               </div>
             )}
           </div>
+          </AnimateIn>
         )}
 
         {wizard.step === 2 && wizard.selectedTemplate && (
+          <AnimateIn key={wizard.step} direction="up" delay={100} duration={300}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -282,16 +287,18 @@ function CreateAgentWizard() {
                 />
               ))}
             </CardContent>
-            <CardFooter className="flex justify-between border-t pt-6">
+            <CardFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 border-t pt-6">
               <Button variant="ghost" onClick={prevStep}>Atrás</Button>
               <Button onClick={nextStep}>
                 Siguiente <span className="ml-2">→</span>
               </Button>
             </CardFooter>
           </Card>
+          </AnimateIn>
         )}
 
         {wizard.step === 3 && (
+          <AnimateIn key={wizard.step} direction="up" delay={100} duration={300}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             <div className="lg:col-span-2 space-y-6">
               <Card>
@@ -376,9 +383,11 @@ function CreateAgentWizard() {
               </div>
             </div>
           </div>
+          </AnimateIn>
         )}
 
         {wizard.step === 4 && (
+          <AnimateIn key={wizard.step} direction="up" delay={100} duration={300}>
           <Card className="text-center py-12">
             <CardContent className="flex flex-col items-center justify-center space-y-6">
               {wizard.isCreating ? (
@@ -391,51 +400,18 @@ function CreateAgentWizard() {
                   </div>
                 </>
               ) : wizard.error ? (
-                <>
-                  {wizard.errorType === "network" ? (
-                    <AlertTriangle className="h-12 w-12 text-amber-500" />
-                  ) : (
-                    <AlertCircle className="h-12 w-12 text-destructive" />
-                  )}
-                  <div className="space-y-3 max-w-md">
-                    <h2 className="text-2xl font-bold">
-                      {wizard.errorType === "network" ? "Error de conexión" : "Ups, algo salió mal"}
-                    </h2>
-                    {wizard.errorType === "network" ? (
-                      <div className="space-y-2">
-                        <p className="text-muted-foreground">
-                          No se pudo conectar con el servidor. Verifica que Exploration API esté corriendo en :8643.
-                        </p>
-                        <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-2 rounded">
-                          {wizard.error}
-                        </p>
-                      </div>
-                    ) : wizard.errorType === "http" ? (
-                      <div className="space-y-2">
-                        <p className="text-muted-foreground">
-                          El servidor respondió con un error. Revisa la configuración e intenta de nuevo.
-                        </p>
-                        <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-2 rounded">
-                          {wizard.error}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">
-                        {wizard.error}
-                      </p>
-                    )}
-                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                      <Button onClick={nextStep} className="flex-1 sm:flex-initial" variant="default">
-                        <RotateCcw className="h-4 w-4 mr-2" />
-                        Reintentar
-                      </Button>
-                      <Button onClick={prevStep} className="flex-1 sm:flex-initial" variant="outline">
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Volver al Paso 3
-                      </Button>
-                    </div>
-                  </div>
-                </>
+                <ErrorState
+                  title={wizard.errorType === "network" ? "Error de conexión" : "Ups, algo salió mal"}
+                  description={
+                    wizard.errorType === "network"
+                      ? "No se pudo conectar con el servidor. Verifica que Exploration API esté corriendo en :8643."
+                      : wizard.errorType === "http"
+                      ? "El servidor respondió con un error. Revisa la configuración e intenta de nuevo."
+                      : wizard.error
+                  }
+                  retry={nextStep}
+                  action={{ label: "Volver al Paso 3", href: "/create" }}
+                />
               ) : (
                 <>
                   <CheckCircle2 className="h-12 w-12 text-green-500" />
@@ -450,6 +426,7 @@ function CreateAgentWizard() {
               )}
             </CardContent>
           </Card>
+          </AnimateIn>
         )}
       </div>
     </div>

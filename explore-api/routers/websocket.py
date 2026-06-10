@@ -166,13 +166,24 @@ async def stream_hermes_events(base_url: str = "http://localhost:8642", api_key:
     """Subscribe to the Hermes API Server SSE event stream and relay events."""
     headers = {"Authorization": f"Bearer {api_key}", "Accept": "text/event-stream"}
 
+    # First, check if the endpoint exists at all — if not, log once and stop
+    try:
+        async with httpx.AsyncClient(base_url=base_url, headers=headers, timeout=5.0) as client:
+            probe = await client.get("/api/system/events")
+            if probe.status_code == 404:
+                logger.info("Hermes API does not expose /api/system/events — event stream disabled")
+                return
+    except httpx.HTTPError as exc:
+        logger.info("Hermes API not reachable (%s) — event stream disabled", exc)
+        return
+
     while True:
         try:
             async with httpx.AsyncClient(base_url=base_url, headers=headers, timeout=30.0) as client:
                 async with client.stream("GET", "/api/system/events") as response:
                     if response.status_code != 200:
-                        logger.warning("Event stream returned %d, retrying in 5s", response.status_code)
-                        await asyncio.sleep(5)
+                        logger.warning("Event stream returned %d, retrying in 30s", response.status_code)
+                        await asyncio.sleep(30)
                         continue
 
                     async for line in response.aiter_lines():

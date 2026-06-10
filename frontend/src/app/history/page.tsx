@@ -6,7 +6,8 @@ import { Agent, Execution } from '@/lib/types';
 import { ExecutionTable } from '@/components/history/ExecutionTable';
 import { OutputViewer } from '@/components/history/OutputViewer';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowRight, History as HistoryIcon, Bot } from 'lucide-react';
+import { History as HistoryIcon, ArrowRight } from 'lucide-react';
+import { ErrorState } from '@/components/ErrorState';
 import Link from 'next/link';
 
 export default function HistoryPage() {
@@ -21,7 +22,7 @@ export default function HistoryPage() {
       try {
         setLoading(true);
         const [agentsData, allExecutions] = await Promise.all([
-          getJobs(),
+          getJobs(), 
           searchSessions('') 
         ]);
         
@@ -42,8 +43,8 @@ export default function HistoryPage() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="space-y-2 text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+        <div className="space-y-3 text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto" />
           <p className="text-muted-foreground text-sm">Cargando historial...</p>
         </div>
       </div>
@@ -52,32 +53,30 @@ export default function HistoryPage() {
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center space-y-4">
-          <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
-          <h2 className="text-xl font-semibold">{error}</h2>
-          <Button onClick={() => window.location.reload()}>Reintentar</Button>
-        </div>
-      </div>
+      <ErrorState
+        title="Error al cargar el historial"
+        description={error}
+        retry={() => window.location.reload()}
+      />
     );
   }
 
   if (executions.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-center space-y-6 max-w-md p-8 bg-card rounded-xl border shadow-sm">
-          <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-            <HistoryIcon className="w-8 h-8 text-muted-foreground" />
+        <div className="text-center space-y-5 max-w-sm p-8 bg-card rounded-xl border border-border shadow-xs">
+          <div className="bg-muted w-14 h-14 rounded-2xl flex items-center justify-center mx-auto">
+            <HistoryIcon className="w-7 h-7 text-muted-foreground" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold">No hay ejecuciones aún</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-xl font-bold text-foreground">No hay ejecuciones aún</h2>
+            <p className="text-muted-foreground text-sm leading-relaxed">
               Parece que aún no has ejecutado ningún agente. Crea un agente para empezar a generar outputs.
             </p>
           </div>
           <Link href="/create">
-            <Button className="w-full">
-              Crear un Agente <ArrowRight className="ml-2 w-4 h-4" />
+            <Button size="sm">
+              Crear un Agente <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -86,10 +85,10 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="container mx-auto py-4 sm:py-8 space-y-6 sm:space-y-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Historial de Ejecuciones</h1>
-        <p className="text-muted-foreground">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Historial de Ejecuciones</h1>
+        <p className="text-muted-foreground text-sm">
           Monitorea y revisa todas las actividades y outputs de tus agentes.
         </p>
       </div>

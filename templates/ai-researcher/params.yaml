@@ -1,0 +1,37 @@
+- name: sources
+  label: Fuentes (URLs, una por línea)
+  type: text
+  required: true
+  help: "Ej: https://arxiv.org, https://news.ycombinator.com, https://huggingface.co/blog"
+
+- name: topics
+  label: Temas de interés
+  type: text
+  required: true
+  help: "Ej: LLMs, RAG, multimodal, agentic AI"
+
+- name: output_format
+  label: Formato de salida
+  type: select
+  options:
+    - resumen
+    - thread
+    - blog
+  default: resumen
+
+- name: frequency
+  label: Frecuencia de ejecución
+  type: select
+  options:
+    - diario
+    - cada 12h
+    - semanal
+  default: diario
+
+- name: language
+  label: Idioma
+  type: select
+  options:
+    - español
+    - english
+  default: español

@@ -18,34 +18,17 @@ const routeNames: Record<string, string> = {
 
 function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
   const parts = pathname.split('/').filter(Boolean)
-
-  // If no path segments, just Home
   if (parts.length === 0) {
     return [{ label: 'Home', href: '/' }]
   }
 
   const crumbs: { label: string; href: string }[] = [{ label: 'Home', href: '/' }]
-
-  // Walk segments, building the path progressively
   let accumulated = ''
   for (let i = 0; i < parts.length; i++) {
     accumulated += '/' + parts[i]
     const key = parts[i]
     const label = routeNames[key] || key.charAt(0).toUpperCase() + key.slice(1)
-
-    // If this segment is the last one, use it as-is
-    if (i === parts.length - 1) {
-      crumbs.push({ label, href: accumulated })
-      break
-    }
-
-    // Check if accumulated path matches a known route
-    if (routeNames[parts[i]]) {
-      crumbs.push({ label, href: accumulated })
-    } else {
-      // Sub-route under a known parent — just show the accumulated path
-      crumbs.push({ label, href: accumulated })
-    }
+    crumbs.push({ label, href: accumulated })
   }
 
   return crumbs
@@ -76,19 +59,21 @@ function ApiStatusIndicator() {
   }, [checkApi])
 
   return (
-    <div className="flex items-center gap-1.5 text-xs">
+    <div className="flex items-center gap-2 text-xs font-medium">
       {online === true ? (
         <>
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
           </span>
-          <span className="text-muted-foreground hidden sm:inline">API Online</span>
+          <span className="text-muted-foreground hidden sm:inline">Online</span>
         </>
       ) : (
         <>
-          <WifiOff className="h-3.5 w-3.5 text-error" />
-          <span className="text-muted-foreground hidden sm:inline">API Offline</span>
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-error"></span>
+          </span>
+          <span className="text-muted-foreground hidden sm:inline">Offline</span>
         </>
       )}
     </div>
@@ -101,7 +86,6 @@ function DarkModeToggle() {
   const [dark, setDark] = useState(false)
 
   useEffect(() => {
-    // Check initial state
     const isDark = document.documentElement.classList.contains('dark')
     setDark(isDark)
   }, [])
@@ -121,13 +105,13 @@ function DarkModeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggle}
-      className="h-11 w-11 min-w-[44px] min-h-[44px]"
+      className="h-9 w-9 min-w-[44px] min-h-[44px] rounded-lg"
       title={dark ? 'Modo claro' : 'Modo oscuro'}
     >
       {dark ? (
-        <Sun className="h-4.5 w-4.5" />
+        <Sun className="h-4 w-4" />
       ) : (
-        <Moon className="h-4.5 w-4.5" />
+        <Moon className="h-4 w-4" />
       )}
     </Button>
   )
@@ -140,30 +124,30 @@ export default function Header() {
   const breadcrumbs = getBreadcrumbs(pathname || '/')
 
   return (
-    <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30 px-3 sm:px-6 flex items-center justify-between gap-4">
+    <header className="h-14 sm:h-15 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between gap-4">
       {/* Left: breadcrumbs */}
-      <div className="flex items-center gap-3 min-w-0">
-        <nav className="flex items-center gap-1.5 text-sm">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <nav className="flex items-center gap-1.5 text-sm overflow-hidden">
           {breadcrumbs.map((crumb, idx) => (
-            <span key={crumb.href} className="flex items-center gap-1.5">
+            <span key={crumb.href} className="flex items-center gap-1.5 flex-shrink-0">
               {idx > 0 && (
-                <span className="text-muted-foreground/50 mx-0.5">/</span>
+                <span className="text-muted-foreground/40 mx-1 flex-shrink-0">/</span>
               )}
               {idx === 0 ? (
                 <a
                   href={crumb.href}
-                  className="text-muted-foreground hover:text-primary transition-colors truncate"
+                  className="text-muted-foreground hover:text-foreground transition-colors truncate"
                 >
                   Home
                 </a>
               ) : idx === breadcrumbs.length - 1 ? (
-                <span className="font-semibold text-foreground truncate max-w-[120px] sm:max-w-none">
+                <span className="font-semibold text-foreground truncate max-w-[80px] sm:max-w-[160px] md:max-w-none">
                   {crumb.label}
                 </span>
               ) : (
                 <a
                   href={crumb.href}
-                  className="text-muted-foreground hover:text-primary transition-colors truncate"
+                  className="text-muted-foreground hover:text-foreground transition-colors truncate"
                 >
                   {crumb.label}
                 </a>
@@ -173,36 +157,37 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* Right: search, API status, dark mode, notifications, avatar */}
-      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+      {/* Right: API status, dark mode, notifications, avatar */}
+      <div className="flex items-center gap-2 flex-shrink-0">
         {/* API Status */}
         <ApiStatusIndicator />
 
         {/* Search */}
-        <div className="relative w-40 sm:w-56 hidden md:block">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="relative w-48 sm:w-60 hidden md:block">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Buscar agentes..."
-            className="pl-8 h-11 w-full bg-muted/50 min-h-[44px]"
+            className="pl-9 h-9 bg-muted/50 border-border text-sm"
           />
         </div>
+
+        {/* Separator */}
+        <div className="w-px h-6 bg-border hidden sm:block" />
 
         {/* Dark mode toggle */}
         <DarkModeToggle />
 
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative h-11 w-11 min-w-[44px] min-h-[44px]">
-          <Bell className="h-4.5 w-4.5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
+        <Button variant="ghost" size="icon" className="relative h-9 w-9 min-w-[44px] min-h-[44px] rounded-lg">
+          <Bell className="h-4 w-4" />
+          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
         </Button>
 
         {/* Avatar */}
-        <Button variant="ghost" size="icon" className="h-11 w-11 min-w-[44px] min-h-[44px]">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-xs font-medium text-primary-foreground">
-            JD
-          </div>
-        </Button>
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-xs font-bold text-primary-foreground shadow-sm">
+          N
+        </div>
       </div>
     </header>
   )

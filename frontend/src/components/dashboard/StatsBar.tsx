@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { AnimateIn } from "@/components/AnimateIn"
 
 interface StatsCardProps {
   title: string
@@ -17,34 +16,35 @@ interface StatsCardProps {
   }
 }
 
-const colorMap: Record<string, { from: string; to: string; icon: string; text: string; ring: string }> = {
+const colorMap: Record<string, {
+  iconBg: string
+  iconColor: string
+  valueColor: string
+  borderColor: string
+}> = {
   blue: {
-    from: 'from-blue-500/10',
-    to: 'to-transparent',
-    icon: 'bg-blue-500/15 text-blue-500',
-    text: 'text-blue-500',
-    ring: 'ring-blue-500/20',
+    iconBg: 'bg-primary/10 dark:bg-primary/15',
+    iconColor: 'text-primary',
+    valueColor: 'text-foreground',
+    borderColor: 'border-l-primary',
   },
   green: {
-    from: 'from-emerald-500/10',
-    to: 'to-transparent',
-    icon: 'bg-emerald-500/15 text-emerald-500',
-    text: 'text-emerald-500',
-    ring: 'ring-emerald-500/20',
+    iconBg: 'bg-success/10 dark:bg-success/15',
+    iconColor: 'text-success',
+    valueColor: 'text-foreground',
+    borderColor: 'border-l-success',
   },
   purple: {
-    from: 'from-violet-500/10',
-    to: 'to-transparent',
-    icon: 'bg-violet-500/15 text-violet-500',
-    text: 'text-violet-500',
-    ring: 'ring-violet-500/20',
+    iconBg: 'bg-[oklch(0.55_0.18_300)]/10 dark:bg-[oklch(0.55_0.18_300)]/15',
+    iconColor: 'text-[oklch(0.55_0.18_300)]',
+    valueColor: 'text-foreground',
+    borderColor: 'border-l-[oklch(0.55_0.18_300)]',
   },
   amber: {
-    from: 'from-amber-500/10',
-    to: 'to-transparent',
-    icon: 'bg-amber-500/15 text-amber-500',
-    text: 'text-amber-500',
-    ring: 'ring-amber-500/20',
+    iconBg: 'bg-warning/10 dark:bg-warning/15',
+    iconColor: 'text-warning',
+    valueColor: 'text-foreground',
+    borderColor: 'border-l-warning',
   },
 }
 
@@ -52,42 +52,46 @@ const defaultColor = colorMap.blue
 
 export function StatsBar({ stats }: { stats: StatsCardProps[] }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat, i) => {
+    <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+      {stats.map((stat) => {
         const colors = stat.accentColor ? (colorMap[stat.accentColor] || defaultColor) : defaultColor
         return (
-          <AnimateIn key={stat.title} delay={i * 100} direction="up" duration={400}>
-            <Card
-              className={cn(
-                "bg-gradient-to-br transition-all duration-200 hover:scale-[1.02] hover:shadow-lg cursor-default",
-                colors.from
+          <Card
+            key={stat.title}
+            className={cn(
+              "group transition-all duration-200 hover:shadow-md border-l-[3px] cursor-default",
+              colors.borderColor
+            )}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {stat.title}
+              </CardTitle>
+              <div className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-lg transition-transform group-hover:scale-110",
+                colors.iconBg
+              )}>
+                <stat.icon className={cn("h-4 w-4", colors.iconColor)} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className={cn("text-2xl font-bold tracking-tight", colors.valueColor)}>
+                {stat.value}
+              </div>
+              {stat.description && (
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               )}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className={cn("text-sm font-medium", colors.text)}>
-                  {stat.title}
-                </CardTitle>
-                <div className={cn("flex h-8 w-8 items-center justify-center rounded-full", colors.icon)}>
-                  <stat.icon className="h-4 w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                {stat.description && (
-                  <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-                )}
-                {stat.trend && (
-                  <p className={cn(
-                    "text-xs mt-1",
-                    stat.trend.isPositive ? "text-emerald-500" : "text-red-500"
-                  )}>
-                    {stat.trend.isPositive ? "+" : "−"}{stat.trend.value}{" "}
-                    <span className="text-muted-foreground">desde ayer</span>
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </AnimateIn>
+              {stat.trend && (
+                <p className={cn(
+                  "text-xs mt-1 font-medium",
+                  stat.trend.isPositive ? "text-success" : "text-error"
+                )}>
+                  {stat.trend.isPositive ? "+" : "−"}{stat.trend.value}{" "}
+                  <span className="text-muted-foreground font-normal">desde ayer</span>
+                </p>
+              )}
+            </CardContent>
+          </Card>
         )
       })}
     </div>

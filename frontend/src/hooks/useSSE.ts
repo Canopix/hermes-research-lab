@@ -19,22 +19,15 @@ export interface UseSSEReturn {
 
 // --- Constants ---
 
-const INITIAL_RETRY_DELAY = 1_000       // 1s
-const MAX_RETRY_DELAY = 30_000           // 30s
+const INITIAL_RETRY_DELAY = 2_000       // 2s
+const MAX_RETRY_DELAY = 60_000           // 60s
 const RETRY_BACKOFF_FACTOR = 2
-const POLLING_INTERVAL = 5_000           // 5s fallback polling
+const MAX_RETRY_ATTEMPTS = 5             // stop after 5 failures
+const POLLING_INTERVAL = 10_000          // 10s fallback polling
+const CONNECTION_TIMEOUT = 8_000         // 8s timeout for SSE open
 
 // --- Helpers ---
 
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-/**
- * Build SSE URL.
- * baseUrl is the proxy prefix (e.g. "/api/explore") which resolves
- * relative to the same origin — works from any network.
- */
 function buildSSEUrl(baseUrl: string, runId: string): string {
   const separator = baseUrl.includes('?') ? '&' : '?'
   return `${baseUrl}/api/jobs/${runId}/events${separator}encoding=json`
@@ -56,56 +49,70 @@ export function useSSE(
   const retryCountRef = useRef(0)
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onEventRef = useRef(onEvent)
+  const stoppedRef = useRef(false)
 
-  // Keep callback ref in sync
   useEffect(() => {
     onEventRef.current = onEvent
   }, [onEvent])
 
-  const stopConnection = useCallback(() => {
-    // Close EventSource
+  const cleanup = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close()
       eventSourceRef.current = null
     }
-    // Clear retry timeout
     if (retryTimeoutRef.current) {
       clearTimeout(retryTimeoutRef.current)
       retryTimeoutRef.current = null
     }
-    // Stop polling fallback
     if (pollingRef.current) {
       clearInterval(pollingRef.current)
       pollingRef.current = null
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
     }
     retryCountRef.current = 0
     setIsConnected(false)
   }, [])
 
   const startSSE = useCallback(() => {
-    if (!runId) return
+    if (!runId || stoppedRef.current) return
 
     const url = buildSSEUrl(baseUrl, runId)
 
-    // Close any existing connection first
-    stopConnection()
+    cleanup()
 
     try {
       const es = new EventSource(url)
       eventSourceRef.current = es
 
+      // Connection timeout — if SSE doesn't open in time, treat as failure
+      timeoutRef.current = setTimeout(() => {
+        if (es.readyState !== EventSource.OPEN) {
+          es.close()
+          eventSourceRef.current = null
+          retryConnection()
+        }
+      }, CONNECTION_TIMEOUT)
+
       es.onopen = () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current)
+          timeoutRef.current = null
+        }
         setIsConnected(true)
         setError(null)
         retryCountRef.current = 0
       }
 
-      es.addEventListener('token', (e: MessageEvent) => {
+      const handleMessage = (type: SSEEvent['type']) => (e: MessageEvent) => {
         try {
           const parsed = JSON.parse(e.data)
           const event: SSEEvent = {
-            type: 'token',
+            type,
             data: parsed,
             timestamp: new Date().toISOString(),
           }
@@ -114,89 +121,64 @@ export function useSSE(
         } catch {
           // ignore parse errors
         }
-      })
+      }
 
-      es.addEventListener('tool_start', (e: MessageEvent) => {
-        try {
-          const parsed = JSON.parse(e.data)
-          const event: SSEEvent = {
-            type: 'tool_start',
-            data: parsed,
-            timestamp: new Date().toISOString(),
-          }
-          setLastEvent(event)
-          onEventRef.current(event)
-        } catch {
-          // ignore parse errors
-        }
-      })
+      es.addEventListener('token', handleMessage('token'))
+      es.addEventListener('tool_start', handleMessage('tool_start'))
+      es.addEventListener('tool_end', handleMessage('tool_end'))
+      es.addEventListener('lifecycle', handleMessage('lifecycle'))
 
-      es.addEventListener('tool_end', (e: MessageEvent) => {
-        try {
-          const parsed = JSON.parse(e.data)
-          const event: SSEEvent = {
-            type: 'tool_end',
-            data: parsed,
-            timestamp: new Date().toISOString(),
-          }
-          setLastEvent(event)
-          onEventRef.current(event)
-        } catch {
-          // ignore parse errors
-        }
-      })
-
-      es.addEventListener('lifecycle', (e: MessageEvent) => {
-        try {
-          const parsed = JSON.parse(e.data)
-          const event: SSEEvent = {
-            type: 'lifecycle',
-            data: parsed,
-            timestamp: new Date().toISOString(),
-          }
-          setLastEvent(event)
-          onEventRef.current(event)
-        } catch {
-          // ignore parse errors
-        }
-      })
-
-      es.onerror = async () => {
+      es.onerror = () => {
         setIsConnected(false)
-
-        // If the connection is explicitly closed (not an error), don't retry
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current)
+          timeoutRef.current = null
+        }
         if (es.readyState === EventSource.CLOSED) return
-
-        setError('SSE connection lost — attempting to reconnect')
-
-        // Exponential backoff: 1s -> 2s -> 4s -> 8s -> 16s -> 30s (max)
-        const delayMs = Math.min(
-          INITIAL_RETRY_DELAY * Math.pow(RETRY_BACKOFF_FACTOR, retryCountRef.current),
-          MAX_RETRY_DELAY,
-        )
-        retryCountRef.current += 1
-
-        retryTimeoutRef.current = setTimeout(() => {
-          startSSE()
-        }, delayMs)
+        retryConnection()
       }
     } catch (err) {
       setError(`Failed to connect SSE: ${err instanceof Error ? err.message : String(err)}`)
     }
-  }, [baseUrl, runId, stopConnection])
+  }, [baseUrl, runId, cleanup])
 
-  // Fallback polling: query /api/jobs/{id}/run every 5s when SSE is unavailable
+  const retryConnection = useCallback(() => {
+    if (stoppedRef.current) return
+
+    // Stop retrying after max attempts
+    if (retryCountRef.current >= MAX_RETRY_ATTEMPTS) {
+      setError('SSE connection failed — max retries reached')
+      // Start polling as final fallback
+      startPolling()
+      return
+    }
+
+    const delayMs = Math.min(
+      INITIAL_RETRY_DELAY * Math.pow(RETRY_BACKOFF_FACTOR, retryCountRef.current),
+      MAX_RETRY_DELAY,
+    )
+    retryCountRef.current += 1
+
+    retryTimeoutRef.current = setTimeout(() => {
+      if (!stoppedRef.current) {
+        startSSE()
+      }
+    }, delayMs)
+  }, [startSSE])
+
+  // Polling fallback — only as last resort, not simultaneous with SSE
   const startPolling = useCallback(() => {
-    if (!runId) return
+    if (!runId || pollingRef.current) return
     const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'agenthub-local'
 
     const fetchStatus = async () => {
+      if (stoppedRef.current) return
       try {
         const res = await fetch(`${baseUrl}/api/jobs/${runId}/run`, {
           headers: { 'Authorization': `Bearer ${API_KEY}` },
+          signal: AbortSignal.timeout(5000),
         })
         if (!res.ok) return
-
         const data = await res.json()
         const event: SSEEvent = {
           type: 'lifecycle',
@@ -209,42 +191,29 @@ export function useSSE(
       }
     }
 
-    fetchStatus() // immediate first poll
+    fetchStatus()
     pollingRef.current = setInterval(fetchStatus, POLLING_INTERVAL)
   }, [baseUrl, runId])
 
-  const stopPolling = useCallback(() => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current)
-      pollingRef.current = null
-    }
-  }, [])
-
-  // Main effect: manage SSE lifecycle
   useEffect(() => {
     if (!enabled || !runId) {
-      stopConnection()
-      stopPolling()
+      cleanup()
       return
     }
 
-    // Try SSE first; if it fails, fall back to polling
+    stoppedRef.current = false
     startSSE()
 
-    // Start polling as a backup (it won't fire events if SSE succeeds,
-    // but provides a safety net if SSE drops)
-    startPolling()
-
     return () => {
-      stopConnection()
-      stopPolling()
+      stoppedRef.current = true
+      cleanup()
     }
-  }, [runId, enabled, startSSE, startPolling, stopConnection, stopPolling])
+  }, [runId, enabled])
 
-  // Expose reconnect function
   const reconnect = useCallback(() => {
     retryCountRef.current = 0
     setError(null)
+    stoppedRef.current = false
     startSSE()
   }, [startSSE])
 

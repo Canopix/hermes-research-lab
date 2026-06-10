@@ -1,4 +1,4 @@
-"""Parse SKILL.md frontmatter YAML for template metadata."""
+"""Parse template directories: soul.md + params.yaml + hermes.yaml."""
 
 from __future__ import annotations
 
@@ -9,23 +9,28 @@ from pathlib import Path
 import yaml
 
 
-# Icon map: derive icon from skill name keywords
+TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "templates")
+
+# Icon map: derive icon from template name/keywords
 ICON_MAP = {
-    "research": "\U0001f52c",
-    "monitor": "\U0001f4e6",
-    "watch": "\U0001f440",
-    "paper": "\U0001f4dc",
-    "summar": "\U0001f4d0",
-    "competitor": "\U0001f3ae",
-    "ai": "\U0001f916",
-    "github": "\U0001f419",
-    "blog": "\U0001f4dd",
-    "default": "\U0001f4e9",
+    "morning": "☀️",
+    "brief": "☀️",
+    "research": "🔬",
+    "monitor": "📦",
+    "watch": "👀",
+    "paper": "📜",
+    "summar": "📊",
+    "competitor": "🎮",
+    "ai": "🤖",
+    "github": "🐙",
+    "blog": "📝",
+    "alert": "🚨",
+    "social": "💬",
+    "default": "📦",
 }
 
 
 def _derive_icon(name: str) -> str:
-    """Derive an emoji icon from the skill name."""
     lower = name.lower()
     for keyword, icon in ICON_MAP.items():
         if keyword in lower:
@@ -33,145 +38,153 @@ def _derive_icon(name: str) -> str:
     return ICON_MAP["default"]
 
 
-def parse_skill_md(skill_path):
-    """Parse a SKILL.md file and extract frontmatter YAML + metadata."""
-    path = Path(skill_path)
+def load_soul(soul_path: str) -> str | None:
+    """Read soul.md — the prompt body with {{placeholders}}."""
+    path = Path(soul_path)
     if not path.is_file():
         return None
-
     try:
-        content = path.read_text(encoding="utf-8")
+        return path.read_text(encoding="utf-8")
     except OSError:
         return None
 
-    # Extract YAML frontmatter between --- delimiters
-    fm_pattern = re.compile(r'^---\n(.*?)\n---\n(.*)', re.DOTALL)
-    match = fm_pattern.match(content)
-    if not match:
-        return {
-            "name": path.parent.name,
-            "version": "0.0.0",
-            "description": "",
-            "metadata": {},
-            "params": [],
-            "hermes_config": {},
-            "body": content,
-        }
 
+def load_params(params_path: str) -> list[dict]:
+    """Read params.yaml — list of parameter definitions."""
+    path = Path(params_path)
+    if not path.is_file():
+        return []
     try:
-        frontmatter = yaml.safe_load(match.group(1))
-    except yaml.YAMLError:
-        return None
-
-    if not isinstance(frontmatter, dict):
-        return None
-
-    body = match.group(2)
-
-    # Params are at top level of frontmatter (per spec)
-    params = frontmatter.get("params", [])
-    if not isinstance(params, list):
-        params = []
-
-    # hermes_config at top level
-    hermes_config = frontmatter.get("hermes_config", {})
-    if not isinstance(hermes_config, dict):
-        hermes_config = {}
-
-    return {
-        "name": frontmatter.get("name", path.parent.name),
-        "version": frontmatter.get("version", "0.0.0"),
-        "description": frontmatter.get("description", ""),
-        "metadata": frontmatter,
-        "params": params,
-        "hermes_config": hermes_config,
-        "body": body,
-    }
+        content = path.read_text(encoding="utf-8")
+        data = yaml.safe_load(content)
+        if isinstance(data, list):
+            return data
+        return []
+    except (yaml.YAMLError, OSError):
+        return []
 
 
-def scan_templates(hermes_home=None):
-    """Scan ~/.hermes/skills/ for SKILL.md files with category: agenthub-template.
+def load_hermes_config(hermes_path: str) -> dict:
+    """Read hermes.yaml — technical config (model, toolsets, deliver, etc.)."""
+    path = Path(hermes_path)
+    if not path.is_file():
+        return {}
+    try:
+        content = path.read_text(encoding="utf-8")
+        data = yaml.safe_load(content)
+        if isinstance(data, dict):
+            return data
+        return {}
+    except (yaml.YAMLError, OSError):
+        return {}
 
-    Walks the skills directory tree, parses each SKILL.md, and returns only
-    those whose frontmatter contains category == 'agenthub-template'.
+
+def scan_templates(templates_dir: str | None = None) -> list[dict]:
+    """Scan /root/agenthub/templates/ for template directories.
+
+    Each directory must contain at least a soul.md to be considered a template.
+    Returns a sorted list of template summaries.
     """
-    if hermes_home is None:
-        hermes_home = os.path.join(os.path.expanduser("~/.hermes"), "skills")
+    if templates_dir is None:
+        templates_dir = TEMPLATES_DIR
 
     result = []
-    skills_path = Path(hermes_home)
-    if not skills_path.is_dir():
+    base = Path(templates_dir)
+    if not base.is_dir():
         return result
 
-    for skill_md in skills_path.rglob("SKILL.md"):
-        parsed = parse_skill_md(skill_md)
-        if parsed is None:
+    for entry in sorted(base.iterdir()):
+        if not entry.is_dir():
             continue
 
-        # Check category in frontmatter
-        metadata = parsed.get("metadata", {})
-        if not isinstance(metadata, dict):
-            continue
-        if metadata.get("category") != "agenthub-template":
+        template_id = entry.name
+        soul_path = entry / "soul.md"
+
+        if not soul_path.is_file():
             continue
 
-        template_id = skill_md.parent.name
+        soul = load_soul(str(soul_path))
+        if soul is None:
+            continue
+
+        params = load_params(str(entry / "params.yaml"))
+        hermes_config = load_hermes_config(str(entry / "hermes.yaml"))
+
+        # Extract a short description from the first line of soul.md
+        first_line = soul.strip().split("\n")[0] if soul.strip() else ""
+        description = first_line.lstrip("#").strip() if first_line else template_id
+
         result.append({
             "id": template_id,
-            "name": parsed["name"],
-            "description": parsed["description"],
-            "icon": _derive_icon(parsed["name"]),
-            "params": parsed["params"],
-            "hermesConfig": parsed["hermes_config"],
+            "name": template_id,
+            "description": description,
+            "icon": _derive_icon(template_id),
+            "params": params,
+            "hermesConfig": hermes_config,
         })
 
     return sorted(result, key=lambda t: t["name"])
 
 
-def render_preview(skill_path, params=None):
-    """Render the SKILL.md body replacing {{param_name}} with values."""
-    path = Path(skill_path)
-    if not path.is_file():
+def get_template(template_id: str, templates_dir: str | None = None) -> dict | None:
+    """Get full template data by ID."""
+    if templates_dir is None:
+        templates_dir = TEMPLATES_DIR
+
+    base = Path(templates_dir) / template_id
+    soul_path = base / "soul.md"
+
+    if not soul_path.is_file():
+        return None
+
+    soul = load_soul(str(soul_path))
+    if soul is None:
+        return None
+
+    params = load_params(str(base / "params.yaml"))
+    hermes_config = load_hermes_config(str(base / "hermes.yaml"))
+
+    first_line = soul.strip().split("\n")[0] if soul.strip() else ""
+    description = first_line.lstrip("#").strip() if first_line else template_id
+
+    return {
+        "id": template_id,
+        "name": template_id,
+        "description": description,
+        "icon": _derive_icon(template_id),
+        "params": params,
+        "hermesConfig": hermes_config,
+        "body": soul,
+    }
+
+
+def render_preview(template_id: str, config: dict | None = None, templates_dir: str | None = None) -> str:
+    """Render the soul.md replacing {{param_name}} with values.
+
+    Falls back to parameter defaults for any missing keys.
+    """
+    if templates_dir is None:
+        templates_dir = TEMPLATES_DIR
+
+    base = Path(templates_dir) / template_id
+    soul_path = base / "soul.md"
+
+    soul = load_soul(str(soul_path))
+    if soul is None:
         return ""
 
-    try:
-        content = path.read_text(encoding="utf-8")
-    except OSError:
-        return ""
+    # Load defaults from params.yaml
+    params = load_params(str(base / "params.yaml"))
+    defaults = {p["name"]: p.get("default", "") for p in params if isinstance(p, dict)}
 
-    fm_pattern = re.compile(r'^---\n(.*?)\n---\n(.*)', re.DOTALL)
-    match = fm_pattern.match(content)
-    if not match:
-        return content
-
-    try:
-        frontmatter = yaml.safe_load(match.group(1))
-    except yaml.YAMLError:
-        return match.group(2)
-
-    body = match.group(2)
-    if not isinstance(frontmatter, dict):
-        return body
-
-    # Build a values map: explicit params > defaults from frontmatter > empty
-    param_defs = frontmatter.get("params", [])
-    if not isinstance(param_defs, list):
-        param_defs = []
-
-    defaults = {}
-    for pdef in param_defs:
-        if isinstance(pdef, dict):
-            pname = pdef.get("name", "")
-            if pname:
-                defaults[pname] = pdef.get("default", "")
-
-    # Merge explicit params over defaults
-    if params is None:
-        params = {}
-    values = {**defaults, **params}
+    # Merge: user config overrides defaults
+    if config is None:
+        config = {}
+    values = {**defaults, **config}
 
     # Replace {{param_name}} placeholders
+    body = soul
     for name, value in values.items():
-        body = body.replace("{{" + name + "}}", str(value) if value else "")
+        body = body.replace("{{" + name + "}}", str(value) if value is not None else "")
 
     return body
