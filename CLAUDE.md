@@ -25,7 +25,7 @@ hooks/                 — Gateway hooks for monitoring
   agent-monitor/       — Activity logging hook
 scripts/               — Setup, start, demo scripts
 docs/                  — Architecture and task docs
-frontend/              — Next.js frontend (pending P1)
+frontend/              — Next.js frontend (P1 DONE)
 ```
 
 ## Quick Start
