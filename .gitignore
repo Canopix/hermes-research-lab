@@ -39,3 +39,6 @@ coverage/
 
 # Planning (local only, not shared via git)
 PHASES.md
+
+# AgentHub plugin ships a hand-written (non-built) dist bundle
+!plugin/agenthub/dashboard/dist/
