@@ -2,12 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-BASE_DIR="/root/agenthub"
-EXPLORE_API_DIR="$BASE_DIR/explore-api"
-FRONTEND_DIR="$BASE_DIR/frontend"
-SKILLS_DIR="$HOME/.hermes/skills/agenthub-templates"
-HOOK_DIR="$HOME/.hermes/hooks/agent-monitor"
+# shellcheck source=common.sh
+source "$SCRIPT_DIR/common.sh"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -21,6 +17,7 @@ log_info(){ echo -e "[INFO] $1"; }
 
 echo "=============================================="
 echo "  AgentHub Setup"
+echo "  Project: $PROJECT_DIR"
 echo "=============================================="
 echo ""
 
@@ -43,22 +40,16 @@ else
     exit 1
 fi
 
-HERMES_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8642/health 2>/dev/null || echo "000")
+HERMES_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${HERMES_PORT}/health" 2>/dev/null || echo "000")
 if [ "$HERMES_HEALTH" = "200" ]; then
-    log_ok "Hermes API Server corriendo en :8642"
+    log_ok "Hermes API Server corriendo en :${HERMES_PORT}"
 else
-    log_warn "Hermes API Server no responde en :8642"
-    log_info "Habilitando API Server en config del perfil actual..."
-    hermes config set api_server.enabled true 2>/dev/null || true
-    hermes config set api_server.port 8642 2>/dev/null || true
-    hermes config set api_server.api_server_key "agenthub-local" 2>/dev/null || true
-    hermes config set api_server.cors_origins '["http://localhost:3000"]' 2>/dev/null || true
-    log_info "Reiniciando gateway para aplicar cambios..."
-    hermes gateway restart 2>/dev/null || log_warn "No se pudo reiniciar el gateway automáticamente. Ejecuta: hermes gateway restart"
-    sleep 3
-    HERMES_HEALTH2=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8642/health 2>/dev/null || echo "000")
-    if [ "$HERMES_HEALTH2" = "200" ]; then
-        log_ok "Hermes API Server habilitado y corriendo en :8642"
+    log_warn "Hermes API Server no responde en :${HERMES_PORT}"
+    while IFS= read -r line; do
+        log_info "$line"
+    done < <(ensure_hermes_api_server)
+    if hermes_api_health_ok; then
+        log_ok "Hermes API Server habilitado y corriendo en :${HERMES_PORT}"
     else
         log_warn "Hermes API Server aún no disponible. Verifica con: hermes gateway status"
     fi
@@ -100,12 +91,12 @@ else
 fi
 
 log_info "Instalando templates como skills de Hermes..."
-if [ -d "$SKILLS_DIR" ]; then
+if [ -d "$SKILLS_DIR" ] && [ "$(ls -A "$SKILLS_DIR" 2>/dev/null)" ]; then
     log_ok "Templates ya instalados en $SKILLS_DIR"
 else
     mkdir -p "$SKILLS_DIR"
-    if [ -d "$BASE_DIR/templates" ]; then
-        cp -r "$BASE_DIR/templates/"* "$SKILLS_DIR/" 2>/dev/null || true
+    if [ -d "$TEMPLATES_DIR" ]; then
+        cp -r "$TEMPLATES_DIR/"* "$SKILLS_DIR/" 2>/dev/null || true
     fi
     log_ok "Templates instalados en $SKILLS_DIR"
 fi
@@ -115,20 +106,21 @@ if [ -f "$HOOK_DIR/HOOK.yaml" ]; then
     log_ok "Hook agent-monitor ya instalado en $HOOK_DIR"
 else
     mkdir -p "$HOOK_DIR"
-    if [ -d "$BASE_DIR/hooks" ]; then
-        cp -r "$BASE_DIR/hooks/"* "$HOOK_DIR/" 2>/dev/null || true
+    if [ -d "$HOOKS_DIR/agent-monitor" ]; then
+        cp -r "$HOOKS_DIR/agent-monitor/"* "$HOOK_DIR/" 2>/dev/null || true
     fi
     log_ok "Hook agent-monitor instalado"
 fi
 
 log_info "Configurando CLI agenthub..."
-chmod +x "$BASE_DIR/scripts/agenthub.py"
-ln -sf "$BASE_DIR/scripts/agenthub.py" /usr/local/bin/agenthub
-log_ok "CLI agenthub instalado en /usr/local/bin/agenthub"
+CLI_PATH=$(install_agenthub_cli) && log_ok "CLI agenthub instalado en $CLI_PATH" || log_warn "No se pudo instalar el CLI en PATH — usa: python3 $PROJECT_DIR/scripts/agenthub.py"
+if [[ ":$PATH:" != *":${HOME}/.local/bin:"* ]]; then
+    log_warn "Asegúrate de tener ~/.local/bin en PATH"
+fi
 
-if [ ! -f "$BASE_DIR/.env" ]; then
-    if [ -f "$BASE_DIR/.env.example" ]; then
-        cp "$BASE_DIR/.env.example" "$BASE_DIR/.env"
+if [ ! -f "$PROJECT_DIR/.env" ]; then
+    if [ -f "$PROJECT_DIR/.env.example" ]; then
+        cp "$PROJECT_DIR/.env.example" "$PROJECT_DIR/.env"
         log_ok ".env creado desde .env.example"
     else
         log_warn "No se encontró .env.example"
@@ -143,8 +135,9 @@ echo -e "  ${GREEN}Setup completado${NC}"
 echo "=============================================="
 echo ""
 echo "  Siguientes pasos:"
-echo "    cd $BASE_DIR"
+echo "    cd $PROJECT_DIR"
 echo "    agenthub start    # Levanta Exploration API + Frontend"
 echo "    agenthub status   # Verifica que todo esté corriendo"
-echo "    agenthub demo     # Ejecuta demo para el jurado"
+echo "    agenthub wizard   # Crear un agente por CLI"
+echo "    agenthub demo     # Demo automatizada"
 echo ""

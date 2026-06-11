@@ -8,7 +8,8 @@ import { AgentCardSkeleton } from "@/components/dashboard/AgentCardSkeleton";
 import { StatsSkeleton } from "@/components/dashboard/StatsSkeleton";
 import { AnimateIn } from "@/components/AnimateIn";
 import { ErrorState } from "@/components/ErrorState";
-import { getJobs, getJobOutputs } from "@/lib/api";
+import { getJobs, getJobOutputs, deleteJob } from "@/lib/api";
+import { toast } from "sonner";
 import { 
   Users, 
   Zap, 
@@ -17,9 +18,10 @@ import {
   Plus,
   Bot,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -27,8 +29,25 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const handleStatusChange = (agentId: string, newStatus: string) => {
-    setAgents(prev => prev.map(a => a.id === agentId ? { ...a, status: newStatus as any } : a));
+  const handleAgentChange = (agentId: string, patch: Partial<Agent>) => {
+    setAgents(prev => prev.map(a => a.id === agentId ? { ...a, ...patch } : a));
+  };
+
+  const handleDeleteAgent = async (agentId: string) => {
+    const agent = agents.find(a => a.id === agentId);
+    try {
+      const result = await deleteJob(agentId);
+      setAgents(prev => prev.filter(a => a.id !== agentId));
+      if (result.profile_deleted && result.profile) {
+        toast.success(`${agent?.name ?? "Agente"} eliminado (job + profile)`);
+      } else {
+        toast.success(`${agent?.name ?? "Agente"} eliminado`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al eliminar";
+      toast.error(msg);
+      throw err;
+    }
   };
 
   useEffect(() => {
@@ -54,11 +73,14 @@ export default function AgentsPage() {
     load();
   }, []);
 
-  const activeCount = agents.filter(a => a.status === 'active').length;
+  const activeCount = agents.filter(a => a.status === 'active' || a.status === 'running').length;
   const totalCount = agents.length;
 
   const totalOutputs = allOutputs.length;
-  const completedOutputs = allOutputs.filter(o => o.status === 'completed').length;
+  const completedOutputs = allOutputs.filter(o => {
+    const s = o.status.toLowerCase()
+    return s === 'completed' || s === 'success'
+  }).length;
   const successRate = totalOutputs > 0 ? Math.round((completedOutputs / totalOutputs) * 100) : 0;
 
   const lastExecution = allOutputs.length > 0
@@ -102,11 +124,12 @@ export default function AgentsPage() {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Agentes</h1>
             <p className="text-muted-foreground text-sm mt-1">Gestiona tus agentes de automatización activos.</p>
           </div>
-          <Button asChild size="sm">
-            <Link href="/create">
-              <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
-            </Link>
-          </Button>
+          <Link
+            href="/create"
+            className={cn(buttonVariants({ size: "sm" }), "inline-flex shrink-0")}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
+          </Link>
         </div>
         <ErrorState
           title="Error de conexión"
@@ -125,11 +148,12 @@ export default function AgentsPage() {
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Agentes</h1>
           <p className="text-muted-foreground text-sm mt-1">Gestiona tus agentes de automatización activos.</p>
         </div>
-        <Button asChild size="sm">
-          <Link href="/create">
-            <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
-          </Link>
-        </Button>
+        <Link
+          href="/create"
+          className={cn(buttonVariants({ size: "sm" }), "inline-flex shrink-0")}
+        >
+          <Plus className="mr-2 h-4 w-4" /> Nuevo Agente
+        </Link>
       </div>
 
       {agents.length === 0 ? (
@@ -142,10 +166,11 @@ export default function AgentsPage() {
             <p className="text-muted-foreground text-sm leading-relaxed">
               No hay agentes configurados. Crea tu primer agente para empezar a automatizar.
             </p>
-            <Link href="/create">
-              <Button size="sm" className="mt-2">
-                <Plus className="mr-2 h-4 w-4" /> Crear primer agente
-              </Button>
+            <Link
+              href="/create"
+              className={cn(buttonVariants({ size: "sm" }), "mt-2 inline-flex")}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Crear primer agente
             </Link>
           </div>
         </div>
@@ -162,7 +187,8 @@ export default function AgentsPage() {
               <AgentCardWithSSE
                 key={agent.id}
                 agent={agent}
-                onStatusChange={handleStatusChange}
+                onAgentChange={handleAgentChange}
+                onDelete={handleDeleteAgent}
               />
             ))}
           </div>

@@ -1,8 +1,9 @@
 """Quick test of the API key middleware."""
 import asyncio
+import os
 import sys
 
-sys.path.insert(0, "/root/agenthub/explore-api")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from httpx import AsyncClient, ASGITransport
 from main import app

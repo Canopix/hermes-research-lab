@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# AgentHub CLI — run from anywhere inside the repo:
+#   ./agenthub setup
+#   ./agenthub start
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec python3 "$ROOT/scripts/agenthub.py" "$@"

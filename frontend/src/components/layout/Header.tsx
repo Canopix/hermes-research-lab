@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
+import { checkExploreApiOnline } from '@/lib/api'
 
 // ─── Breadcrumb helpers ────────────────────────────────────────────────
 
@@ -40,16 +41,7 @@ function ApiStatusIndicator() {
   const [online, setOnline] = useState<boolean | null>(null)
 
   const checkApi = useCallback(async () => {
-    try {
-      const res = await fetch('/api/explore/api/system/overview', {
-        method: 'GET',
-        cache: 'no-store',
-        signal: AbortSignal.timeout(5000),
-      })
-      setOnline(res.ok)
-    } catch {
-      setOnline(false)
-    }
+    setOnline(await checkExploreApiOnline())
   }, [])
 
   useEffect(() => {
@@ -124,7 +116,7 @@ export default function Header() {
   const breadcrumbs = getBreadcrumbs(pathname || '/')
 
   return (
-    <header className="h-14 sm:h-15 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between gap-4">
+    <header className="h-14 sm:h-15 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-30 flex items-center justify-between gap-4 max-md:pl-14 px-4 sm:px-6">
       {/* Left: breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <nav className="flex items-center gap-1.5 text-sm overflow-hidden">

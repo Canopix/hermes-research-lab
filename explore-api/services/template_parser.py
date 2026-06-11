@@ -80,7 +80,7 @@ def load_hermes_config(hermes_path: str) -> dict:
 
 
 def scan_templates(templates_dir: str | None = None) -> list[dict]:
-    """Scan /root/agenthub/templates/ for template directories.
+    """Scan the project templates/ directory for template folders.
 
     Each directory must contain at least a soul.md to be considered a template.
     Returns a sorted list of template summaries.

@@ -1,26 +1,65 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { getCronOverview } from "@/lib/api"
-import { CronJobInfo } from "@/lib/types"
+import { useCallback, useEffect, useState } from "react"
+import { deleteJob, getCronOverview, getJobs } from "@/lib/api"
+import { Agent, CronJobInfo } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { ClockIcon } from "lucide-react"
+import { ClockIcon, Trash2Icon } from "lucide-react"
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog"
+import { toast } from "sonner"
 
 export default function CronTab() {
-  const [jobs, setJobs] = useState<CronJobInfo[]>([])
+  const [apiJobs, setApiJobs] = useState<Agent[]>([])
+  const [configJobs, setConfigJobs] = useState<CronJobInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Agent | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [jobs, cronConfig] = await Promise.all([
+        getJobs(),
+        getCronOverview(),
+      ])
+      setApiJobs(jobs)
+      setConfigJobs(cronConfig)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar cron jobs")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    getCronOverview()
-      .then(setJobs)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [])
+    load()
+  }, [load])
+
+  const handleDeleteJob = async () => {
+    if (!deleteTarget || deleting) return
+    try {
+      setDeleting(true)
+      const result = await deleteJob(deleteTarget.id)
+      setApiJobs(prev => prev.filter(j => j.id !== deleteTarget.id))
+      if (result.profile_deleted && result.profile) {
+        toast.success(`Job eliminado (profile ${result.profile} también)`)
+      } else {
+        toast.success(`Job "${deleteTarget.name}" eliminado`)
+      }
+      setDeleteTarget(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al eliminar job")
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -46,7 +85,7 @@ export default function CronTab() {
     return (
       <Card className="border-destructive/50">
         <CardHeader>
-          <CardTitle className="text-destructive">Error Loading Cron Jobs</CardTitle>
+          <CardTitle className="text-destructive">Error al cargar cron jobs</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">{error}</p>
@@ -55,90 +94,142 @@ export default function CronTab() {
     )
   }
 
-  // Group jobs by profile
   const groupedByProfile: Record<string, CronJobInfo[]> = {}
-  jobs.forEach((job) => {
+  configJobs.forEach((job) => {
     const profile = job.profile || "global"
-    if (!groupedByProfile[profile]) {
-      groupedByProfile[profile] = []
-    }
+    if (!groupedByProfile[profile]) groupedByProfile[profile] = []
     groupedByProfile[profile].push(job)
   })
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
-        <ClockIcon className="h-5 w-5" />
-        Cron Jobs ({jobs.length})
-      </h3>
+    <div className="space-y-8">
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <ClockIcon className="h-5 w-5" />
+          Agentes programados ({apiJobs.length})
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Cron jobs gestionados por AgentHub (Hermes API). Puedes eliminarlos aquí.
+        </p>
 
-      {jobs.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            No cron jobs configured. Add cron_jobs to your profile config.yaml.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {Object.entries(groupedByProfile).map(([profile, profileJobs]) => (
-            <div key={profile}>
-              <Separator />
-              <h4 className="text-sm font-medium flex items-center gap-2 mt-4 mb-3">
-                <Badge variant="outline">{profile}</Badge>
-                <span className="text-muted-foreground">
-                  ({profileJobs.length} job{profileJobs.length !== 1 ? "s" : ""})
-                </span>
-              </h4>
-              <div className="grid gap-3 md:grid-cols-2">
-                {profileJobs.map((job, idx) => {
-                  const name = job.name || job.schedule || `Job ${idx + 1}`
-                  const schedule = job.schedule || job.raw || "N/A"
-                  const enabled = job.enabled !== false
-                  return (
-                    <Card key={idx}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-sm font-medium">
-                            {name}
-                          </CardTitle>
-                          <Badge
-                            variant={enabled ? "default" : "secondary"}
-                            className="text-xs"
-                          >
-                            {enabled ? "Active" : "Disabled"}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-xs text-muted-foreground mb-2">
-                          Schedule:
-                        </div>
-                        <ScrollArea className="h-16 w-full">
-                          <pre className="text-xs font-mono bg-muted p-2 rounded-md whitespace-pre-wrap">
-                            {typeof schedule === "string"
-                              ? schedule
-                              : JSON.stringify(schedule, null, 2)}
-                          </pre>
-                        </ScrollArea>
-                        {job.command && (
-                          <div className="mt-2">
-                            <div className="text-xs text-muted-foreground">
-                              Command:
-                            </div>
-                            <pre className="text-xs font-mono bg-muted p-2 rounded-md mt-1 overflow-x-auto">
-                              {job.command}
-                            </pre>
+        {apiJobs.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground text-sm">
+              No hay agentes programados. Crea uno en{" "}
+              <a href="/create" className="underline underline-offset-2">Nuevo agente</a>.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {apiJobs.map((job) => (
+              <Card key={job.id}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <CardTitle className="text-sm font-medium truncate">
+                        {job.name}
+                      </CardTitle>
+                      <p className="text-[10px] font-mono text-muted-foreground mt-1 truncate">
+                        {job.id}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="shrink-0 text-xs">
+                      {job.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {job.profile && (
+                    <p className="text-xs text-muted-foreground">
+                      Profile: <span className="font-mono">{job.profile}</span>
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Próxima: {job.nextRun ?? "N/A"}
+                  </p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="mt-1"
+                    onClick={() => setDeleteTarget(job)}
+                    disabled={job.status === "running"}
+                  >
+                    <Trash2Icon className="h-3.5 w-3.5 mr-1.5" />
+                    Eliminar
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {configJobs.length > 0 && (
+        <section className="space-y-4">
+          <Separator />
+          <h3 className="text-lg font-semibold">
+            Cron en config.yaml ({configJobs.length})
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Jobs definidos en el config de cada profile. Solo lectura — edítalos en{" "}
+            <code className="text-xs bg-muted px-1 rounded">~/.hermes/profiles/*/config.yaml</code>{" "}
+            o con <code className="text-xs bg-muted px-1 rounded">hermes cron</code>.
+          </p>
+          <div className="space-y-4">
+            {Object.entries(groupedByProfile).map(([profile, profileJobs]) => (
+              <div key={profile}>
+                <h4 className="text-sm font-medium flex items-center gap-2 mb-3">
+                  <Badge variant="outline">{profile}</Badge>
+                  <span className="text-muted-foreground">
+                    ({profileJobs.length} job{profileJobs.length !== 1 ? "s" : ""})
+                  </span>
+                </h4>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {profileJobs.map((job, idx) => {
+                    const name = job.name || job.schedule || `Job ${idx + 1}`
+                    const schedule = job.schedule || job.raw || "N/A"
+                    const enabled = job.enabled !== false
+                    return (
+                      <Card key={`${profile}-${idx}`} className="opacity-90">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium">{name}</CardTitle>
+                            <Badge variant={enabled ? "secondary" : "outline"} className="text-xs">
+                              {enabled ? "Activo" : "Off"}
+                            </Badge>
                           </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )
-                })}
+                        </CardHeader>
+                        <CardContent>
+                          <ScrollArea className="h-16 w-full">
+                            <pre className="text-xs font-mono bg-muted p-2 rounded-md whitespace-pre-wrap">
+                              {typeof schedule === "string"
+                                ? schedule
+                                : JSON.stringify(schedule, null, 2)}
+                            </pre>
+                          </ScrollArea>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </section>
       )}
+
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title={deleteTarget ? `Eliminar ${deleteTarget.name}?` : "Eliminar job"}
+        description={
+          deleteTarget?.profile
+            ? `Se eliminará el cron job y el profile "${deleteTarget.profile}".`
+            : "Se eliminará el cron job. Esta acción no se puede deshacer."
+        }
+        loading={deleting}
+        onConfirm={handleDeleteJob}
+      />
     </div>
   )
 }

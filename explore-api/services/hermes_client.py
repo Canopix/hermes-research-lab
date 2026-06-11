@@ -20,9 +20,9 @@ class HermesClient:
         )
 
     async def get_health(self) -> dict:
-        """GET /api/system/health — returns health status of the API Server."""
+        """GET /health — returns health status of the API Server."""
         try:
-            resp = await self._client.get("/api/system/health")
+            resp = await self._client.get("/health")
             resp.raise_for_status()
             return resp.json()
         except httpx.HTTPError as exc:
@@ -54,8 +54,18 @@ class HermesClient:
         try:
             resp = await self._client.post("/api/jobs", json=data)
             resp.raise_for_status()
-            return resp.json()
-        except httpx.HTTPError:
+            result = resp.json()
+            if isinstance(result, dict) and "job" in result:
+                return result["job"]
+            return result if isinstance(result, dict) else None
+        except httpx.HTTPError as exc:
+            detail = str(exc)
+            if hasattr(exc, "response") and exc.response is not None:
+                try:
+                    detail = exc.response.text
+                except Exception:
+                    pass
+            print(f"[HermesClient] create_job failed: {detail}")
             return None
 
     async def update_job(self, job_id: str, data: dict) -> dict | None:
@@ -95,12 +105,22 @@ class HermesClient:
             return None
 
     async def trigger_job(self, job_id: str) -> dict | None:
-        """POST /jobs/{id}/trigger — trigger a job run."""
+        """POST /jobs/{id}/run — trigger an immediate job run."""
         try:
-            resp = await self._client.post(f"/api/jobs/{job_id}/trigger")
+            resp = await self._client.post(f"/api/jobs/{job_id}/run")
             resp.raise_for_status()
-            return resp.json()
-        except httpx.HTTPError:
+            result = resp.json()
+            if isinstance(result, dict) and "job" in result:
+                return result["job"]
+            return result if isinstance(result, dict) else None
+        except httpx.HTTPError as exc:
+            detail = str(exc)
+            if hasattr(exc, "response") and exc.response is not None:
+                try:
+                    detail = exc.response.text
+                except Exception:
+                    pass
+            print(f"[HermesClient] trigger_job failed: {detail}")
             return None
 
     async def get_job_outputs(self, job_id: str) -> list[dict]:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Test YAML error handling returns 500."""
 import sys, os, shutil
-sys.path.insert(0, "/root/agenthub/explore-api")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi.testclient import TestClient
 from main import app
@@ -9,7 +9,7 @@ from main import app
 client = TestClient(app)
 
 # Create a bad template temporarily
-bad_dir = "/root/.hermes/skills/agenthub-templates/bad-template-test"
+bad_dir = os.path.expanduser("~/.hermes/skills/agenthub-templates/bad-template-test")
 os.makedirs(bad_dir, exist_ok=True)
 with open(os.path.join(bad_dir, "SKILL.md"), "w") as f:
     f.write("---\nname: bad\nthis is: [not: valid: yaml: :\n---\nbody\n")

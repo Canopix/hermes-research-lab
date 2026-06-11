@@ -11,21 +11,24 @@ import {
   Play, 
   Pause, 
   RotateCcw, 
-  MoreVertical, 
+  Trash2,
   Wifi,
   Clock,
   CalendarDays,
 } from "lucide-react"
 import { pauseJob, resumeJob, triggerJob } from "@/lib/api"
 import { toast } from "sonner"
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog"
 
 interface AgentCardProps {
   agent: Agent
   progress?: number
   activeTool?: string
   runId?: string | null
+  sseConnected?: boolean
   onRunIdChange?: (runId: string | null) => void
   onStatusChange?: (agentId: string, newStatus: string) => void
+  onDelete?: (agentId: string) => Promise<void>
   index?: number
 }
 
@@ -55,11 +58,13 @@ function getTemplateEmoji(template?: string): string {
   return "\u{1F916}"
 }
 
-export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, onStatusChange, index = 0 }: AgentCardProps) {
-  const isRunning = agent.status === "active"
+export function AgentCard({ agent, progress, activeTool, runId, sseConnected, onRunIdChange, onStatusChange, onDelete, index = 0 }: AgentCardProps) {
+  const isRunning = agent.status === "running"
   const hasProgress = progress !== undefined && progress !== null
   const progressPercent = hasProgress ? Math.round(progress * 100) : 0
   const [loading, setLoading] = useState<string | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const handlePauseResume = async () => {
     if (loading) return
@@ -88,12 +93,26 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, o
     try {
       setLoading("trigger")
       await triggerJob(agent.id)
-      toast.success("Triggered " + agent.name)
+      onStatusChange?.(agent.id, "running")
+      toast.success(`${agent.name} en ejecución`)
     } catch (err) {
       console.error("Trigger failed:", err)
       toast.error("Error al ejecutar " + agent.name)
     } finally {
       setLoading(null)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!onDelete || deleting) return
+    try {
+      setDeleting(true)
+      await onDelete(agent.id)
+      setDeleteOpen(false)
+    } catch {
+      // toast handled by parent
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -106,7 +125,8 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, o
         className={cn(
           "overflow-hidden flex flex-col transition-all duration-200",
           "border-l-[3px] border-l-muted",
-          isRunning && "border-l-success",
+          isRunning && "border-l-blue-500 shadow-sm ring-1 ring-blue-500/10",
+          !isRunning && agent.status === "active" && "border-l-success",
           agent.status === "paused" && "border-l-warning",
           agent.status === "error" && "border-l-error",
           "hover:shadow-md hover:-translate-y-0.5",
@@ -123,6 +143,11 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, o
                 <span className="inline-block mt-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                   {agent.template || "Sin template"}
                 </span>
+                {agent.profile && (
+                  <p className="mt-1 text-[10px] text-muted-foreground truncate" title={agent.profile}>
+                    Profile: {agent.profile}
+                  </p>
+                )}
               </div>
             </div>
             <StatusBadge status={agent.status} />
@@ -148,8 +173,32 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, o
             </div>
           </div>
 
-          {/* Progress / Running indicator */}
-          {isRunning && hasProgress && (
+          {isRunning && (
+            <div className="space-y-1.5 rounded-lg bg-blue-500/5 border border-blue-500/15 p-3">
+              <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider">
+                <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                  <Wifi className="h-3 w-3 animate-pulse" />
+                  Ejecutando ahora
+                </span>
+                <span className="text-muted-foreground">
+                  {hasProgress ? `${progressPercent}%` : sseConnected ? "En vivo" : "Sincronizando…"}
+                </span>
+              </div>
+              {hasProgress ? (
+                <Progress
+                  value={progressPercent}
+                  className="h-1.5 [&_[data-slot=progress-indicator]]:bg-blue-500"
+                />
+              ) : (
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div className="h-full w-1/3 rounded-full bg-blue-500/80 animate-pulse" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Progress from SSE when we have numeric progress but not in running banner */}
+          {!isRunning && hasProgress && (
             <div className="space-y-1.5">
               <div className="flex justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                 <span className="flex items-center gap-1.5">
@@ -162,19 +211,6 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, o
             </div>
           )}
 
-          {isRunning && !hasProgress && (
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                <span className="flex items-center gap-1.5">
-                  <Wifi className="h-3 w-3 text-primary animate-pulse" />
-                  Ejecutando
-                </span>
-                <span className="animate-pulse text-foreground">—</span>
-              </div>
-              <Progress value={0} className="h-1.5" />
-            </div>
-          )}
-
           {/* Tool indicator */}
           {activeTool && (
             <ToolIndicator
@@ -183,12 +219,10 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, o
             />
           )}
 
-          {/* SSE streaming indicator */}
-          {runId && (
+          {runId && sseConnected && (
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <Wifi className="h-3 w-3 text-success" />
               <span>Streaming SSE activo</span>
-              <span className="font-mono text-foreground">{runId.slice(0, 8)}</span>
             </div>
           )}
 
@@ -210,10 +244,10 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, o
                 size="icon"
                 title={agent.status === "active" ? "Pausar" : "Reanudar"}
                 onClick={handlePauseResume}
-                disabled={!!loading}
+                disabled={!!loading || isRunning}
                 className="h-8 w-8"
               >
-                {agent.status === "active" ? (
+                {(agent.status === "active" || agent.status === "running") ? (
                   loading === "pause" ? (
                     <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   ) : (
@@ -232,7 +266,7 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, o
                 size="icon"
                 title="Ejecutar"
                 onClick={handleTrigger}
-                disabled={!!loading}
+                disabled={!!loading || isRunning}
                 className="h-8 w-8"
               >
                 {loading === "trigger" ? (
@@ -242,12 +276,32 @@ export function AgentCard({ agent, progress, activeTool, runId, onRunIdChange, o
                 )}
               </Button>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" title="Opciones">
-              <MoreVertical className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              title="Eliminar agente"
+              onClick={() => setDeleteOpen(true)}
+              disabled={!!loading || isRunning || !onDelete}
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </CardFooter>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={`Eliminar ${agent.name}?`}
+        description={
+          agent.profile
+            ? `Se eliminará el cron job y el profile "${agent.profile}" asociado. Esta acción no se puede deshacer.`
+            : "Se eliminará el cron job. Esta acción no se puede deshacer."
+        }
+        loading={deleting}
+        onConfirm={handleDelete}
+      />
     </AnimateIn>
   )
 }

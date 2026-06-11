@@ -32,11 +32,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="h-full bg-background text-foreground">
-        <div className="flex min-h-screen">
+        <div className="flex min-h-dvh">
           <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
+          <div className="flex min-h-0 flex-1 flex-col min-w-0">
             <Header />
-            <main className="flex-1 pt-4 p-4 sm:p-6 lg:p-8">
+            <main className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6 lg:p-8 max-md:pt-2">
               {children}
             </main>
           </div>

@@ -16,8 +16,53 @@ from typing import Any
 
 from config import HERMES_API_KEY, HERMES_API_URL
 from services.hermes_client import get_client
+from services.job_outputs import list_job_outputs, list_all_job_outputs
+from services.profile_provision import (
+    ProfileProvisionError,
+    delete_agent_profile,
+    is_agenthub_profile,
+    provision_agent_profile,
+)
+from services.template_parser import TEMPLATES_DIR, get_template, render_preview
 
 router = APIRouter(tags=["jobs"])
+
+
+def _wizard_payload_to_hermes_job(body: dict, *, profile_name: str | None = None) -> dict:
+    """Transform AgentHub wizard payload into a Hermes API Server job."""
+    template_id = body.get("template", "")
+    tmpl = get_template(template_id, TEMPLATES_DIR) if template_id else None
+    hermes_config = (tmpl or {}).get("hermesConfig") or {}
+
+    prompt = body.get("prompt") or ""
+    if not prompt.strip() and body.get("config") is not None:
+        prompt = render_preview(template_id, body.get("config"), TEMPLATES_DIR)
+        config_values = body.get("config") or {}
+        if config_values:
+            prompt += "\n\n## Configuration\n" + json.dumps(config_values, indent=2)
+
+    payload: dict[str, Any] = {
+        "name": body.get("name") or template_id or "agent",
+        "prompt": prompt,
+        "schedule": body.get("schedule", "0 */6 * * *"),
+        "deliver": body.get("deliver", hermes_config.get("deliver", "local")),
+    }
+
+    if profile_name:
+        payload["profile"] = profile_name
+
+    toolsets = hermes_config.get("toolsets") or []
+    skills_list = hermes_config.get("skills") or []
+    if toolsets:
+        payload["enabled_toolsets"] = toolsets
+    if skills_list:
+        payload["skills"] = skills_list
+
+    model = hermes_config.get("model")
+    if model:
+        payload["model"] = model
+
+    return payload
 
 
 # ── GET /api/jobs ──────────────────────────────────────────────
@@ -49,74 +94,30 @@ async def create_job(request: Request) -> dict:
     - AgentHub wizard payload: { name, template, config, prompt }
       which gets transformed into a proper Hermes API Server job.
     """
-    body = await request.json()
+    raw_body = await request.json()
 
-    # ── Orchestration: transform wizard payload → Hermes API job ──
-    if "template" in body and "prompt" in body:
-        # Frontend sent a pre-rendered prompt (from previewTemplate)
-        import os
-        from services.template_parser import parse_skill_md
+    if "template" in raw_body:
+        try:
+            profile_name = await provision_agent_profile(
+                template_id=raw_body.get("template", ""),
+                agent_name=raw_body.get("name") or raw_body.get("template", "agent"),
+                config=raw_body.get("config") or {},
+            )
+        except ProfileProvisionError as exc:
+            raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
-        template_id = body["template"]
-        templates_dir = os.path.join(
-            os.path.expanduser("~/.hermes"), "skills", "agenthub-templates", template_id
-        )
-        skill_md = os.path.join(templates_dir, "SKILL.md")
-        parsed = parse_skill_md(skill_md)
-
-        hermes_config = parsed["hermes_config"] if parsed else {}
-        toolsets = hermes_config.get("toolsets", [])
-        skills_list = hermes_config.get("skills", [])
-
-        body = {
-            "name": body.get("name") or template_id,
-            "prompt": body["prompt"],
-            "schedule": body.get("schedule", "0 */6 * * *"),  # default: every 6h
-            "enabled_toolsets": toolsets if toolsets else None,
-            "skills": skills_list if skills_list else None,
-            "deliver": body.get("deliver", "local"),
-        }
-
-    elif "template" in body and "config" in body:
-        # Frontend sent template + config but NO prompt.
-        # We need to render the prompt from the template + config ourselves.
-        import os
-        from services.template_parser import parse_skill_md, render_preview
-
-        template_id = body["template"]
-        templates_dir = os.path.join(
-            os.path.expanduser("~/.hermes"), "skills", "agenthub-templates", template_id
-        )
-        skill_md_path = os.path.join(templates_dir, "SKILL.md")
-
-        # Parse frontmatter for toolsets/skills
-        parsed = parse_skill_md(skill_md_path)
-        hermes_config = parsed["hermes_config"] if parsed else {}
-        toolsets = hermes_config.get("toolsets", [])
-        skills_list = hermes_config.get("skills", [])
-
-        # Render prompt from template + config
-        config_values = body.get("config", {})
-        rendered_prompt = render_preview(skill_md_path, params=config_values)
-
-        # Inject config values as context so the agent knows them
-        if config_values:
-            injected_context = "\n\n## Configuration\n" + json.dumps(config_values, indent=2)
-            rendered_prompt = rendered_prompt + injected_context
-
-        body = {
-            "name": body.get("name") or template_id,
-            "prompt": rendered_prompt,
-            "schedule": body.get("schedule", "0 */6 * * *"),
-            "enabled_toolsets": toolsets if toolsets else None,
-            "skills": skills_list if skills_list else None,
-            "deliver": body.get("deliver", "local"),
-        }
+        body = _wizard_payload_to_hermes_job(raw_body, profile_name=profile_name)
+    else:
+        body = raw_body
+        profile_name = body.get("profile")
 
     client = await get_client()
     job = await client.create_job(body)
     if job is None:
-        raise HTTPException(status_code=500, detail="Failed to create job")
+        raise HTTPException(status_code=502, detail="Hermes API Server rejected job creation")
+
+    if profile_name and isinstance(job, dict):
+        job["profile"] = profile_name
     return job
 
 
@@ -135,12 +136,37 @@ async def update_job(job_id: str, request: Request) -> dict:
 # ── DELETE /api/jobs/{id} ─────────────────────────────────────
 @router.delete("/api/jobs/{job_id}")
 async def delete_job(job_id: str) -> dict:
-    """Delete a job."""
+    """Delete a job and its AgentHub profile (agent-*) when linked."""
     client = await get_client()
+    job = await client.get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+
+    profile_name = job.get("profile") if isinstance(job, dict) else None
+
     ok = await client.delete_job(job_id)
     if not ok:
         raise HTTPException(status_code=500, detail="Failed to delete job")
-    return {"status": "deleted", "id": job_id}
+
+    profile_deleted = False
+    if profile_name:
+        try:
+            await delete_agent_profile(profile_name)
+            profile_deleted = is_agenthub_profile(profile_name)
+        except ProfileProvisionError as exc:
+            raise HTTPException(
+                status_code=exc.status_code,
+                detail=(
+                    f"Job deleted but failed to remove profile '{profile_name}': "
+                    f"{exc.message}"
+                ),
+            ) from exc
+
+    result: dict[str, Any] = {"status": "deleted", "id": job_id}
+    if profile_name:
+        result["profile"] = profile_name
+        result["profile_deleted"] = profile_deleted
+    return result
 
 
 # ── POST /api/jobs/{id}/pause ─────────────────────────────────
@@ -165,23 +191,41 @@ async def resume_job(job_id: str) -> dict:
     return job
 
 
-# ── POST /api/jobs/{id}/trigger ───────────────────────────────
+# ── POST /api/jobs/{id}/trigger (alias) ───────────────────────
+# ── POST /api/jobs/{id}/run ───────────────────────────────────
 @router.post("/api/jobs/{job_id}/trigger")
+@router.post("/api/jobs/{job_id}/run")
 async def trigger_job(job_id: str) -> dict:
-    """Trigger a job run."""
+    """Trigger a job run now (proxies Hermes POST /api/jobs/{id}/run)."""
     client = await get_client()
     job = await client.trigger_job(job_id)
     if job is None:
-        raise HTTPException(status_code=500, detail="Failed to trigger job")
+        raise HTTPException(
+            status_code=502,
+            detail="Hermes API Server rejected run request — check Hermes logs",
+        )
     return job
 
 
 # ── GET /api/jobs/{id}/outputs ────────────────────────────────
 @router.get("/api/jobs/{job_id}/outputs")
 async def get_job_outputs(job_id: str) -> list[dict]:
-    """Get outputs/executions for a job."""
+    """Get outputs/executions for a job.
+
+    Reads ~/.hermes/cron/output/{id}/*.md first (fast, reliable).
+    Falls back to Hermes API only if no local files exist.
+    """
+    disk_outputs = list_job_outputs(job_id)
+    if disk_outputs:
+        return disk_outputs
     client = await get_client()
     return await client.get_job_outputs(job_id)
+
+
+@router.get("/api/reports")
+async def list_reports() -> list[dict]:
+    """All agent reports from disk — single call for the history UI."""
+    return list_all_job_outputs()
 
 
 # ── SSE proxy: GET /api/jobs/{id}/events ──────────────────────

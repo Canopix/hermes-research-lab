@@ -1,6 +1,6 @@
 """Template endpoints: list, detail, preview.
 
-Templates live in /root/agenthub/templates/<template_id>/
+Templates live in <project>/templates/<template_id>/
 Each template has:
   - soul.md       (required) — the agent's personality + prompt with {{placeholders}}
   - params.yaml   (optional) — parameter definitions

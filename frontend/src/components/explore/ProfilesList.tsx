@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getProfiles, getProfileDetail } from "@/lib/api"
+import { getProfiles, getProfileDetail, deleteProfile } from "@/lib/api"
 import { ProfileBasic, ProfileDetail } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -15,7 +15,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { UsersIcon, FileTextIcon, SettingsIcon } from "lucide-react"
+import { UsersIcon, FileTextIcon, SettingsIcon, Trash2Icon } from "lucide-react"
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog"
+import { toast } from "sonner"
+
+function isAgentHubProfile(name: string) {
+  return name.startsWith("agent-")
+}
 
 export default function ProfilesList() {
   const [profiles, setProfiles] = useState<ProfileBasic[]>([])
@@ -23,6 +29,16 @@ export default function ProfilesList() {
   const [error, setError] = useState<string | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<ProfileDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const reloadProfiles = () => {
+    setLoading(true)
+    getProfiles()
+      .then(setProfiles)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }
 
   useEffect(() => {
     getProfiles()
@@ -40,6 +56,22 @@ export default function ProfilesList() {
       setError(err instanceof Error ? err.message : "Failed to load profile")
     } finally {
       setDetailLoading(false)
+    }
+  }
+
+  const handleDeleteProfile = async () => {
+    if (!selectedProfile || deleting) return
+    try {
+      setDeleting(true)
+      await deleteProfile(selectedProfile.name)
+      toast.success(`Profile "${selectedProfile.name}" eliminado`)
+      setDeleteOpen(false)
+      setSelectedProfile(null)
+      reloadProfiles()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al eliminar profile")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -147,6 +179,25 @@ export default function ProfilesList() {
                   {selectedProfile.name}
                 </DialogTitle>
               </DialogHeader>
+              {isAgentHubProfile(selectedProfile.name) ? (
+                <div className="flex justify-end -mt-2 mb-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    <Trash2Icon className="h-4 w-4 mr-1.5" />
+                    Eliminar profile
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground -mt-2 mb-2">
+                  Profile manual — elimínalo con{" "}
+                  <code className="text-[11px] bg-muted px-1 rounded">
+                    hermes profile delete {selectedProfile.name}
+                  </code>
+                </p>
+              )}
               <ScrollArea className="flex-1 pr-4">
                 <div className="space-y-4">
                   {/* Skills */}
@@ -237,6 +288,15 @@ export default function ProfilesList() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={`Eliminar profile ${selectedProfile?.name ?? ""}?`}
+        description="Se eliminará el profile y su memoria en Hermes. Los cron jobs que lo usen quedarán huérfanos si no los borras antes desde Agentes."
+        loading={deleting}
+        onConfirm={handleDeleteProfile}
+      />
     </div>
   )
 }

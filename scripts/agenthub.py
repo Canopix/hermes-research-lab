@@ -17,19 +17,21 @@ def main():
             "\nComandos:\n"
             "  setup    Instala dependencias y configura todo el ecosistema\n"
             "  start    Levanta Exploration API + Frontend\n"
-            "  stop     Detiene todos los servicios\n"
+            "  stop     Detiene Frontend + Exploration API (no para Hermes)\n"
             "  status   Muestra el estado de los servicios\n"
+            "  wizard   Wizard interactivo para crear un agente\n"
             "  demo     Ejecuta la demo automatizada para el jurado\n"
             "\nEjemplos:\n"
             "  agenthub setup\n"
             "  agenthub start\n"
+            "  agenthub wizard\n"
             "  agenthub status\n"
             "  agenthub demo\n"
         ),
     )
     parser.add_argument(
         "command",
-        choices=["setup", "start", "stop", "status", "demo"],
+        choices=["setup", "start", "stop", "status", "wizard", "demo"],
         help="Comando a ejecutar",
     )
     parser.add_argument(
@@ -45,6 +47,7 @@ def main():
         "start": "start.sh",
         "stop": "stop.sh",
         "status": "status.sh",
+        "wizard": "wizard.sh",
         "demo": "demo.sh",
     }
 

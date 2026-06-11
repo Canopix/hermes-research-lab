@@ -2,6 +2,7 @@
 
 import sys
 import os
+from unittest.mock import AsyncMock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -59,3 +60,27 @@ def test_profiles_unauthorized():
     """GET /api/system/profiles without API key returns 401."""
     resp = client.get("/api/system/profiles")
     assert resp.status_code == 401
+
+
+@patch("services.profile_provision.profile_exists", return_value=True)
+@patch("routers.profiles.delete_agent_profile", new_callable=AsyncMock)
+def test_delete_profile_agenthub(mock_delete, _mock_exists):
+    """DELETE agent-* profile delegates to Hermes CLI wrapper."""
+    mock_delete.return_value = None
+    resp = client.delete(
+        "/api/system/profiles/agent-ai-researcher-test",
+        headers=HEADERS,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "deleted"
+    mock_delete.assert_awaited_once_with("agent-ai-researcher-test")
+
+
+def test_delete_profile_manual_forbidden():
+    """DELETE non-agent profile returns 403."""
+    resp = client.delete(
+        "/api/system/profiles/pilot-leads",
+        headers=HEADERS,
+    )
+    assert resp.status_code == 403
+    assert "AgentHub" in resp.json()["detail"]

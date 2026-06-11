@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Test the template API endpoints via HTTP."""
 
+import os
 import sys
-sys.path.insert(0, "/root/agenthub/explore-api")
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi.testclient import TestClient
 from main import app

@@ -4,13 +4,50 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 import yaml
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 
 from config import HERMES_HOME
+from services.profile_provision import (
+    ProfileProvisionError,
+    delete_agent_profile,
+    is_agenthub_profile,
+    provision_agent_profile,
+)
 
 router = APIRouter(tags=["profiles"])
+
+
+class CreateProfileRequest(BaseModel):
+    name: str
+    template: str
+    config: dict[str, Any] = Field(default_factory=dict)
+    description: str | None = None
+
+
+@router.post("/api/system/profiles")
+async def create_profile(body: CreateProfileRequest) -> dict:
+    """POST /api/system/profiles — create an AgentHub agent profile via Hermes CLI."""
+    try:
+        profile_name = await provision_agent_profile(
+            template_id=body.template,
+            agent_name=body.name,
+            config=body.config,
+            description=body.description,
+        )
+    except ProfileProvisionError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+    profile_dir = _profiles_dir() / profile_name
+    return {
+        "name": profile_name,
+        "description": body.description or body.name,
+        "skills": _list_skills_for_profile(profile_name),
+        "soul": _read_text(profile_dir / "SOUL.md"),
+    }
 
 
 def _profiles_dir() -> Path:
@@ -131,3 +168,28 @@ async def get_profile_config(name: str) -> dict:
         "name": name,
         "config": config,
     }
+
+
+@router.delete("/api/system/profiles/{name}")
+async def delete_profile(name: str) -> dict:
+    """DELETE /api/system/profiles/{name} — remove an AgentHub profile via Hermes CLI."""
+    if not is_agenthub_profile(name):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                f"Profile '{name}' no fue creado por AgentHub. "
+                "Elimínalo con: hermes profile delete " + name
+            ),
+        )
+
+    from services.profile_provision import profile_exists
+
+    if not profile_exists(name):
+        raise HTTPException(status_code=404, detail=f"Profile '{name}' not found")
+
+    try:
+        await delete_agent_profile(name)
+    except ProfileProvisionError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+    return {"status": "deleted", "name": name}

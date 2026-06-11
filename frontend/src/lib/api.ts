@@ -8,9 +8,33 @@ import { Agent, Template, Execution } from '../lib/types'
 const API_BASE = '/api/explore'
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'agenthub-local'
 
-const headers = {
+export const exploreApiHeaders = {
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${API_KEY}`
+  'Authorization': `Bearer ${API_KEY}`,
+}
+
+const headers = exploreApiHeaders
+
+const FETCH_TIMEOUT_MS = 12_000
+
+async function fetchApi(url: string, init?: RequestInit): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  })
+}
+
+/** Lightweight health check for UI status indicators (no auth required). */
+export async function checkExploreApiOnline(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/health`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
 }
 
 // --- Exploration API (proxied via /api/explore) ---
@@ -113,21 +137,112 @@ export async function getToolsets() {
 export async function searchSessions(query: string) {
   const res = await fetch(`${API_BASE}/api/system/sessions/search?q=${encodeURIComponent(query)}`, { headers })
   if (!res.ok) throw new Error('Failed to search sessions')
-  return res.json()
+  const data = await res.json()
+  return Array.isArray(data) ? data : (data.results ?? [])
+}
+
+function formatAgentDate(value: unknown): string | null {
+  if (!value || typeof value !== 'string') return null
+  try {
+    return new Date(value).toLocaleString('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return value
+  }
+}
+
+function normalizeAgent(raw: Record<string, unknown>): Agent {
+  const state = String(raw.state ?? raw.status ?? '')
+  const enabled = raw.enabled !== false
+
+  let status: Agent['status'] = 'active'
+  if (raw.paused_at || state === 'paused' || !enabled) {
+    status = 'paused'
+  } else if (state === 'error' || state === 'failed' || raw.last_error) {
+    status = 'error'
+  }
+
+  const schedule = raw.schedule as Record<string, unknown> | undefined
+  const nextRunRaw =
+    raw.next_run_at ?? raw.nextRun ?? schedule?.display ?? raw.schedule_display
+  const lastRunRaw = raw.last_run_at ?? raw.lastRun ?? null
+
+  return {
+    id: String(raw.id ?? ''),
+    name: String(raw.name ?? raw.id ?? 'Agent'),
+    status,
+    template: String(raw.template ?? raw.template_id ?? raw.skill ?? ''),
+    profile: raw.profile != null ? String(raw.profile) : undefined,
+    nextRun: formatAgentDate(nextRunRaw),
+    lastRun: formatAgentDate(lastRunRaw),
+    lastRunAt: lastRunRaw ? String(lastRunRaw) : null,
+    lastStatus: raw.last_status != null ? String(raw.last_status) : null,
+    config: (raw.config as Record<string, unknown>) ?? {},
+  }
+}
+
+function normalizeAgentList(data: unknown): Agent[] {
+  const items = Array.isArray(data) ? data : []
+  return items.map((item) => normalizeAgent(item as Record<string, unknown>))
+}
+
+function normalizeExecution(raw: Record<string, unknown>, agentId?: string): Execution {
+  const finished =
+    raw.finishedAt ?? raw.finished_at ?? raw.ended_at ?? raw.completed_at ?? null
+
+  return {
+    id: String(raw.id ?? raw.session_id ?? ''),
+    agentId: String(agentId ?? raw.agentId ?? raw.agent_id ?? raw.job_id ?? ''),
+    status: String(raw.status ?? 'unknown'),
+    startedAt: String(
+      raw.startedAt ?? raw.started_at ?? raw.timestamp ?? new Date().toISOString()
+    ),
+    finishedAt: finished ? String(finished) : null,
+    output: String(raw.output ?? raw.content ?? raw.result ?? raw.body ?? ''),
+    duration:
+      typeof raw.duration === 'number'
+        ? raw.duration
+        : typeof raw.duration_ms === 'number'
+          ? raw.duration_ms
+          : null,
+    title: raw.title != null ? String(raw.title) : undefined,
+    excerpt: raw.excerpt != null ? String(raw.excerpt) : undefined,
+    jobName: raw.job_name != null ? String(raw.job_name) : undefined,
+    linkCount: typeof raw.link_count === 'number' ? raw.link_count : undefined,
+    isSilent: raw.is_silent === true,
+  }
+}
+
+export async function getAllExecutions(): Promise<Execution[]> {
+  return getReports()
+}
+
+export async function getReports(): Promise<Execution[]> {
+  const res = await fetchApi(`${API_BASE}/api/reports`, { headers })
+  if (!res.ok) throw new Error('Failed to fetch reports')
+  const data = await res.json()
+  const items = Array.isArray(data) ? data : []
+  return items.map((item: Record<string, unknown>) =>
+    normalizeExecution(item, String(item.job_id ?? item.agentId ?? ''))
+  )
 }
 
 // --- Jobs (proxied via /api/explore) ---
 
 export async function getJobs(): Promise<Agent[]> {
-  const res = await fetch(`${API_BASE}/api/jobs`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/jobs`, { headers })
   if (!res.ok) throw new Error('Failed to fetch jobs')
-  return res.json()
+  return normalizeAgentList(await res.json())
 }
 
 export async function getJob(id: string): Promise<Agent> {
   const res = await fetch(`${API_BASE}/api/jobs/${id}`, { headers })
   if (!res.ok) throw new Error('Failed to fetch job')
-  return res.json()
+  return normalizeAgent(await res.json())
 }
 
 export async function createJob(data: any): Promise<Agent> {
@@ -140,7 +255,8 @@ export async function createJob(data: any): Promise<Agent> {
     let detail = `HTTP ${res.status}`
     try {
       const errBody = await res.json()
-      if (errBody.message) detail += ': ' + errBody.message
+      if (errBody.detail) detail += ': ' + (typeof errBody.detail === 'string' ? errBody.detail : JSON.stringify(errBody.detail))
+      else if (errBody.message) detail += ': ' + errBody.message
     } catch {
       try {
         const text = await res.text()
@@ -151,7 +267,7 @@ export async function createJob(data: any): Promise<Agent> {
     ;(err as any).status = res.status
     throw err
   }
-  return res.json()
+  return normalizeAgent(await res.json())
 }
 
 export async function updateJob(id: string, data: any): Promise<Agent> {
@@ -161,15 +277,38 @@ export async function updateJob(id: string, data: any): Promise<Agent> {
     body: JSON.stringify(data)
   })
   if (!res.ok) throw new Error('Failed to update job')
-  return res.json()
+  return normalizeAgent(await res.json())
 }
 
-export async function deleteJob(id: string): Promise<void> {
+export async function deleteProfile(name: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/system/profiles/${encodeURIComponent(name)}`, {
+    method: 'DELETE',
+    headers,
+  })
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try {
+      const body = await res.json()
+      if (body.detail) detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)
+    } catch {}
+    throw new Error(detail)
+  }
+}
+
+export async function deleteJob(id: string): Promise<{ profile?: string; profile_deleted?: boolean }> {
   const res = await fetch(`${API_BASE}/api/jobs/${id}`, {
     method: 'DELETE',
     headers
   })
-  if (!res.ok) throw new Error('Failed to delete job')
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try {
+      const body = await res.json()
+      if (body.detail) detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)
+    } catch {}
+    throw new Error(detail)
+  }
+  return res.json()
 }
 
 export async function pauseJob(id: string): Promise<Agent> {
@@ -178,7 +317,7 @@ export async function pauseJob(id: string): Promise<Agent> {
     headers
   })
   if (!res.ok) throw new Error('Failed to pause job')
-  return res.json()
+  return normalizeAgent(await res.json())
 }
 
 export async function resumeJob(id: string): Promise<Agent> {
@@ -187,7 +326,7 @@ export async function resumeJob(id: string): Promise<Agent> {
     headers
   })
   if (!res.ok) throw new Error('Failed to resume job')
-  return res.json()
+  return normalizeAgent(await res.json())
 }
 
 export async function triggerJob(id: string): Promise<Agent> {
@@ -195,14 +334,32 @@ export async function triggerJob(id: string): Promise<Agent> {
     method: 'POST',
     headers
   })
-  if (!res.ok) throw new Error('Failed to trigger job')
-  return res.json()
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try {
+      const errBody = await res.json()
+      if (errBody.detail) {
+        detail += ': ' + (typeof errBody.detail === 'string' ? errBody.detail : JSON.stringify(errBody.detail))
+      } else if (errBody.message) {
+        detail += ': ' + errBody.message
+      }
+    } catch {
+      try {
+        const text = await res.text()
+        if (text) detail += ': ' + text.slice(0, 200)
+      } catch {}
+    }
+    throw new Error(detail)
+  }
+  return normalizeAgent(await res.json())
 }
 
 export async function getJobOutputs(id: string): Promise<Execution[]> {
-  const res = await fetch(`${API_BASE}/api/jobs/${id}/outputs`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/jobs/${id}/outputs`, { headers })
   if (!res.ok) throw new Error('Failed to fetch job outputs')
-  return res.json()
+  const data = await res.json()
+  const items = Array.isArray(data) ? data : (data.outputs ?? [])
+  return items.map((item: Record<string, unknown>) => normalizeExecution(item, id))
 }
 
 // Re-export API_BASE for components that need it (e.g. SSE)

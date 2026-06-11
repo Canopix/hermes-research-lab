@@ -1,10 +1,14 @@
 export interface Agent {
   id: string
   name: string
-  status: 'active' | 'paused' | 'error'
+  status: 'active' | 'paused' | 'error' | 'running'
   template: string
+  profile?: string
   nextRun: string | null
   lastRun: string | null
+  /** Raw ISO timestamp from Hermes — used to detect new executions while polling */
+  lastRunAt?: string | null
+  lastStatus?: string | null
   config: Record<string, any>
 }
 
@@ -34,6 +38,12 @@ export interface Execution {
   finishedAt: string | null
   output: string
   duration: number | null
+  /** Human-readable report title extracted from markdown */
+  title?: string
+  excerpt?: string
+  jobName?: string
+  linkCount?: number
+  isSilent?: boolean
 }
 
 // --- Explore API types ---

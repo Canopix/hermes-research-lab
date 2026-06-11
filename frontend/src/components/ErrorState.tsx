@@ -1,8 +1,9 @@
 "use client";
 
 import { AlertCircle, LucideIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { AnimateIn } from "./AnimateIn";
 
 export interface ErrorStateProps {
@@ -36,9 +37,12 @@ export function ErrorState({
               </Button>
             )}
             {action && (
-              <Button asChild variant="outline">
-                <Link href={action.href}>{action.label}</Link>
-              </Button>
+              <Link
+                href={action.href}
+                className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
+              >
+                {action.label}
+              </Link>
             )}
           </div>
         </div>

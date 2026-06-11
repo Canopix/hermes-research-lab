@@ -187,6 +187,7 @@
 .sidebar-panel {
   background: var(--sidebar);
   border-right: 1px solid var(--sidebar-border);
+  min-height: 100dvh;
 }
 
 .dark .sidebar-panel {
@@ -228,4 +229,25 @@
   outline: 2px solid oklch(0.62 0.22 270 / 0.5);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+/* === Report / blog reading typography === */
+.report-prose {
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+.report-prose > * + * {
+  margin-top: 1.15em;
+}
+
+.report-prose h1 + *,
+.report-prose h2 + *,
+.report-prose h3 + * {
+  margin-top: 0.65em;
+}
+
+.report-prose a {
+  word-break: break-word;
 }

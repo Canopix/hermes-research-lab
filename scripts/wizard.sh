@@ -44,7 +44,7 @@ echo ""
 EXPLORE_HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$EXPLORE_URL/health" 2>/dev/null || echo "000")
 if [ "$EXPLORE_HTTP" != "200" ]; then
     log_err "Exploration API ($EXPLORE_URL) no responde (HTTP $EXPLORE_HTTP)"
-    log_info "Arranca los servicios con: bash scripts/start.sh"
+    log_info "Arranca los servicios con: agenthub start"
     exit 1
 fi
 log_ok "Exploration API conectada"

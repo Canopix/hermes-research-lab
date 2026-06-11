@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-EXPLORE_PORT=8643
-FRONTEND_PORT=3000
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=common.sh
+source "$SCRIPT_DIR/common.sh"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -13,41 +14,72 @@ log_ok()  { echo -e "${GREEN}[OK]${NC} $1"; }
 log_warn(){ echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_info(){ echo -e "[INFO] $1"; }
 
+# Kill every process listening on a port (graceful, then -9).
+kill_port() {
+    local port="$1"
+    local label="$2"
+    local pids
+
+    pids=$(lsof -ti:"$port" 2>/dev/null || true)
+    if [ -z "$pids" ]; then
+        log_info "$label no está corriendo en :$port"
+        return 0
+    fi
+
+    log_info "Matando $label en :$port (PID: $(echo "$pids" | tr '\n' ' '))..."
+    # shellcheck disable=SC2086
+    kill $pids 2>/dev/null || true
+    sleep 1
+
+    pids=$(lsof -ti:"$port" 2>/dev/null || true)
+    if [ -n "$pids" ]; then
+        # shellcheck disable=SC2086
+        kill -9 $pids 2>/dev/null || true
+    fi
+
+    if port_in_use "$port"; then
+        log_warn "$label aún responde en :$port"
+    else
+        log_ok "$label detenido (:$port)"
+    fi
+}
+
+# Stop a process recorded in a pidfile (e.g. uvicorn parent not bound to port).
+stop_pidfile() {
+    local pidfile="$1"
+    local label="$2"
+
+    if [ ! -f "$pidfile" ]; then
+        return 0
+    fi
+
+    local pid
+    pid=$(cat "$pidfile" 2>/dev/null || true)
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        log_info "Matando $label (pidfile PID: $pid)..."
+        kill "$pid" 2>/dev/null || true
+        sleep 1
+        kill -9 "$pid" 2>/dev/null || true
+        log_ok "$label detenido (pidfile)"
+    fi
+    rm -f "$pidfile"
+}
+
 echo "=============================================="
 echo "  AgentHub - Stopping Services"
+echo "  (Hermes :$HERMES_PORT no se toca)"
 echo "=============================================="
 echo ""
 
-if kill $(lsof -ti:$EXPLORE_PORT 2>/dev/null) &>/dev/null; then
-    PIDS=$(lsof -ti:$EXPLORE_PORT)
-    log_info "Matando Exploration API (PID: $PIDS)..."
-    kill $PIDS 2>/dev/null || true
-    sleep 1
-    kill -9 $PIDS 2>/dev/null || true
-    log_ok "Exploration API detenida en :$EXPLORE_PORT"
-else
-    log_info "Exploration API no está corriendo en :$EXPLORE_PORT"
-fi
+kill_port "$EXPLORE_PORT" "Exploration API"
+kill_port "$FRONTEND_PORT" "Frontend"
 
-if kill $(lsof -ti:$FRONTEND_PORT 2>/dev/null) &>/dev/null; then
-    PIDS=$(lsof -ti:$FRONTEND_PORT)
-    log_info "Matando Frontend (PID: $PIDS)..."
-    kill $PIDS 2>/dev/null || true
-    sleep 1
-    kill -9 $PIDS 2>/dev/null || true
-    log_ok "Frontend detenido en :$FRONTEND_PORT"
-else
-    log_info "Frontend no está corriendo en :$FRONTEND_PORT"
-fi
-
-for pidfile in /tmp/agenthub-explore.pid /tmp/agenthub-frontend.pid; do
-    if [ -f "$pidfile" ]; then
-        rm -f "$pidfile"
-    fi
-done
+stop_pidfile /tmp/agenthub-explore.pid "Exploration API"
+stop_pidfile /tmp/agenthub-frontend.pid "Frontend"
 
 echo ""
 echo "=============================================="
-echo -e "  ${GREEN}Servicios detenidos${NC}"
+echo -e "  ${GREEN}AgentHub detenido${NC} (Frontend + Exploration API)"
+echo -e "  ${YELLOW}Hermes sigue corriendo en :$HERMES_PORT${NC}"
 echo "=============================================="
 echo ""

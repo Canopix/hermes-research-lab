@@ -41,8 +41,11 @@ export function ExecutionTable({ executions, agents, onRowClick }: ExecutionTabl
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  const filteredExecutions = executions.filter(exec => {
-    const matchesSearch = exec.output.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const items = Array.isArray(executions) ? executions : [];
+
+  const filteredExecutions = items.filter(exec => {
+    const output = exec.output ?? '';
+    const matchesSearch = output.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         exec.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesAgent = agentFilter === 'all' || exec.agentId === agentFilter;
     const matchesStatus = statusFilter === 'all' || exec.status === statusFilter;
@@ -134,6 +137,7 @@ export function ExecutionTable({ executions, agents, onRowClick }: ExecutionTabl
               {paginatedExecutions.length > 0 ? (
                 paginatedExecutions.map((exec) => {
                   const agent = getAgent(exec.agentId);
+                  const output = exec.output ?? '';
                   return (
                     <TableRow 
                       key={exec.id} 
@@ -156,7 +160,7 @@ export function ExecutionTable({ executions, agents, onRowClick }: ExecutionTabl
                         {exec.duration ? `${(exec.duration / 1000).toFixed(1)}s` : '--'}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell max-w-[200px] truncate text-muted-foreground text-xs">
-                        {exec.output.substring(0, 50)}...
+                        {output ? `${output.substring(0, 50)}${output.length > 50 ? '...' : ''}` : '—'}
                       </TableCell>
                     </TableRow>
                   );
