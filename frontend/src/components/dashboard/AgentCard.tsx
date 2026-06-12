@@ -10,11 +10,12 @@ import { AnimateIn } from "@/components/AnimateIn"
 import { 
   Play, 
   Pause, 
-  RotateCcw, 
+  RotateCcw,
   Trash2,
   Wifi,
   Clock,
   CalendarDays,
+  FileText,
 } from "lucide-react"
 import { pauseJob, resumeJob, triggerJob } from "@/lib/api"
 import { toast } from "sonner"
@@ -38,24 +39,17 @@ const statusBorderColors: Record<string, string> = {
   error: "border-l-error",
 }
 
-const statusIconColors: Record<string, string> = {
-  active: "text-success",
-  paused: "text-warning",
-  error: "text-error",
-}
-
-function getTemplateEmoji(template?: string): string {
-  if (!template) return "\u{1F916}"
+function getTemplateLabel(template?: string): string {
+  if (!template) return "General"
   const t = template.toLowerCase()
-  if (t.includes("code") || t.includes("dev")) return "\u{1F4BB}"
-  if (t.includes("data") || t.includes("analytics")) return "\u{1F4CA}"
-  if (t.includes("research") || t.includes("search")) return "\u{1F50D}"
-  if (t.includes("write") || t.includes("content")) return "\u{270D}\u{FE0F}"
-  if (t.includes("image") || t.includes("design")) return "\u{1F3A8}"
-  if (t.includes("monitor") || t.includes("watch")) return "\u{1F441}\u{FE0F}"
-  if (t.includes("test") || t.includes("qa")) return "\u{1F9EA}"
-  if (t.includes("deploy") || t.includes("ops")) return "\u{1F680}"
-  return "\u{1F916}"
+  if (t.includes("research") || t.includes("search")) return "Investigación"
+  if (t.includes("code") || t.includes("dev")) return "Desarrollo"
+  if (t.includes("data") || t.includes("analytics")) return "Análisis"
+  if (t.includes("write") || t.includes("content")) return "Contenido"
+  if (t.includes("monitor") || t.includes("watch")) return "Monitoreo"
+  if (t.includes("test") || t.includes("qa")) return "Testing"
+  if (t.includes("deploy") || t.includes("ops")) return "Operaciones"
+  return template
 }
 
 export function AgentCard({ agent, progress, activeTool, runId, sseConnected, onRunIdChange, onStatusChange, onDelete, index = 0 }: AgentCardProps) {
@@ -116,36 +110,38 @@ export function AgentCard({ agent, progress, activeTool, runId, sseConnected, on
     }
   }
 
-  const statusIconColor = statusIconColors[agent.status] || "text-muted-foreground"
-  const emoji = getTemplateEmoji(agent.template)
+  const templateLabel = getTemplateLabel(agent.template)
 
   return (
-    <AnimateIn delay={index * 80} direction="up" duration={350}>
+    <AnimateIn delay={index * 60} direction="up" duration={300}>
       <Card
         className={cn(
           "overflow-hidden flex flex-col transition-all duration-200",
-          "border-l-[3px] border-l-muted",
-          isRunning && "border-l-blue-500 shadow-sm ring-1 ring-blue-500/10",
+          "border-l-2 border-l-muted",
+          isRunning && "border-l-primary/70 shadow-sm",
           !isRunning && agent.status === "active" && "border-l-success",
           agent.status === "paused" && "border-l-warning",
           agent.status === "error" && "border-l-error",
-          "hover:shadow-md hover:-translate-y-0.5",
+          "hover:shadow-sm hover:-translate-y-0.5",
         )}
       >
-        <div className="px-5 pt-5 pb-3">
+        {/* Header */}
+        <div className="px-4 pt-4 pb-3">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 bg-muted/60">
-                <span className="select-none">{emoji}</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-md flex items-center justify-center text-base shrink-0 bg-muted/50 border border-border/60">
+                <FileText className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-sm leading-tight truncate text-foreground">{agent.name}</h3>
-                <span className="inline-block mt-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                  {agent.template || "Sin template"}
+                <h3 className="font-semibold text-sm leading-tight truncate text-foreground">
+                  {agent.name}
+                </h3>
+                <span className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded border border-border/60 bg-muted/30 text-muted-foreground font-mono">
+                  {templateLabel}
                 </span>
                 {agent.profile && (
-                  <p className="mt-1 text-[10px] text-muted-foreground truncate" title={agent.profile}>
-                    Profile: {agent.profile}
+                  <p className="mt-1 text-[10px] text-muted-foreground/70 truncate font-mono" title={agent.profile}>
+                    @{agent.profile}
                   </p>
                 )}
               </div>
@@ -154,60 +150,62 @@ export function AgentCard({ agent, progress, activeTool, runId, sseConnected, on
           </div>
         </div>
 
-        <CardContent className="flex-1 px-5 space-y-3">
-          {/* Run info */}
+        {/* Content */}
+        <CardContent className="flex-1 px-4 space-y-3">
+          {/* Schedule info */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2 text-sm">
-              <Clock className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground")} />
+              <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Próxima Ejecución</p>
-                <p className="font-medium text-xs text-foreground truncate">{agent.nextRun || "N/A"}</p>
+                <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Próxima</p>
+                <p className="font-medium text-xs text-foreground truncate font-mono">{agent.nextRun || "—"}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <CalendarDays className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground")} />
+              <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Última Ejecución</p>
-                <p className="font-medium text-xs text-foreground truncate">{agent.lastRun || "N/A"}</p>
+                <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Última</p>
+                <p className="font-medium text-xs text-foreground truncate font-mono">{agent.lastRun || "—"}</p>
               </div>
             </div>
           </div>
 
+          {/* Running banner */}
           {isRunning && (
-            <div className="space-y-1.5 rounded-lg bg-blue-500/5 border border-blue-500/15 p-3">
+            <div className="space-y-1.5 rounded-md border border-primary/15 bg-primary/3 p-3">
               <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider">
-                <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                <span className="flex items-center gap-1.5 text-primary">
                   <Wifi className="h-3 w-3 animate-pulse" />
-                  Ejecutando ahora
+                  Ejecutando
                 </span>
-                <span className="text-muted-foreground">
-                  {hasProgress ? `${progressPercent}%` : sseConnected ? "En vivo" : "Sincronizando…"}
+                <span className="text-muted-foreground font-mono">
+                  {hasProgress ? `${progressPercent}%` : sseConnected ? "en vivo" : "sincronizando…"}
                 </span>
               </div>
               {hasProgress ? (
                 <Progress
                   value={progressPercent}
-                  className="h-1.5 [&_[data-slot=progress-indicator]]:bg-blue-500"
+                  className="h-1 **:data-[slot=progress-indicator]:bg-primary"
                 />
               ) : (
-                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                  <div className="h-full w-1/3 rounded-full bg-blue-500/80 animate-pulse" />
+                <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+                  <div className="h-full w-1/3 rounded-full bg-primary/60 animate-pulse" />
                 </div>
               )}
             </div>
           )}
 
-          {/* Progress from SSE when we have numeric progress but not in running banner */}
+          {/* Progress when not running */}
           {!isRunning && hasProgress && (
             <div className="space-y-1.5">
-              <div className="flex justify-between text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="flex justify-between text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">
                 <span className="flex items-center gap-1.5">
                   <Wifi className="h-3 w-3 text-primary animate-pulse" />
                   Progreso
                 </span>
-                <span className="text-foreground">{progressPercent}%</span>
+                <span className="text-foreground font-mono">{progressPercent}%</span>
               </div>
-              <Progress value={progressPercent} className="h-1.5" />
+              <Progress value={progressPercent} className="h-1" />
             </div>
           )}
 
@@ -220,23 +218,28 @@ export function AgentCard({ agent, progress, activeTool, runId, sseConnected, on
           )}
 
           {runId && sseConnected && (
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 font-mono">
               <Wifi className="h-3 w-3 text-success" />
-              <span>Streaming SSE activo</span>
+              <span>SSE activo</span>
             </div>
           )}
 
           {/* Last output preview */}
-          <div className="rounded-lg bg-muted/30 p-3">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Último Output</p>
-            <p className="text-xs text-muted-foreground line-clamp-2 overflow-hidden relative leading-relaxed">
-              {agent.config?.last_output || "Sin output registrado aún."}
-              <span className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-muted/30 to-transparent pointer-events-none" />
-            </p>
-          </div>
+          {agent.config?.last_output && (
+            <div className="rounded-md border border-border/40 bg-muted/20 p-3">
+              <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider mb-1.5">
+                Último resultado
+              </p>
+              <p className="text-xs text-muted-foreground/70 line-clamp-2 overflow-hidden leading-relaxed">
+                {agent.config.last_output}
+                <span className="absolute bottom-0 left-0 right-0 h-3 bg-linear-to-t from-muted/20 to-transparent pointer-events-none" />
+              </p>
+            </div>
+          )}
         </CardContent>
 
-        <CardFooter className="px-5 py-3 border-t border-border/40 bg-muted/20">
+        {/* Footer actions */}
+        <CardFooter className="px-4 py-2.5 border-t border-border/40 bg-muted/10">
           <div className="flex items-center gap-1.5 w-full justify-between">
             <div className="flex gap-1.5">
               <Button
@@ -267,7 +270,7 @@ export function AgentCard({ agent, progress, activeTool, runId, sseConnected, on
                 title="Ejecutar"
                 onClick={handleTrigger}
                 disabled={!!loading || isRunning}
-                className="h-8 w-8"
+                className="h-8 w-8 bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 hover:border-primary/30"
               >
                 {loading === "trigger" ? (
                   <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />

@@ -214,6 +214,7 @@ function normalizeExecution(raw: Record<string, unknown>, agentId?: string): Exe
     jobName: raw.job_name != null ? String(raw.job_name) : undefined,
     linkCount: typeof raw.link_count === 'number' ? raw.link_count : undefined,
     isSilent: raw.is_silent === true,
+    isFailed: raw.is_failed === true,
   }
 }
 

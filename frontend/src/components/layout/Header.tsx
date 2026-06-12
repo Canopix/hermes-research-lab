@@ -13,17 +13,17 @@ const routeNames: Record<string, string> = {
   agents: 'Dashboard',
   create: 'Builder',
   history: 'Historial',
-  explore: 'Explorar',
+  explore: 'Exploración',
   templates: 'Plantillas',
 }
 
 function getBreadcrumbs(pathname: string): { label: string; href: string }[] {
   const parts = pathname.split('/').filter(Boolean)
   if (parts.length === 0) {
-    return [{ label: 'Home', href: '/' }]
+    return [{ label: 'Inicio', href: '/' }]
   }
 
-  const crumbs: { label: string; href: string }[] = [{ label: 'Home', href: '/' }]
+  const crumbs: { label: string; href: string }[] = [{ label: 'Inicio', href: '/' }]
   let accumulated = ''
   for (let i = 0; i < parts.length; i++) {
     accumulated += '/' + parts[i]
@@ -54,18 +54,17 @@ function ApiStatusIndicator() {
     <div className="flex items-center gap-2 text-xs font-medium">
       {online === true ? (
         <>
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
+          <span className="relative flex h-2 w-2">
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-success/80" />
           </span>
-          <span className="text-muted-foreground hidden sm:inline">Online</span>
+          <span className="text-muted-foreground hidden sm:inline">API Online</span>
         </>
       ) : (
         <>
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-error"></span>
+          <span className="relative flex h-2 w-2">
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-error/80" />
           </span>
-          <span className="text-muted-foreground hidden sm:inline">Offline</span>
+          <span className="text-muted-foreground hidden sm:inline">API Offline</span>
         </>
       )}
     </div>
@@ -121,16 +120,16 @@ export default function Header() {
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <nav className="flex items-center gap-1.5 text-sm overflow-hidden">
           {breadcrumbs.map((crumb, idx) => (
-            <span key={crumb.href} className="flex items-center gap-1.5 flex-shrink-0">
+            <span key={crumb.href} className="flex items-center gap-1.5 shrink-0">
               {idx > 0 && (
-                <span className="text-muted-foreground/40 mx-1 flex-shrink-0">/</span>
+                <span className="text-muted-foreground/40 mx-1 shrink-0">/</span>
               )}
               {idx === 0 ? (
                 <a
                   href={crumb.href}
                   className="text-muted-foreground hover:text-foreground transition-colors truncate"
                 >
-                  Home
+                  {crumb.label}
                 </a>
               ) : idx === breadcrumbs.length - 1 ? (
                 <span className="font-semibold text-foreground truncate max-w-[80px] sm:max-w-[160px] md:max-w-none">
@@ -149,8 +148,8 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* Right: API status, dark mode, notifications, avatar */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      {/* Right: API status, search, dark mode, avatar */}
+      <div className="flex items-center gap-2 shrink-0">
         {/* API Status */}
         <ApiStatusIndicator />
 
@@ -159,8 +158,8 @@ export default function Header() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Buscar agentes..."
-            className="pl-9 h-9 bg-muted/50 border-border text-sm"
+            placeholder="Buscar en la investigación..."
+            className="pl-9 h-9 bg-muted/30 border-border text-sm"
           />
         </div>
 
@@ -170,14 +169,8 @@ export default function Header() {
         {/* Dark mode toggle */}
         <DarkModeToggle />
 
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 min-w-[44px] min-h-[44px] rounded-lg">
-          <Bell className="h-4 w-4" />
-          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
-        </Button>
-
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-xs font-bold text-primary-foreground shadow-sm">
+        <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary">
           N
         </div>
       </div>

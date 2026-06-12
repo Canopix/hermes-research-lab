@@ -14,7 +14,6 @@ import {
   ActivityIcon,
 } from "lucide-react"
 
-// Fallback icon components since HookIcon may not exist
 function HooksIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -43,29 +42,29 @@ const statCards = [
     title: "Profiles",
     value: "profiles_count",
     icon: UsersIcon,
-    description: "Configured profiles",
-    color: "text-blue-500",
+    description: "Perfiles configurados",
+    color: "text-primary",
   },
   {
     title: "Skills",
     value: "skills_count",
     icon: CodeIcon,
-    description: "Installed skills",
-    color: "text-green-500",
+    description: "Skills instaladas",
+    color: "text-success",
   },
   {
     title: "Toolsets",
     value: "toolsets_count",
     icon: WrenchIcon,
-    description: "Available toolsets",
-    color: "text-purple-500",
+    description: "Toolsets disponibles",
+    color: "text-info",
   },
   {
     title: "Hooks",
     value: "hooks_count",
     icon: HooksIcon,
-    description: "Configured hooks",
-    color: "text-orange-500",
+    description: "Hooks configurados",
+    color: "text-warning",
   },
 ]
 
@@ -104,7 +103,7 @@ export default function SystemOverview() {
     return (
       <Card className="border-destructive/50">
         <CardHeader>
-          <CardTitle className="text-destructive">Error Loading Overview</CardTitle>
+          <CardTitle className="text-destructive">Error al cargar</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">{error}</p>
@@ -123,19 +122,19 @@ export default function SystemOverview() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <ActivityIcon className="h-5 w-5" />
-            System Health
+            Estado del Sistema
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
             <Badge
               variant={isHealthy ? "default" : "destructive"}
-              className="text-sm"
+              className="text-sm rounded-md"
             >
-              {isHealthy ? "Healthy" : "Unhealthy"}
+              {isHealthy ? "Operativo" : "No operativo"}
             </Badge>
-            <span className="text-sm text-muted-foreground">
-              {data?.health?.error || "All systems operational"}
+            <span className="text-sm text-muted-foreground/70">
+              {data?.health?.error || "Todos los sistemas funcionando"}
             </span>
           </div>
         </CardContent>
@@ -155,8 +154,8 @@ export default function SystemOverview() {
                 <Icon className={`h-4 w-4 ${card.color}`} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{value}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-2xl font-bold font-mono">{value}</div>
+                <p className="text-xs text-muted-foreground/60">
                   {card.description}
                 </p>
               </CardContent>
@@ -170,13 +169,13 @@ export default function SystemOverview() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <ServerIcon className="h-5 w-5" />
-            Active Jobs
+            Jobs Activos
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">{data?.jobs_count ?? 0}</div>
-          <p className="text-sm text-muted-foreground">
-            Running agents on the system
+          <div className="text-3xl font-bold font-mono">{data?.jobs_count ?? 0}</div>
+          <p className="text-sm text-muted-foreground/60">
+            Agentes ejecutándose en el sistema
           </p>
         </CardContent>
       </Card>

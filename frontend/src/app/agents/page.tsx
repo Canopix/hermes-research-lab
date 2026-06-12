@@ -16,7 +16,7 @@ import {
   CheckCircle2, 
   Clock, 
   Plus,
-  Bot,
+  FlaskConical,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -101,10 +101,10 @@ export default function AgentsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <Skeleton className="h-8 w-40 rounded-lg" />
-            <Skeleton className="h-4 w-72 rounded-lg" />
+            <Skeleton className="h-7 w-40 rounded-md" />
+            <Skeleton className="h-4 w-64 rounded-md" />
           </div>
-          <Skeleton className="h-9 w-36 rounded-lg" />
+          <Skeleton className="h-9 w-36 rounded-md" />
         </div>
         <StatsSkeleton />
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -121,8 +121,8 @@ export default function AgentsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Agentes</h1>
-            <p className="text-muted-foreground text-sm mt-1">Gestiona tus agentes de automatización activos.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Agentes</h1>
+            <p className="text-muted-foreground text-sm mt-1">Gestiona los agentes activos de investigación.</p>
           </div>
           <Link
             href="/create"
@@ -146,7 +146,7 @@ export default function AgentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Agentes</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gestiona tus agentes de automatización activos.</p>
+          <p className="text-muted-foreground text-sm mt-1">Gestiona los agentes activos de investigación.</p>
         </div>
         <Link
           href="/create"
@@ -157,14 +157,14 @@ export default function AgentsPage() {
       </div>
 
       {agents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center min-h-[300px] space-y-5 rounded-xl border border-dashed border-border p-12">
-          <div className="bg-muted w-14 h-14 rounded-2xl flex items-center justify-center">
-            <Bot className="h-7 w-7 text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center min-h-[300px] space-y-5 rounded-xl border border-dashed border-border/50 p-12">
+          <div className="bg-muted/50 w-12 h-12 rounded-lg flex items-center justify-center border border-border/40">
+            <FlaskConical className="h-6 w-6 text-muted-foreground/60" />
           </div>
           <div className="text-center space-y-2 max-w-sm">
-            <h3 className="text-lg font-semibold text-foreground">No hay agentes</h3>
+            <h3 className="text-lg font-semibold text-foreground">Sin agentes configurados</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              No hay agentes configurados. Crea tu primer agente para empezar a automatizar.
+              No hay agentes en ejecución. Creá tu primer agente para comenzar la investigación.
             </p>
             <Link
               href="/create"
@@ -177,10 +177,10 @@ export default function AgentsPage() {
       ) : (
         <>
           <StatsBar stats={[
-            { title: "Agentes Activos", value: String(activeCount), icon: Users, accentColor: "blue" },
-            { title: "Total Agentes", value: String(totalCount), icon: Zap, accentColor: "green" },
-            { title: "Tasa Éxito", value: `${successRate}%`, icon: CheckCircle2, accentColor: "purple" },
-            { title: "Última Ejecución", value: formatLastExecution(lastExecution), icon: Clock, accentColor: "amber" },
+            { title: "Activos", value: String(activeCount), icon: Users, accentColor: "success" },
+            { title: "Total", value: String(totalCount), icon: Zap, accentColor: "primary" },
+            { title: "Tasa Éxito", value: `${successRate}%`, icon: CheckCircle2, accentColor: "info" },
+            { title: "Última Ejecución", value: formatLastExecution(lastExecution), icon: Clock, accentColor: "warning" },
           ]} />
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {agents.map((agent) => (

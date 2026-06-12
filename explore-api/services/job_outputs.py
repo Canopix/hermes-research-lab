@@ -16,6 +16,7 @@ _CRON_JOB_RE = re.compile(r"^#\s+Cron Job:\s*(.+)$", re.MULTILINE)
 _RUN_TIME_RE = re.compile(r"\*\*Run Time:\*\*\s*(.+)", re.MULTILINE)
 _RESPONSE_RE = re.compile(r"## Response\s*\n+(.*)", re.DOTALL)
 _LINK_RE = re.compile(r"https?://[^\s\)>\"]+")
+_FAILURE_RE = re.compile(r"\*\*FAILED\*\*|FAILED|error.*execution|execution.*failed", re.IGNORECASE)
 
 
 def _extract_title(text: str) -> str | None:
@@ -84,6 +85,27 @@ def _parse_output_file(path: Path, job_id: str) -> dict:
         path.stem,
     )
     raw_output = response.group(1).strip() if response else content.strip()
+
+    # Detect failure: job ran but the LLM execution failed
+    is_failed = bool(_FAILURE_RE.search(raw_output))
+
+    if is_failed:
+        return {
+            "id": f"{job_id}-{path.stem}",
+            "job_id": job_id,
+            "job_name": job_name,
+            "title": f"{job_name or 'Agente'} (FAILED)",
+            "excerpt": "La ejecución del agente falló. Revisá la configuración del template y las credenciales.",
+            "link_count": 0,
+            "is_silent": False,
+            "is_failed": True,
+            "timestamp": started_at,
+            "started_at": started_at,
+            "status": "failed",
+            "output": raw_output,
+            "duration_ms": 0,
+        }
+
     is_silent = raw_output == "[SILENT]" or not raw_output
 
     if is_silent:
@@ -107,6 +129,7 @@ def _parse_output_file(path: Path, job_id: str) -> dict:
         "excerpt": excerpt,
         "link_count": link_count,
         "is_silent": is_silent,
+        "is_failed": False,
         "timestamp": started_at,
         "started_at": started_at,
         "status": status,

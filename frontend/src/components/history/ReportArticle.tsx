@@ -42,41 +42,41 @@ export function ReportArticle({ execution, agent }: ReportArticleProps) {
 
   if (execution.isSilent) {
     return (
-      <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 p-12 text-center">
-        <Moon className="mb-4 h-10 w-10 text-muted-foreground/60" />
+      <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-border/40 bg-muted/10 p-12 text-center">
+        <Moon className="mb-4 h-10 w-10 text-muted-foreground/40" />
         <h2 className="text-lg font-semibold text-foreground">Corrida silenciosa</h2>
-        <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground/70">
           {agentName} ejecutó pero no encontró novedades que reportar. Esto es normal cuando
-          no hay papers, noticias o updates nuevos en tus fuentes.
+          no hay papers, noticias o updates nuevos en las fuentes.
         </p>
-        <p className="mt-4 text-xs text-muted-foreground">{date}</p>
+        <p className="mt-4 text-xs text-muted-foreground/50 font-mono">{date}</p>
       </div>
     );
   }
 
   return (
     <article className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-      {/* Blog header */}
-      <header className="mb-8 border-b border-border/60 pb-8">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-          Reporte de investigación
+      {/* Header */}
+      <header className="mb-8 border-b border-border/50 pb-8">
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/70 font-mono">
+          Informe de investigación
         </p>
         <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-[2.5rem] lg:leading-[1.15]">
           {title}
         </h1>
-        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground/70">
           <span className="inline-flex items-center gap-2">
             <User className="h-4 w-4" />
             {agentName}
           </span>
-          <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-2 font-mono">
             <Calendar className="h-4 w-4" />
             {date}
           </span>
           {(execution.linkCount ?? 0) > 0 && (
             <span className="inline-flex items-center gap-2 text-primary">
               <Link2 className="h-4 w-4" />
-              {execution.linkCount} enlaces a fuentes
+              {execution.linkCount} fuentes
             </span>
           )}
         </div>
@@ -88,8 +88,8 @@ export function ReportArticle({ execution, agent }: ReportArticleProps) {
         </div>
       </header>
 
-      {/* Article body */}
-      <div className="mx-auto max-w-[68ch] pb-12">
+      {/* Body */}
+      <div className="mx-auto max-w-[65ch] pb-12">
         <ReportMarkdown content={execution.output} />
       </div>
     </article>

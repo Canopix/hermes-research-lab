@@ -44,6 +44,7 @@ export interface Execution {
   jobName?: string
   linkCount?: number
   isSilent?: boolean
+  isFailed?: boolean
 }
 
 // --- Explore API types ---

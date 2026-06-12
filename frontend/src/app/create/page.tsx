@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Code, Settings2, Sparkles, FileText, ArrowLeft, RotateCcw } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Code, Settings2, FlaskConical, FileText, ArrowLeft, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorState } from "@/components/ErrorState";
 import { AnimateIn } from "@/components/AnimateIn";
@@ -39,7 +39,7 @@ interface WizardState {
 }
 
 const STEPS = [
-  { id: 1, label: "Elegir Template" },
+  { id: 1, label: "Template" },
   { id: 2, label: "Configurar" },
   { id: 3, label: "Preview" },
   { id: 4, label: "Crear" },
@@ -91,7 +91,6 @@ function CreateAgentWizard() {
   }, [searchParams]);
 
   const handleTemplateSelect = (template: Template) => {
-    // If template has no params, skip step 2
     const hasParams = template.params && template.params.length > 0;
     setWizard({
       ...wizard,
@@ -110,7 +109,6 @@ function CreateAgentWizard() {
     if (!current.selectedTemplate) return;
 
     if (current.step === 2) {
-      // Validate agent name is not empty
       if (!current.agentName || current.agentName.trim() === "") {
         toast.error("El nombre del agente es obligatorio");
         return;
@@ -181,7 +179,7 @@ function CreateAgentWizard() {
       <div className="max-w-5xl mx-auto pb-20">
         <header className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-2">
-            <div className="h-8 w-52 bg-muted rounded animate-pulse" />
+            <div className="h-7 w-52 bg-muted rounded animate-pulse" />
             <div className="h-4 w-72 bg-muted rounded animate-pulse" />
           </div>
           <div className="h-10 w-24 bg-muted rounded animate-pulse" />
@@ -200,8 +198,8 @@ function CreateAgentWizard() {
     <div className="max-w-5xl mx-auto pb-20">
       <header className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Crear Nuevo Agente</h1>
-          <p className="text-muted-foreground mt-1">Configura tu asistente inteligente en pocos pasos.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Crear Agente</h1>
+          <p className="text-muted-foreground mt-1">Configura un nuevo agente de investigación.</p>
         </div>
         <Button variant="outline" onClick={() => router.push("/agents")}>
           Cancelar
@@ -214,8 +212,8 @@ function CreateAgentWizard() {
         {wizard.step === 1 && (
           <AnimateIn key={wizard.step} direction="up" delay={100} duration={300}>
           <div className="space-y-6">
-            <div className="flex items-center gap-2 text-lg font-medium">
-              <Sparkles className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-2 text-lg font-medium text-foreground">
+              <FlaskConical className="h-5 w-5 text-primary" />
               <span>Selecciona una base para tu agente</span>
             </div>
             {templates.length === 0 ? (
@@ -248,14 +246,13 @@ function CreateAgentWizard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings2 className="h-5 w-5 text-primary" />
-                Personalizar {wizard.selectedTemplate.name}
+                Configurar {wizard.selectedTemplate.name}
               </CardTitle>
               <CardDescription>
-                Ajusta los parámetros necesarios para el funcionamiento del agente.
+                Ajusta los parámetros para el funcionamiento del agente.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Nombre del agente */}
               <div className="space-y-2">
                 <label htmlFor="agentName" className="text-sm font-medium">
                   Nombre del agente <span className="text-destructive">*</span>
@@ -268,12 +265,11 @@ function CreateAgentWizard() {
                   onChange={(e) => setWizard(prev => ({ ...prev, agentName: e.target.value }))}
                   className="w-full"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Este será el nombre de tu agente personalizado. Por defecto se usa el nombre del template.
+                <p className="text-xs text-muted-foreground/60">
+                  Nombre descriptivo para tu agente personalizado.
                 </p>
               </div>
               <Separator />
-              {/* Parámetros dinámicos */}
               {wizard.selectedTemplate.params.map((p) => (
                 <DynamicParam
                   key={p.name}
@@ -308,11 +304,11 @@ function CreateAgentWizard() {
                     Preview del Prompt
                   </CardTitle>
                   <CardDescription>
-                    Así es como el modelo interpretará tus instrucciones.
+                    Instrucciones que el modelo interpretará.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <pre className="bg-muted p-4 rounded-md font-mono text-sm overflow-x-auto whitespace-pre-wrap min-h-[300px]">
+                  <pre className="bg-muted/50 p-4 rounded-lg font-mono text-sm overflow-x-auto whitespace-pre-wrap min-h-[300px] border border-border/40">
                     {wizard.preview || "Generando preview..."}
                   </pre>
                 </CardContent>
@@ -322,29 +318,28 @@ function CreateAgentWizard() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Resumen de Configuración</CardTitle>
+                  <CardTitle className="text-lg">Resumen</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Nombre del agente */}
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Nombre del Agente</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1">Agente</p>
                     <p className="text-sm font-medium">{wizard.agentName}</p>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Template</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1">Template</p>
                     <p className="text-sm font-medium">{wizard.selectedTemplate?.name}</p>
                   </div>
                   <Separator />
                   {wizard.selectedTemplate?.params && wizard.selectedTemplate.params.length > 0 && (
                     <>
                       <div>
-                        <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Parámetros</p>
+                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-2">Parámetros</p>
                         <div className="space-y-2">
                           {Object.entries(wizard.config).map(([key, val]) => (
                             <div key={key} className="flex justify-between text-sm">
                               <span className="text-muted-foreground">{key}:</span>
-                              <span className="font-medium">{String(val)}</span>
+                              <span className="font-medium font-mono text-xs">{String(val)}</span>
                             </div>
                           ))}
                         </div>
@@ -353,29 +348,29 @@ function CreateAgentWizard() {
                     </>
                   )}
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Toolsets</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1">Toolsets</p>
                     <div className="flex flex-wrap gap-1">
                       {wizard.selectedTemplate?.hermesConfig?.toolsets?.map(t => (
-                        <Badge key={t} variant="outline">{t}</Badge>
+                        <Badge key={t} variant="outline" className="rounded-md text-[10px]">{t}</Badge>
                       ))}
                     </div>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Schedule</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1">Schedule</p>
                     <p className="text-sm font-medium font-mono">{wizard.schedule}</p>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Deliver</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1">Deliver</p>
                     <p className="text-sm font-medium">{wizard.deliver}</p>
                   </div>
                 </CardContent>
               </Card>
 
               <div className="flex flex-col gap-3">
-                <Button size="lg" className="w-full" onClick={nextStep}>
-                  Crear Agente Ahora
+                <Button size="lg" className="w-full bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 hover:border-primary/30" onClick={nextStep}>
+                  Crear Agente
                 </Button>
                 <Button variant="outline" size="lg" className="w-full" onClick={prevStep}>
                   Atrás
@@ -394,19 +389,19 @@ function CreateAgentWizard() {
                 <>
                   <Loader2 className="h-12 w-12 animate-spin text-primary" />
                   <div>
-                    <h2 className="text-2xl font-bold">Creando tu agente...</h2>
-                    <p className="text-muted-foreground mt-2">Estamos preparando todo el entorno.</p>
-                    <p className="text-sm text-muted-foreground mt-1 font-medium">{wizard.agentName}</p>
+                    <h2 className="text-2xl font-bold">Creando agente...</h2>
+                    <p className="text-muted-foreground mt-2">Preparando el entorno.</p>
+                    <p className="text-sm text-muted-foreground mt-1 font-medium font-mono">{wizard.agentName}</p>
                   </div>
                 </>
               ) : wizard.error ? (
                 <ErrorState
-                  title={wizard.errorType === "network" ? "Error de conexión" : "Ups, algo salió mal"}
+                  title={wizard.errorType === "network" ? "Error de conexión" : "Algo salió mal"}
                   description={
                     wizard.errorType === "network"
                       ? "No se pudo conectar con el servidor. Verifica que Exploration API esté corriendo en :8643."
                       : wizard.errorType === "http"
-                      ? "El servidor respondió con un error. Revisa la configuración e intenta de nuevo."
+                      ? "El servidor respondió con un error."
                       : wizard.error
                   }
                   retry={nextStep}
@@ -414,10 +409,10 @@ function CreateAgentWizard() {
                 />
               ) : (
                 <>
-                  <CheckCircle2 className="h-12 w-12 text-green-500" />
+                  <CheckCircle2 className="h-12 w-12 text-success" />
                   <div>
                     <h2 className="text-2xl font-bold">¡Agente creado!</h2>
-                    <p className="text-muted-foreground mt-2">Tu nuevo agente <strong>{wizard.agentName}</strong> ya está listo para trabajar.</p>
+                    <p className="text-muted-foreground mt-2">Tu agente <strong>{wizard.agentName}</strong> está listo.</p>
                   </div>
                   <Button onClick={() => router.push("/agents")} size="lg">
                     Ir al Dashboard

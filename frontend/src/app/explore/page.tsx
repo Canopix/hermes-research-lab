@@ -16,12 +16,12 @@ export default function ExplorePage() {
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Exploración del Sistema</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Explora todo lo que Hermes tiene configurado: profiles, skills, toolsets, hooks, MCP servers, cron y config.
+          Configuración del sistema Hermes: profiles, skills, toolsets, hooks, MCP servers, cron y config.
         </p>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="flex flex-wrap w-full justify-start gap-1 h-auto p-1 bg-muted/50">
+        <TabsList className="flex flex-wrap w-full justify-start gap-1 h-auto p-1 bg-muted/30 border border-border/40">
           <TabsTrigger value="overview" className="text-xs font-medium">Overview</TabsTrigger>
           <TabsTrigger value="profiles" className="text-xs font-medium">Profiles</TabsTrigger>
           <TabsTrigger value="skills" className="text-xs font-medium">Skills</TabsTrigger>

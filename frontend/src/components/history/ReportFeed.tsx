@@ -44,6 +44,9 @@ export function ReportFeed({
   onAgentFilterChange,
 }: ReportFeedProps) {
   const filtered = executions.filter((exec) => {
+    // Skip failed executions — they don't contain useful research data
+    if (exec.isFailed) return false;
+
     const haystack = [
       exec.title,
       exec.excerpt,
@@ -66,7 +69,7 @@ export function ReportFeed({
           placeholder="Buscar en reportes…"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
         />
         <select
           value={agentFilter}
@@ -82,9 +85,9 @@ export function ReportFeed({
         </select>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1 [-webkit-overflow-scrolling:touch]">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1 [-webkit-overflow-scrolling:touch]">
         {filtered.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Sin reportes que coincidan.</p>
+          <p className="py-8 text-center text-sm text-muted-foreground/60">Sin reportes que coincidan.</p>
         ) : (
           filtered.map((exec) => {
             const agentName = getAgentName(agents, exec.agentId, exec);
@@ -98,22 +101,22 @@ export function ReportFeed({
                 type="button"
                 onClick={() => onSelect(exec)}
                 className={cn(
-                  'w-full rounded-xl border p-4 text-left transition-all',
+                  'w-full rounded-lg border p-3.5 text-left transition-all',
                   selected
-                    ? 'border-primary/40 bg-primary/5 shadow-sm ring-1 ring-primary/20'
-                    : 'border-border/60 bg-card hover:border-border hover:bg-muted/30',
+                    ? 'border-primary/30 bg-primary/3 shadow-sm'
+                    : 'border-border/40 bg-card hover:border-border hover:bg-muted/20',
                 )}
               >
-                <div className="mb-2 flex items-start gap-2">
-                  <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary/70" />
+                <div className="mb-1.5 flex items-start gap-2">
+                  <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/60" />
                   <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
                     {title}
                   </h3>
                 </div>
-                <p className="mb-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                <p className="mb-2.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground/70">
                   {exec.excerpt ?? exec.output.slice(0, 160)}
                 </p>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50 font-mono">
                   <span className="inline-flex items-center gap-1">
                     <User className="h-3 w-3" />
                     {agentName}
@@ -123,9 +126,9 @@ export function ReportFeed({
                     {date}
                   </span>
                   {(exec.linkCount ?? 0) > 0 && (
-                    <span className="inline-flex items-center gap-1 text-primary/80">
+                    <span className="inline-flex items-center gap-1 text-primary/70">
                       <Link2 className="h-3 w-3" />
-                      {exec.linkCount} enlaces
+                      {exec.linkCount} fuentes
                     </span>
                   )}
                 </div>

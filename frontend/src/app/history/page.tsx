@@ -6,7 +6,7 @@ import { Agent, Execution } from '@/lib/types';
 import { ReportFeed } from '@/components/history/ReportFeed';
 import { ReportArticle } from '@/components/history/ReportArticle';
 import { Button } from '@/components/ui/button';
-import { History as HistoryIcon, ArrowRight, BookOpen } from 'lucide-react';
+import { History as HistoryIcon, ArrowRight, BookOpen, FlaskConical } from 'lucide-react';
 import { ErrorState } from '@/components/ErrorState';
 import Link from 'next/link';
 
@@ -51,7 +51,7 @@ export default function HistoryPage() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="space-y-3 text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <p className="text-sm text-muted-foreground">Cargando reportes…</p>
         </div>
       </div>
@@ -71,15 +71,15 @@ export default function HistoryPage() {
   if (executions.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="max-w-md space-y-5 rounded-xl border border-border bg-card p-8 text-center shadow-xs">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-            <HistoryIcon className="h-7 w-7 text-muted-foreground" />
+        <div className="max-w-md space-y-6 rounded-xl border border-border/60 bg-card p-8 text-center shadow-xs">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-muted/50 border border-border/40">
+            <FlaskConical className="h-5 w-5 text-muted-foreground/60" />
           </div>
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-foreground">Aún no hay reportes</h2>
-            <p className="text-sm leading-relaxed text-muted-foreground">
+            <p className="text-sm leading-relaxed text-muted-foreground/80">
               Cuando un agente ejecuta, genera un reporte en markdown — papers, tendencias,
-              enlaces. Aparecerán acá en formato de lectura, como un blog.
+              enlaces. Aparecerán acá en formato de lectura.
             </p>
           </div>
           <div className="flex flex-col justify-center gap-2 sm:flex-row">
@@ -105,17 +105,17 @@ export default function HistoryPage() {
     <div className="flex min-h-[calc(100dvh-5.5rem)] flex-col gap-4 lg:h-[calc(100dvh-5.5rem)] lg:min-h-0 lg:overflow-hidden">
       <header className="shrink-0 space-y-1">
         <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          Reportes
+          Reportes de Investigación
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Lectura de los informes generados por tus agentes — papers, fuentes y análisis.
+        <p className="text-sm text-muted-foreground/70">
+          Informes generados por los agentes — papers, fuentes y análisis documentales.
         </p>
       </header>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden lg:grid-cols-[minmax(280px,340px)_1fr] lg:gap-6">
         {/* Feed sidebar */}
-        <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/50 p-4 max-lg:max-h-[min(360px,42vh)]">
-          <div className="mb-3 flex shrink-0 items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/50 bg-card p-4 max-lg:max-h-[min(360px,42vh)]">
+          <div className="mb-3 flex shrink-0 items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
             <BookOpen className="h-3.5 w-3.5" />
             {executions.length} reporte{executions.length === 1 ? '' : 's'}
           </div>
@@ -132,11 +132,11 @@ export default function HistoryPage() {
         </aside>
 
         {/* Article reader */}
-        <main className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card p-6 sm:p-8 max-lg:min-h-[50vh]">
+        <main className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/50 bg-card p-6 sm:p-8 max-lg:min-h-[50vh]">
           {selected ? (
             <ReportArticle execution={selected} agent={selectedAgent} />
           ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground/60">
               Seleccioná un reporte para leerlo
             </div>
           )}

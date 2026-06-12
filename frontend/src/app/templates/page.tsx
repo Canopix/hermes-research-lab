@@ -6,7 +6,7 @@ import { TemplateCard } from "./TemplateCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Bot } from "lucide-react";
+import { Search, Filter, FlaskConical } from "lucide-react";
 
 // --- Mock templates for offline development ---
 const MOCK_TEMPLATES: Template[] = [
@@ -91,7 +91,6 @@ export default function TemplatesPage() {
   const [filterToolset, setFilterToolset] = useState<string>("all");
 
   useEffect(() => {
-    // Try real API first, fall back to mock
     async function load() {
       try {
         const res = await fetch("/api/explore/api/templates", {
@@ -111,14 +110,12 @@ export default function TemplatesPage() {
       } catch (e) {
         console.log("API no disponible, usando datos mock");
       }
-      // Fallback: mock data
       setTemplates(MOCK_TEMPLATES);
       setLoading(false);
     }
     load();
   }, []);
 
-  // Collect all unique toolsets for filter
   const allToolsets = Array.from(
     new Set(templates.flatMap((t) => t.hermesConfig?.toolsets || []))
   ).sort();
@@ -137,7 +134,7 @@ export default function TemplatesPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         <p className="text-muted-foreground">Cargando catálogo de templates...</p>
       </div>
     );
@@ -146,9 +143,9 @@ export default function TemplatesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Catálogo de Templates</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Plantillas</h1>
         <p className="text-muted-foreground mt-1">
-          Elige un template para crear tu agente rápidamente.
+          Templates preconfigurados para crear agentes de investigación rápidamente.
         </p>
       </div>
 
@@ -179,7 +176,7 @@ export default function TemplatesPage() {
       </div>
 
       {/* Results count */}
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground/70">
         {filtered.length} template{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
       </p>
 
@@ -187,7 +184,7 @@ export default function TemplatesPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground space-y-4">
-            <Bot className="h-12 w-12 mx-auto opacity-30" />
+            <FlaskConical className="h-12 w-12 mx-auto opacity-30" />
             <p>No se encontraron templates con esos filtros.</p>
           </CardContent>
         </Card>
