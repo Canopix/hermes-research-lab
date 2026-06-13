@@ -6,7 +6,7 @@
 }
 
 [data-testid="agenthub-root"] [data-testid="wizard-form"] {
-  border-top: 1px solid var(--border, #e0e0e0);
+  border-top: 1px solid var(--color-border, #e0e0e0);
   padding-top: 16px;
 }
 
@@ -26,5 +26,5 @@
 }
 
 [data-testid="agenthub-root"] [data-testid="tpl-card"]:hover {
-  border-color: var(--primary, #0066cc);
+  border-color: var(--color-primary, #0066cc);
 }

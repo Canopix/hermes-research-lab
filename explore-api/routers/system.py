@@ -129,13 +129,14 @@ async def list_delivery_channels() -> list[dict]:
                     "supports_thread_id": True,
                 })
 
-            if "discord" in platforms and platforms["discord"]:
-                channels.append({
-                    "id": "discord",
-                    "name": "Discord",
-                    "icon": "🎮",
-                    "description": "Envía a Discord",
-                })
+            # Discord desactivado temporalmente como canal de envío
+            # if "discord" in platforms and platforms["discord"]:
+            #     channels.append({
+            #         "id": "discord",
+            #         "name": "Discord",
+            #         "icon": "🎮",
+            #         "description": "Envía a Discord",
+            #     })
 
             if "slack" in platforms and platforms["slack"]:
                 channels.append({

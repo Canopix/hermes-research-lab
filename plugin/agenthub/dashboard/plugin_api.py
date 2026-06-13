@@ -313,7 +313,7 @@ def list_channels():
     # Detect configured platforms
     platform_type_map = {
         "telegram": "telegram",
-        "discord": "discord",
+        # "discord": "discord",  # Desactivado temporalmente
         "slack": "slack",
         "whatsapp": "whatsapp",
         "signal": "signal",
@@ -322,7 +322,7 @@ def list_channels():
     }
     platform_features = {
         "telegram": {"supports_chat_id": True, "supports_thread_id": True},
-        "discord": {"supports_chat_id": True, "supports_thread_id": True},
+        # "discord": {"supports_chat_id": True, "supports_thread_id": True},  # Desactivado temporalmente
         "slack": {"supports_chat_id": True, "supports_thread_id": False},
     }
 
@@ -440,8 +440,7 @@ def create_agent(req: CreateAgentRequest):
     # 1. Create profile with --clone (copies config.yaml, .env, SOUL.md from current)
     profile_created = False
     if not profile_dir.exists():
-        create_cmd = ["hermes", "profile", "create", profile_name, "--clone",
-                      "--description", f"AgentHub agent: {tpl['name']}"]
+        create_cmd = ["hermes", "profile", "create", profile_name, "--clone"]
         result = subprocess.run(create_cmd, capture_output=True, text=True, timeout=30)
         if result.returncode != 0:
             return {"profile": profile_name, "profile_created": False,
@@ -496,12 +495,22 @@ def create_agent(req: CreateAgentRequest):
     # 6. Create cron job IN the new profile context using -p flag
     cmd = ["hermes", "-p", profile_name, "cron", "create", schedule, rendered,
            "--name", agent_name, "--deliver", deliver]
-    # Add skills
-    all_skills = [req.template_id] + [s for s in req.skills if s != req.template_id]
-    for skill in all_skills:
-        cmd.extend(["--skill", skill])
-
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    # Add skills — only user-selected real skills, NOT the template_id
+    # (templates render prompts; they are not executable skills)
+    for skill in req.skills:
+        if skill:  # skip empty strings
+            cmd.extend(["--skill", skill])
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    except subprocess.TimeoutExpired:
+        return {"profile": profile_name, "profile_created": profile_created,
+                "job_created": False, "error": "Hermes cron create timed out after 60s"}
+    except FileNotFoundError:
+        return {"profile": profile_name, "profile_created": profile_created,
+                "job_created": False, "error": "Hermes CLI not found on PATH"}
+    except Exception as exc:
+        return {"profile": profile_name, "profile_created": profile_created,
+                "job_created": False, "error": f"Failed to run hermes cron create: {exc}"}
 
     # 7. Save metadata
     metadata = {

@@ -36,25 +36,25 @@
   var GRID = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px", marginTop: "16px" };
   var FILL_PANEL = { position: "relative", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" };
   var SCROLL_AREA = { flex: 1, overflowY: "auto", padding: "0" };
-  var TAB_BAR = { display: "flex", gap: "2px", borderBottom: "1px solid var(--border, #e2e8f0)", marginBottom: "16px", overflowX: "auto" };
-  var TAB_BTN_BASE = { padding: "8px 16px", fontSize: "13px", fontWeight: 500, border: "none", borderBottom: "2px solid transparent", background: "transparent", cursor: "pointer", color: "var(--muted-foreground, #64748b)", whiteSpace: "nowrap", transition: "all 0.15s" };
-  var TAB_BTN_ACTIVE = { borderBottomColor: "var(--primary, #3b82f6)", color: "var(--primary, #3b82f6)" };
+  var TAB_BAR = { display: "flex", gap: "2px", borderBottom: "1px solid var(--color-border, #e2e8f0)", marginBottom: "16px", overflowX: "auto" };
+  var TAB_BTN_BASE = { padding: "8px 16px", fontSize: "13px", fontWeight: 500, border: "none", borderBottom: "2px solid transparent", background: "transparent", cursor: "pointer", color: "var(--color-muted-foreground, #64748b)", whiteSpace: "nowrap", transition: "all 0.15s" };
+  var TAB_BTN_ACTIVE = { borderBottomColor: "var(--color-primary, #3b82f6)", color: "var(--color-primary, #3b82f6)" };
   var FIELD_STYLE = { marginBottom: "14px" };
   var FIELD_LABEL = { display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "4px", color: "var(--foreground, #0f172a)" };
-  var FIELD_DESC = { fontSize: "11px", color: "var(--muted-foreground, #64748b)", marginBottom: "4px" };
-  var CHECKBOX_ROW = { display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: "1px solid var(--border, #e2e8f0)", borderRadius: "6px", marginBottom: "6px", cursor: "pointer", transition: "background 0.1s", fontSize: "13px" };
-  var CHECKBOX_ROW_SELECTED = { background: "var(--accent, #f1f5f9)", borderColor: "var(--primary, #3b82f6)" };
+  var FIELD_DESC = { fontSize: "11px", color: "var(--color-muted-foreground, #64748b)", marginBottom: "4px" };
+  var CHECKBOX_ROW = { display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: "1px solid var(--color-border, #e2e8f0)", borderRadius: "6px", marginBottom: "6px", cursor: "pointer", transition: "background 0.1s", fontSize: "13px" };
+  var CHECKBOX_ROW_SELECTED = { background: "var(--color-accent, #f1f5f9)", borderColor: "var(--color-primary, #3b82f6)" };
   var CARD_SELECTABLE = { cursor: "pointer", transition: "all 0.15s" };
   var HEADER_ROW = { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" };
-  var SCHEDULE_INPUT = { width: "100%", padding: "8px 12px", border: "1px solid var(--border, #e2e8f0)", borderRadius: "6px", fontSize: "13px", fontFamily: "monospace" };
-  var RESULT_SUCCESS = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "#e6ffe6", border: "1px solid #b3e6b3" };
-  var RESULT_ERROR = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "#ffe6e6", border: "1px solid #e6b3b3" };
-  var PREVIEW_BOX = { background: "var(--muted, #f1f5f9)", padding: "12px", borderRadius: "6px", marginTop: "12px", whiteSpace: "pre-wrap", fontSize: "12px", maxHeight: "200px", overflowY: "auto" };
-  var EMPTY_STATE = { textAlign: "center", padding: "48px 24px", color: "var(--muted-foreground, #64748b)" };
-  var BACK_BTN = { marginBottom: "12px", fontSize: "13px", cursor: "pointer", background: "none", border: "none", color: "var(--primary, #3b82f6)", padding: "0", display: "flex", alignItems: "center", gap: "4px" };
+  var SCHEDULE_INPUT = { width: "100%", padding: "8px 12px", border: "1px solid var(--color-border, #e2e8f0)", borderRadius: "6px", fontSize: "13px", fontFamily: "monospace" };
+  var RESULT_SUCCESS = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "var(--color-success, #e6ffe6)", border: "1px solid var(--color-success, #b3e6b3)" };
+  var RESULT_ERROR = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "var(--color-destructive, #ffe6e6)", border: "1px solid var(--color-destructive, #e6b3b3)" };
+  var PREVIEW_BOX = { background: "var(--color-muted, #f1f5f9)", padding: "12px", borderRadius: "6px", marginTop: "12px", whiteSpace: "pre-wrap", fontSize: "12px", maxHeight: "200px", overflowY: "auto" };
+  var EMPTY_STATE = { textAlign: "center", padding: "48px 24px", color: "var(--color-muted-foreground, #64748b)" };
+  var BACK_BTN = { marginBottom: "12px", fontSize: "13px", cursor: "pointer", background: "none", border: "none", color: "var(--color-primary, #3b82f6)", padding: "0", display: "flex", alignItems: "center", gap: "4px" };
   var SECTION_TITLE = { fontSize: "14px", fontWeight: 600, marginBottom: "8px", color: "var(--foreground, #0f172a)" };
-  var SUMMARY_ROW = { display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border, #e2e8f0)", fontSize: "13px" };
-  var SUMMARY_LABEL = { color: "var(--muted-foreground, #64748b)" };
+  var SUMMARY_ROW = { display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--color-border, #e2e8f0)", fontSize: "13px" };
+  var SUMMARY_LABEL = { color: "var(--color-muted-foreground, #64748b)" };
   var SUMMARY_VALUE = { fontWeight: 500 };
 
   // ── Helpers ────────────────────────────────────────────────────────────
@@ -85,12 +85,12 @@
     });
     return h(Card, {
       key: tpl.id, "data-testid": "tpl-card",
-      style: Object.assign({}, CARD_SELECTABLE, opts.selected ? { border: "2px solid var(--primary, #3b82f6)" } : {}),
+      style: Object.assign({}, CARD_SELECTABLE, opts.selected ? { border: "2px solid var(--color-primary, #3b82f6)" } : {}),
       onClick: opts.onClick || null
     },
       h(CardHeader, { style: { padding: "12px 16px 4px" } }, h(CardTitle, { style: { fontSize: "14px" } }, tpl.name)),
       h(CardContent, { style: { padding: "4px 16px 12px" } },
-        h("p", { style: { fontSize: "12px", color: "var(--muted-foreground, #64748b)", margin: 0, lineHeight: 1.4 } }, tpl.description),
+        h("p", { style: { fontSize: "12px", color: "var(--color-muted-foreground, #64748b)", margin: 0, lineHeight: 1.4 } }, tpl.description),
         h("div", { style: { marginTop: "8px", display: "flex", gap: "4px", flexWrap: "wrap" } }, badges)
       )
     );
@@ -189,7 +189,7 @@
           : h(Input, { type: "text", value: model || defaultModel, placeholder: defaultModel,
               onChange: function (e) { onModelChange(e.target.value); } })
       ),
-      selectedOption ? h("div", { style: { marginTop: "12px", padding: "10px 12px", background: "var(--muted, #f1f5f9)", borderRadius: "6px", fontSize: "12px" } },
+      selectedOption ? h("div", { style: { marginTop: "12px", padding: "10px 12px", background: "var(--color-muted, #f1f5f9)", borderRadius: "6px", fontSize: "12px" } },
         h("strong", null, "Endpoint: "),
         h("span", { style: { fontFamily: "monospace" } }, selectedOption.base_url || "default")
       ) : null
@@ -231,7 +231,7 @@
         h(Input, { type: "text", value: search || "", placeholder: "Search skills…",
           onChange: function (e) { onSearch(e.target.value); } })
       ),
-      h("div", { style: { marginBottom: "8px", fontSize: "12px", color: "var(--muted-foreground, #64748b)" } },
+      h("div", { style: { marginBottom: "8px", fontSize: "12px", color: "var(--color-muted-foreground, #64748b)" } },
         selected.length + " skill" + (selected.length !== 1 ? "s" : "") + " selected"
       ),
       groups.length === 0
@@ -246,7 +246,7 @@
                   h(Checkbox, { checked: isOn }),
                   h("div", null,
                     h("div", { style: { fontWeight: 500, fontSize: "13px" } }, s.name),
-                    s.description ? h("div", { style: { fontSize: "11px", color: "var(--muted-foreground, #64748b)" } }, s.description) : null
+                    s.description ? h("div", { style: { fontSize: "11px", color: "var(--color-muted-foreground, #64748b)" } }, s.description) : null
                   )
                 );
               })
@@ -278,7 +278,7 @@
         h(Input, { type: "text", value: search || "", placeholder: "Search toolsets…",
           onChange: function (e) { onSearch(e.target.value); } })
       ),
-      h("div", { style: { marginBottom: "8px", fontSize: "12px", color: "var(--muted-foreground, #64748b)" } },
+      h("div", { style: { marginBottom: "8px", fontSize: "12px", color: "var(--color-muted-foreground, #64748b)" } },
         selected.length + " toolset" + (selected.length !== 1 ? "s" : "") + " selected"
       ),
       filtered.length === 0
@@ -290,7 +290,7 @@
               h(Checkbox, { checked: isOn }),
               h("div", { style: { flex: 1 } },
                 h("div", { style: { fontWeight: 500, fontSize: "13px" } }, t.name),
-                t.description ? h("div", { style: { fontSize: "11px", color: "var(--muted-foreground, #64748b)" } }, t.description) : null
+                t.description ? h("div", { style: { fontSize: "11px", color: "var(--color-muted-foreground, #64748b)" } }, t.description) : null
               ),
               t.category ? h(Badge, { variant: "secondary", style: { fontSize: "10px" } }, t.category) : null
             );
@@ -333,13 +333,13 @@
           onChange: function (e) { onScheduleChange(e.target.value); },
           "data-testid": "cron-input"
         }),
-        h("div", { style: { marginTop: "6px", fontSize: "11px", color: "var(--muted-foreground, #64748b)" } },
+        h("div", { style: { marginTop: "6px", fontSize: "11px", color: "var(--color-muted-foreground, #64748b)" } },
           "Format: minute hour day month weekday. Example: ",
           h("code", null, "0 9 * * 1-5"),
           " = weekdays at 9 AM"
         )
       ) : null,
-      h("div", { style: { marginTop: "16px", padding: "10px 12px", background: "var(--muted, #f1f5f9)", borderRadius: "6px", fontSize: "12px" } },
+      h("div", { style: { marginTop: "16px", padding: "10px 12px", background: "var(--color-muted, #f1f5f9)", borderRadius: "6px", fontSize: "12px" } },
         h("strong", null, "Current schedule: "),
         h("code", { style: { marginLeft: "4px" } }, schedule || "none")
       )
@@ -363,7 +363,7 @@
 
     return h("div", null,
       h("div", { style: SECTION_TITLE }, "Delivery channel"),
-      h("div", { style: { marginBottom: "12px", fontSize: "12px", color: "var(--muted-foreground, #64748b)" } },
+      h("div", { style: { marginBottom: "12px", fontSize: "12px", color: "var(--color-muted-foreground, #64748b)" } },
         "Choose where agent output is delivered"
       ),
       all.length === 0
@@ -378,7 +378,7 @@
                   ch.icon ? h("span", { style: { marginRight: "6px" } }, ch.icon) : null,
                   ch.name
                 ),
-                ch.description ? h("div", { style: { fontSize: "11px", color: "var(--muted-foreground, #64748b)" } }, ch.description) : null
+                ch.description ? h("div", { style: { fontSize: "11px", color: "var(--color-muted-foreground, #64748b)" } }, ch.description) : null
               )
             );
           }),
@@ -561,7 +561,7 @@
         h("div", { style: HEADER_ROW },
           h("div", null,
             h("h3", { style: { margin: "0 0 4px", fontSize: "18px" } }, tpl.name),
-            h("p", { style: { margin: 0, fontSize: "13px", color: "var(--muted-foreground, #64748b)" } }, tpl.description)
+            h("p", { style: { margin: 0, fontSize: "13px", color: "var(--color-muted-foreground, #64748b)" } }, tpl.description)
           ),
           h("div", { style: { display: "flex", gap: "4px" } },
             (tpl.tags || []).map(function (t) {
@@ -588,7 +588,7 @@
         ),
         // Right: Summary + actions
         h("div", { style: { flex: "0 0 240px", display: "flex", flexDirection: "column", gap: "12px" } },
-          h("div", { style: { background: "var(--muted, #f1f5f9)", borderRadius: "8px", padding: "12px" } },
+          h("div", { style: { background: "var(--color-muted, #f1f5f9)", borderRadius: "8px", padding: "12px" } },
             h("div", { style: { fontSize: "13px", fontWeight: 600, marginBottom: "8px" } }, "Summary"),
             summaryItems.map(function (item) {
               return h("div", { key: item.label, style: SUMMARY_ROW },
@@ -626,7 +626,7 @@
     if (!props.templates.length) return h("p", null, "Loading templates…");
     var groups = groupByCategory(props.templates);
     return h("div", null,
-      h("div", { style: { marginBottom: "8px", fontSize: "13px", color: "var(--muted-foreground, #64748b)" } },
+      h("div", { style: { marginBottom: "8px", fontSize: "13px", color: "var(--color-muted-foreground, #64748b)" } },
         props.templates.length + " templates available. Select one to configure."
       ),
       groups.map(function (g) {
@@ -650,7 +650,7 @@
     if (props.jobs.error) content += "\n\nError: " + props.jobs.error;
     return h("div", null,
       h(Button, { variant: "outline", onClick: props.onRefresh, style: { marginBottom: "8px" } }, "Refresh"),
-      h("pre", { "data-testid": "agents-list", style: { background: "var(--muted, #f1f5f9)", padding: "12px", borderRadius: "6px", whiteSpace: "pre-wrap", fontSize: "12px" } }, content || "No agents yet.")
+      h("pre", { "data-testid": "agents-list", style: { background: "var(--color-muted, #f1f5f9)", padding: "12px", borderRadius: "6px", whiteSpace: "pre-wrap", fontSize: "12px" } }, content || "No agents yet.")
     );
   }
 
@@ -721,6 +721,7 @@
 
     // Select template for wizard
     function selectTemplate(tpl) {
+      setTab("create");
       setSelectedTpl(tpl);
       setAgentName(tpl.name);
       setConfig({});
@@ -731,6 +732,7 @@
 
     // Back to gallery
     function backToGallery() {
+      setTab("templates");
       setSelectedTpl(null);
       setPreview(null);
       setResult(null);
