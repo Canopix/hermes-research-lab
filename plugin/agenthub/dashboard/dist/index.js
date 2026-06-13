@@ -36,25 +36,25 @@
   var GRID = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px", marginTop: "16px" };
   var FILL_PANEL = { position: "relative", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" };
   var SCROLL_AREA = { flex: 1, overflowY: "auto", padding: "0" };
-  var TAB_BAR = { display: "flex", gap: "2px", borderBottom: "1px solid var(--color-border, #e2e8f0)", marginBottom: "16px", overflowX: "auto" };
-  var TAB_BTN_BASE = { padding: "8px 16px", fontSize: "13px", fontWeight: 500, border: "none", borderBottom: "2px solid transparent", background: "transparent", cursor: "pointer", color: "var(--color-muted-foreground, #64748b)", whiteSpace: "nowrap", transition: "all 0.15s" };
-  var TAB_BTN_ACTIVE = { borderBottomColor: "var(--color-primary, #3b82f6)", color: "var(--color-primary, #3b82f6)" };
+  var TAB_BAR = { display: "flex", gap: "2px", borderBottom: "1px solid color-mix(in srgb, var(--midground, #ffac02) 20%, transparent)", marginBottom: "16px", overflowX: "auto" };
+  var TAB_BTN_BASE = { padding: "8px 16px", fontSize: "13px", fontWeight: 500, border: "none", borderBottom: "2px solid transparent", background: "transparent", cursor: "pointer", color: "var(--color-text-tertiary, #b8942e)", whiteSpace: "nowrap", transition: "all 0.15s" };
+  var TAB_BTN_ACTIVE = { borderBottomColor: "var(--midground, #ffac02)", color: "var(--midground, #ffac02)" };
   var FIELD_STYLE = { marginBottom: "14px" };
-  var FIELD_LABEL = { display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "4px", color: "var(--foreground, #0f172a)" };
-  var FIELD_DESC = { fontSize: "11px", color: "var(--color-muted-foreground, #64748b)", marginBottom: "4px" };
-  var CHECKBOX_ROW = { display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: "1px solid var(--color-border, #e2e8f0)", borderRadius: "6px", marginBottom: "6px", cursor: "pointer", transition: "background 0.1s", fontSize: "13px" };
-  var CHECKBOX_ROW_SELECTED = { background: "var(--color-accent, #f1f5f9)", borderColor: "var(--color-primary, #3b82f6)" };
+  var FIELD_LABEL = { display: "block", fontSize: "13px", fontWeight: 500, marginBottom: "4px", color: "var(--foreground, #fff)" };
+  var FIELD_DESC = { fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)", marginBottom: "4px" };
+  var CHECKBOX_ROW = { display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: "1px solid color-mix(in srgb, var(--midground, #ffac02) 20%, transparent)", borderRadius: "6px", marginBottom: "6px", cursor: "pointer", transition: "background 0.1s", fontSize: "13px" };
+  var CHECKBOX_ROW_SELECTED = { background: "color-mix(in srgb, var(--midground, #ffac02) 15%, transparent)", borderColor: "var(--midground, #ffac02)" };
   var CARD_SELECTABLE = { cursor: "pointer", transition: "all 0.15s" };
   var HEADER_ROW = { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" };
-  var SCHEDULE_INPUT = { width: "100%", padding: "8px 12px", border: "1px solid var(--color-border, #e2e8f0)", borderRadius: "6px", fontSize: "13px", fontFamily: "monospace" };
-  var RESULT_SUCCESS = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "var(--color-success, #e6ffe6)", border: "1px solid var(--color-success, #b3e6b3)" };
-  var RESULT_ERROR = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "var(--color-destructive, #ffe6e6)", border: "1px solid var(--color-destructive, #e6b3b3)" };
-  var PREVIEW_BOX = { background: "var(--color-muted, #f1f5f9)", padding: "12px", borderRadius: "6px", marginTop: "12px", whiteSpace: "pre-wrap", fontSize: "12px", maxHeight: "200px", overflowY: "auto" };
-  var EMPTY_STATE = { textAlign: "center", padding: "48px 24px", color: "var(--color-muted-foreground, #64748b)" };
-  var BACK_BTN = { marginBottom: "12px", fontSize: "13px", cursor: "pointer", background: "none", border: "none", color: "var(--color-primary, #3b82f6)", padding: "0", display: "flex", alignItems: "center", gap: "4px" };
-  var SECTION_TITLE = { fontSize: "14px", fontWeight: 600, marginBottom: "8px", color: "var(--foreground, #0f172a)" };
-  var SUMMARY_ROW = { display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--color-border, #e2e8f0)", fontSize: "13px" };
-  var SUMMARY_LABEL = { color: "var(--color-muted-foreground, #64748b)" };
+  var SCHEDULE_INPUT = { width: "100%", padding: "8px 12px", border: "1px solid color-mix(in srgb, var(--midground, #ffac02) 20%, transparent)", borderRadius: "6px", fontSize: "13px", fontFamily: "monospace" };
+  var RESULT_SUCCESS = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "color-mix(in srgb, var(--color-success, #4ade80) 15%, transparent)", border: "1px solid var(--color-success, #4ade80)" };
+  var RESULT_ERROR = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "color-mix(in srgb, var(--color-destructive, #fb2c36) 15%, transparent)", border: "1px solid var(--color-destructive, #fb2c36)" };
+  var PREVIEW_BOX = { background: "color-mix(in srgb, var(--midground, #ffac02) 10%, transparent)", padding: "12px", borderRadius: "6px", marginTop: "12px", whiteSpace: "pre-wrap", fontSize: "12px", maxHeight: "200px", overflowY: "auto" };
+  var EMPTY_STATE = { textAlign: "center", padding: "48px 24px", color: "var(--color-text-tertiary, #b8942e)" };
+  var BACK_BTN = { marginBottom: "12px", fontSize: "13px", cursor: "pointer", background: "none", border: "none", color: "var(--midground, #ffac02)", padding: "0", display: "flex", alignItems: "center", gap: "4px" };
+  var SECTION_TITLE = { fontSize: "14px", fontWeight: 600, marginBottom: "8px", color: "var(--foreground, #fff)" };
+  var SUMMARY_ROW = { display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid color-mix(in srgb, var(--midground, #ffac02) 20%, transparent)", fontSize: "13px" };
+  var SUMMARY_LABEL = { color: "var(--color-text-tertiary, #b8942e)" };
   var SUMMARY_VALUE = { fontWeight: 500 };
 
   // ── Helpers ────────────────────────────────────────────────────────────
@@ -85,12 +85,12 @@
     });
     return h(Card, {
       key: tpl.id, "data-testid": "tpl-card",
-      style: Object.assign({}, CARD_SELECTABLE, opts.selected ? { border: "2px solid var(--color-primary, #3b82f6)" } : {}),
+      style: Object.assign({}, CARD_SELECTABLE, opts.selected ? { border: "2px solid var(--midground, #ffac02)" } : {}),
       onClick: opts.onClick || null
     },
       h(CardHeader, { style: { padding: "12px 16px 4px" } }, h(CardTitle, { style: { fontSize: "14px" } }, tpl.name)),
       h(CardContent, { style: { padding: "4px 16px 12px" } },
-        h("p", { style: { fontSize: "12px", color: "var(--color-muted-foreground, #64748b)", margin: 0, lineHeight: 1.4 } }, tpl.description),
+        h("p", { style: { fontSize: "12px", color: "var(--color-text-tertiary, #b8942e)", margin: 0, lineHeight: 1.4 } }, tpl.description),
         h("div", { style: { marginTop: "8px", display: "flex", gap: "4px", flexWrap: "wrap" } }, badges)
       )
     );
@@ -189,7 +189,7 @@
           : h(Input, { type: "text", value: model || defaultModel, placeholder: defaultModel,
               onChange: function (e) { onModelChange(e.target.value); } })
       ),
-      selectedOption ? h("div", { style: { marginTop: "12px", padding: "10px 12px", background: "var(--color-muted, #f1f5f9)", borderRadius: "6px", fontSize: "12px" } },
+      selectedOption ? h("div", { style: { marginTop: "12px", padding: "10px 12px", background: "color-mix(in srgb, var(--midground, #ffac02) 10%, transparent)", borderRadius: "6px", fontSize: "12px" } },
         h("strong", null, "Endpoint: "),
         h("span", { style: { fontFamily: "monospace" } }, selectedOption.base_url || "default")
       ) : null
@@ -231,7 +231,7 @@
         h(Input, { type: "text", value: search || "", placeholder: "Search skills…",
           onChange: function (e) { onSearch(e.target.value); } })
       ),
-      h("div", { style: { marginBottom: "8px", fontSize: "12px", color: "var(--color-muted-foreground, #64748b)" } },
+      h("div", { style: { marginBottom: "8px", fontSize: "12px", color: "var(--color-text-tertiary, #b8942e)" } },
         selected.length + " skill" + (selected.length !== 1 ? "s" : "") + " selected"
       ),
       groups.length === 0
@@ -246,7 +246,7 @@
                   h(Checkbox, { checked: isOn }),
                   h("div", null,
                     h("div", { style: { fontWeight: 500, fontSize: "13px" } }, s.name),
-                    s.description ? h("div", { style: { fontSize: "11px", color: "var(--color-muted-foreground, #64748b)" } }, s.description) : null
+                    s.description ? h("div", { style: { fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)" } }, s.description) : null
                   )
                 );
               })
@@ -278,7 +278,7 @@
         h(Input, { type: "text", value: search || "", placeholder: "Search toolsets…",
           onChange: function (e) { onSearch(e.target.value); } })
       ),
-      h("div", { style: { marginBottom: "8px", fontSize: "12px", color: "var(--color-muted-foreground, #64748b)" } },
+      h("div", { style: { marginBottom: "8px", fontSize: "12px", color: "var(--color-text-tertiary, #b8942e)" } },
         selected.length + " toolset" + (selected.length !== 1 ? "s" : "") + " selected"
       ),
       filtered.length === 0
@@ -290,7 +290,7 @@
               h(Checkbox, { checked: isOn }),
               h("div", { style: { flex: 1 } },
                 h("div", { style: { fontWeight: 500, fontSize: "13px" } }, t.name),
-                t.description ? h("div", { style: { fontSize: "11px", color: "var(--color-muted-foreground, #64748b)" } }, t.description) : null
+                t.description ? h("div", { style: { fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)" } }, t.description) : null
               ),
               t.category ? h(Badge, { variant: "secondary", style: { fontSize: "10px" } }, t.category) : null
             );
@@ -333,13 +333,13 @@
           onChange: function (e) { onScheduleChange(e.target.value); },
           "data-testid": "cron-input"
         }),
-        h("div", { style: { marginTop: "6px", fontSize: "11px", color: "var(--color-muted-foreground, #64748b)" } },
+        h("div", { style: { marginTop: "6px", fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)" } },
           "Format: minute hour day month weekday. Example: ",
           h("code", null, "0 9 * * 1-5"),
           " = weekdays at 9 AM"
         )
       ) : null,
-      h("div", { style: { marginTop: "16px", padding: "10px 12px", background: "var(--color-muted, #f1f5f9)", borderRadius: "6px", fontSize: "12px" } },
+      h("div", { style: { marginTop: "16px", padding: "10px 12px", background: "color-mix(in srgb, var(--midground, #ffac02) 10%, transparent)", borderRadius: "6px", fontSize: "12px" } },
         h("strong", null, "Current schedule: "),
         h("code", { style: { marginLeft: "4px" } }, schedule || "none")
       )
@@ -363,7 +363,7 @@
 
     return h("div", null,
       h("div", { style: SECTION_TITLE }, "Delivery channel"),
-      h("div", { style: { marginBottom: "12px", fontSize: "12px", color: "var(--color-muted-foreground, #64748b)" } },
+      h("div", { style: { marginBottom: "12px", fontSize: "12px", color: "var(--color-text-tertiary, #b8942e)" } },
         "Choose where agent output is delivered"
       ),
       all.length === 0
@@ -378,7 +378,7 @@
                   ch.icon ? h("span", { style: { marginRight: "6px" } }, ch.icon) : null,
                   ch.name
                 ),
-                ch.description ? h("div", { style: { fontSize: "11px", color: "var(--color-muted-foreground, #64748b)" } }, ch.description) : null
+                ch.description ? h("div", { style: { fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)" } }, ch.description) : null
               )
             );
           }),
@@ -561,7 +561,7 @@
         h("div", { style: HEADER_ROW },
           h("div", null,
             h("h3", { style: { margin: "0 0 4px", fontSize: "18px" } }, tpl.name),
-            h("p", { style: { margin: 0, fontSize: "13px", color: "var(--color-muted-foreground, #64748b)" } }, tpl.description)
+            h("p", { style: { margin: 0, fontSize: "13px", color: "var(--color-text-tertiary, #b8942e)" } }, tpl.description)
           ),
           h("div", { style: { display: "flex", gap: "4px" } },
             (tpl.tags || []).map(function (t) {
@@ -588,7 +588,7 @@
         ),
         // Right: Summary + actions
         h("div", { style: { flex: "0 0 240px", display: "flex", flexDirection: "column", gap: "12px" } },
-          h("div", { style: { background: "var(--color-muted, #f1f5f9)", borderRadius: "8px", padding: "12px" } },
+          h("div", { style: { background: "color-mix(in srgb, var(--midground, #ffac02) 10%, transparent)", borderRadius: "8px", padding: "12px" } },
             h("div", { style: { fontSize: "13px", fontWeight: 600, marginBottom: "8px" } }, "Summary"),
             summaryItems.map(function (item) {
               return h("div", { key: item.label, style: SUMMARY_ROW },
@@ -626,7 +626,7 @@
     if (!props.templates.length) return h("p", null, "Loading templates…");
     var groups = groupByCategory(props.templates);
     return h("div", null,
-      h("div", { style: { marginBottom: "8px", fontSize: "13px", color: "var(--color-muted-foreground, #64748b)" } },
+      h("div", { style: { marginBottom: "8px", fontSize: "13px", color: "var(--color-text-tertiary, #b8942e)" } },
         props.templates.length + " templates available. Select one to configure."
       ),
       groups.map(function (g) {
@@ -642,16 +642,527 @@
     );
   }
 
+  function formatAgentDate(value) {
+    if (!value) return "—";
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return d.toLocaleString(undefined, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  function escapeHtml(text) {
+    return String(text || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function renderMarkdown(content) {
+    if (!content) return "";
+    var html = escapeHtml(content);
+    var c = "color:#e8e8e8;";
+    var ch = "color:#ffac02;";
+    var cl = "color:#ffac02;text-decoration:underline;";
+    html = html.replace(/^### (.+)$/gm, "<h3 style=\"margin:1.25rem 0 0.5rem;font-size:1rem;font-weight:600;" + c + "\">$1</h3>");
+    html = html.replace(/^## (.+)$/gm, "<h2 style=\"margin:1.5rem 0 0.75rem;font-size:1.125rem;font-weight:600;" + ch + "border-bottom:1px solid rgba(255,172,2,0.2);padding-bottom:0.25rem;\">$1</h2>");
+    html = html.replace(/^# (.+)$/gm, "<h1 style=\"margin:0 0 1rem;font-size:1.5rem;font-weight:700;" + ch + "\">$1</h1>");
+    html = html.replace(/\*\*(.+?)\*\*/g, "<strong style=\"color:#fff;\">$1</strong>");
+    html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "<a href=\"$2\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"" + cl + "\">$1</a>");
+    html = html.replace(/(https?:\/\/[^\s<]+)/g, "<a href=\"$1\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"" + cl + "\">$1</a>");
+    html = html.replace(/^- (.+)$/gm, "<li style=\"margin:0.25rem 0;" + c + "\">$1</li>");
+    html = html.replace(/(<li[\s\S]*?<\/li>\n?)+/g, function (block) {
+      return "<ul style=\"margin:0.75rem 0;padding-left:1.25rem;list-style:disc;\">" + block + "</ul>";
+    });
+    html = html.replace(/\n\n+/g, "</p><p style=\"margin:0.75rem 0;line-height:1.7;" + c + "\">");
+    html = "<p style=\"margin:0.75rem 0;line-height:1.7;" + c + "\">" + html + "</p>";
+    html = html.replace(/<p[^>]*>\s*<\/p>/g, "");
+    html = html.replace(/<p[^>]*>(<h[123])/g, "$1");
+    html = html.replace(/(<\/h[123]>)<\/p>/g, "$1");
+    html = html.replace(/<p[^>]*>(<ul)/g, "$1");
+    html = html.replace(/(<\/ul>)<\/p>/g, "$1");
+    return html;
+  }
+
+  function agentDetailRow(label, value) {
+    return h("div", { style: SUMMARY_ROW, key: label },
+      h("span", { style: SUMMARY_LABEL }, label),
+      h("span", { style: SUMMARY_VALUE }, value || "—")
+    );
+  }
+
+  function agentProfileCard(agent, onSelect) {
+    var badges = [];
+    if (agent.template_id) {
+      badges.push(h(Badge, { key: "tpl", variant: "secondary", style: { fontSize: "10px" } }, agent.template_id));
+    }
+    if (agent.execution_count) {
+      badges.push(h(Badge, { key: "runs", variant: "outline", style: { fontSize: "10px" } }, agent.execution_count + " reportes"));
+    }
+
+    return h(Card, {
+      key: agent.profile,
+      "data-testid": "agent-profile-card",
+      style: Object.assign({}, CARD_SELECTABLE, { marginBottom: 0 }),
+      onClick: function () { onSelect(agent.profile); }
+    },
+      h(CardHeader, { style: { padding: "12px 16px 4px" } },
+        h("div", { style: { display: "flex", justifyContent: "space-between", gap: "8px", alignItems: "flex-start" } },
+          h(CardTitle, { style: { fontSize: "14px", margin: 0 } }, agent.name || agent.profile),
+          h("div", { style: { display: "flex", gap: "4px", flexWrap: "wrap", justifyContent: "flex-end" } }, badges)
+        )
+      ),
+      h(CardContent, { style: { padding: "4px 16px 12px" } },
+        agent.description
+          ? h("p", { style: { fontSize: "12px", color: "var(--color-text-tertiary, #b8942e)", margin: "0 0 8px", lineHeight: 1.5 } }, agent.description)
+          : null,
+        agentDetailRow("Creado", formatAgentDate(agent.created_at)),
+        agentDetailRow("Cron jobs", String((agent.jobs || []).length)),
+        agentDetailRow("Última ejecución", formatAgentDate(agent.last_execution_at)),
+        h("p", { style: { fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)", margin: "8px 0 0", fontFamily: "monospace" } }, agent.profile)
+      )
+    );
+  }
+
+  function reportListItem(report, selected, onSelect) {
+    return h("button", {
+      key: report.id,
+      type: "button",
+      onClick: function () { onSelect(report); },
+      style: {
+        width: "100%", textAlign: "left", padding: "10px 12px", marginBottom: "6px",
+        borderRadius: "8px", border: selected ? "1px solid var(--midground, #ffac02)" : "1px solid color-mix(in srgb, var(--midground, #ffac02) 20%, transparent)",
+        background: selected ? "color-mix(in srgb, var(--midground, #ffac02) 15%, transparent)" : "var(--background, #170d02)",
+        cursor: "pointer", color: "var(--foreground, #fff)"
+      }
+    },
+      h("div", { style: { fontSize: "13px", fontWeight: 600, marginBottom: "4px", lineHeight: 1.35, color: "var(--foreground, #fff)" } }, report.title || "Reporte"),
+      h("p", { style: { fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)", margin: "0 0 6px", lineHeight: 1.45 } }, report.excerpt || ""),
+      h("div", { style: { fontSize: "10px", color: "var(--color-text-tertiary, #b8942e)", fontFamily: "monospace" } },
+        formatAgentDate(report.started_at),
+        report.link_count ? " · " + report.link_count + " fuentes" : ""
+      )
+    );
+  }
+
+  function reportReader(report, agentName) {
+    if (!report) {
+      return h("div", { style: Object.assign({}, EMPTY_STATE, { padding: "32px 16px" }) },
+        h("p", { style: { margin: 0 } }, "Selecciona un reporte para leerlo.")
+      );
+    }
+    if (report.is_silent) {
+      return h("div", { style: Object.assign({}, EMPTY_STATE, { padding: "32px 16px" }) },
+        h("h3", { style: { margin: "0 0 8px", fontSize: "16px" } }, "Corrida silenciosa"),
+        h("p", { style: { margin: 0, fontSize: "13px" } }, agentName + " no encontró novedades en esta ejecución."),
+        h("p", { style: { margin: "12px 0 0", fontSize: "11px", fontFamily: "monospace", color: "var(--color-text-tertiary, #b8942e)" } }, formatAgentDate(report.started_at))
+      );
+    }
+    return h("div", { style: { padding: "0 4px 24px", overflowY: "auto", maxHeight: "100%" } },
+      h("p", { style: { fontSize: "10px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--midground, #ffac02)", margin: "0 0 8px" } }, "Informe de investigación"),
+      h("h2", { style: { margin: "0 0 12px", fontSize: "22px", lineHeight: 1.25, fontWeight: 700, color: "var(--foreground, #fff)" } }, report.title || "Reporte"),
+      h("div", { style: { display: "flex", flexWrap: "wrap", gap: "12px", fontSize: "12px", color: "var(--color-text-tertiary, #b8942e)", marginBottom: "16px" } },
+        h("span", null, agentName),
+        h("span", null, formatAgentDate(report.started_at)),
+        report.link_count ? h("span", { style: { color: "var(--midground, #ffac02)" } }, report.link_count + " fuentes") : null
+      ),
+      h("div", {
+        style: { fontSize: "14px", color: "#e8e8e8", maxWidth: "65ch" },
+        dangerouslySetInnerHTML: { __html: renderMarkdown(report.output || report.excerpt || "") }
+      })
+    );
+  }
+
+  // ── Agent Detail: Stats row ──────────────────────────────────────────
+  function agentStat(label, value, color) {
+    return h("div", { style: { textAlign: "center", padding: "12px 16px", background: "color-mix(in srgb, var(--midground, #ffac02) 10%, transparent)", borderRadius: "8px", minWidth: "100px" } },
+      h("div", { style: { fontSize: "22px", fontWeight: 700, color: color || "var(--foreground, #fff)", lineHeight: 1.2 } }, value),
+      h("div", { style: { fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)", marginTop: "4px", textTransform: "uppercase", letterSpacing: "0.04em" } }, label)
+    );
+  }
+
+  // ── Agent Detail: Overview Tab ──────────────────────────────────────
+  function AgentOverviewTab(agent) {
+    var jobCount = (agent.jobs || []).length;
+    var execCount = agent.execution_count || 0;
+    var jobs = agent.jobs || [];
+    var nextJob = jobs.find(function (j) { return j.next_run; });
+
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: "20px" } },
+      // Stats bar
+      h("div", { style: { display: "flex", gap: "12px", flexWrap: "wrap" } },
+        agentStat("Cron jobs", String(jobCount)),
+        agentStat("Reportes", String(execCount)),
+        agentStat("Delivery", agent.jobs[0] ? agent.jobs[0].deliver : "—", "var(--midground, #ffac02)"),
+        nextJob
+          ? agentStat("Próxima", new Date(nextJob.next_run).toLocaleDateString("es-ES", { day: "2-digit", month: "short" }), "var(--color-success, #4ade80)")
+          : null
+      ),
+      // Info card
+      h(Card, { style: { margin: 0 } },
+        h(CardHeader, { style: { padding: "12px 16px 4px" } },
+          h(CardTitle, { style: { fontSize: "14px" } }, "Información del agente")
+        ),
+        h(CardContent, { style: { padding: "4px 16px 12px" } },
+          h("div", { style: { display: "grid", gridTemplateColumns: "140px 1fr", gap: "6px 12px", fontSize: "13px" } },
+            h("span", { style: { color: "var(--color-text-tertiary, #b8942e)" } }, "Profile"),
+            h("span", { style: { fontFamily: "monospace", fontSize: "12px", wordBreak: "break-all" } }, agent.profile),
+            h("span", { style: { color: "var(--color-text-tertiary, #b8942e)" } }, "Template"),
+            h("span", null, agent.template_name || agent.template_id || "—"),
+            h("span", { style: { color: "var(--color-text-tertiary, #b8942e)" } }, "Creado"),
+            h("span", null, formatAgentDate(agent.created_at)),
+            h("span", { style: { color: "var(--color-text-tertiary, #b8942e)" } }, "Última ejecución"),
+            h("span", null, formatAgentDate(agent.last_execution_at))
+          )
+        )
+      ),
+      // Description
+      agent.description ? h(Card, { style: { margin: 0 } },
+        h(CardHeader, { style: { padding: "12px 16px 4px" } },
+          h(CardTitle, { style: { fontSize: "14px" } }, "Descripción")
+        ),
+        h(CardContent, { style: { padding: "4px 16px 12px" } },
+          h("p", { style: { fontSize: "13px", lineHeight: 1.6, margin: 0, color: "var(--color-text-tertiary, #b8942e)" } }, agent.description)
+        )
+      ) : null
+    );
+  }
+
+  // ── Agent Detail: Cron Jobs Tab ─────────────────────────────────────
+  function AgentCronJobsTab(props) {
+    var agent = props.agent || props;
+    var onRunJob = props.onRunJob;
+    var runningJobId = props.runningJobId;
+    var runMessage = props.runMessage;
+    var jobs = agent.jobs || [];
+    if (!jobs.length) {
+      return h("div", { style: EMPTY_STATE },
+        h("p", { style: { margin: 0 } }, "Este agente no tiene cron jobs todavía."),
+        h("p", { style: { margin: "8px 0 0", fontSize: "12px" } }, "Crea el agente desde Templates para vincular un schedule.")
+      );
+    }
+
+    function jobStatusBadge(status) {
+      var s = String(status || "").toLowerCase();
+      var color = s === "active" || s === "scheduled" ? "var(--color-success, #4ade80)" : s === "paused" ? "var(--color-warning, #d97706)" : "var(--color-destructive, #fb2c36)";
+      return h(Badge, { variant: "outline", style: { fontSize: "10px", borderColor: color, color: color } }, status || "unknown");
+    }
+
+    function runMessageBanner() {
+      if (!runMessage) return null;
+      var bg = runMessage.type === "success" ? "var(--color-success, #4ade80)" : runMessage.type === "error" ? "var(--color-destructive, #fb2c36)" : "var(--midground, #ffac02)";
+      return h("div", { style: { padding: "10px 14px", borderRadius: "8px", background: bg, color: "#fff", fontSize: "13px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px" } },
+        runMessage.type === "info" ? h("div", { style: { width: "16px", height: "16px", border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "agenthub-spin 0.8s linear infinite" } }) : null,
+        runMessage.type === "success" ? h("span", null, "✓") : null,
+        runMessage.type === "error" ? h("span", null, "✕") : null,
+        h("span", null, runMessage.text)
+      );
+    }
+
+    return h("div", { style: { display: "flex", flexDirection: "column", gap: "12px" } },
+      // Run status banner (inline)
+      runMessageBanner(),
+      // Running spinner banner
+      runningJobId ? h("div", { style: { padding: "10px 14px", borderRadius: "8px", background: "color-mix(in srgb, var(--midground, #ffac02) 15%, transparent)", border: "1px solid var(--midground, #ffac02)", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" } },
+        h("div", { style: { width: "16px", height: "16px", border: "2px solid var(--midground, #ffac02)", borderTopColor: "transparent", borderRadius: "50%", animation: "agenthub-spin 0.8s linear infinite" } }),
+        h("span", { style: { fontWeight: 500 } }, "Ejecutando job", runningJobId ? "…" : ""),
+        h("span", { style: { fontSize: "11px", fontFamily: "monospace", color: "var(--color-text-tertiary, #b8942e)" } }, runningJobId)
+      ) : null,
+      jobs.map(function (job) {
+        var isRunning = runningJobId === job.id;
+        return h(Card, { key: job.id, style: { margin: 0, opacity: isRunning ? 0.7 : 1, transition: "opacity 0.2s" } },
+          h(CardContent, { style: { padding: "14px 16px" } },
+            h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" } },
+              h("div", { style: { display: "flex", alignItems: "center", gap: "8px" } },
+                h("span", { style: { fontWeight: 600, fontSize: "14px" } }, job.name || "Cron Job"),
+                jobStatusBadge(job.status),
+                isRunning ? h("span", { style: { fontSize: "11px", color: "var(--midground, #ffac02)", fontWeight: 500 } }, "corriendo…") : null
+              ),
+              h(Button, {
+                variant: isRunning ? "default" : "outline",
+                size: "sm",
+                onClick: function () { onRunJob(job.id); },
+                disabled: runningJobId != null,
+                "data-testid": "run-job-" + job.id,
+                style: Object.assign({ fontSize: "12px", minWidth: "110px" }, isRunning ? { background: "var(--midground, #ffac02)", color: "#fff" } : {})
+              }, isRunning ? "⏳ Ejecutando…" : "▶ Ejecutar ahora")
+            ),
+            h("div", { style: { display: "grid", gridTemplateColumns: "120px 1fr 120px 1fr", gap: "6px 12px", fontSize: "13px" } },
+              h("span", { style: { color: "var(--color-text-tertiary, #b8942e)" } }, "Schedule"),
+              h("span", { style: { fontFamily: "monospace" } }, job.schedule),
+              h("span", { style: { color: "var(--color-text-tertiary, #b8942e)" } }, "Próxima corrida"),
+              h("span", null, formatAgentDate(job.next_run)),
+              h("span", { style: { color: "var(--color-text-tertiary, #b8942e)" } }, "Delivery"),
+              h("span", null, job.deliver || "local"),
+              h("span", { style: { color: "var(--color-text-tertiary, #b8942e)" } }, "Última corrida"),
+              h("span", null, job.last_run ? formatAgentDate(job.last_run) : "—")
+            )
+          )
+        );
+      })
+    );
+  }
+
+  // ── Agent Detail: History Tab (blog reader) ─────────────────────────
+  function AgentHistoryTab(props) {
+    var agent = props.agent || props;
+    var selectedReport = props.selectedReport;
+    var setSelectedReport = props.setSelectedReport;
+    var executions = (agent.executions || []).filter(function (r) { return !r.is_failed; });
+    if (!executions.length) {
+      return h("div", { style: { minHeight: "300px" } },
+        h("div", { style: EMPTY_STATE },
+          h("p", { style: { margin: 0 } }, "Aún no hay reportes."),
+          h("p", { style: { margin: "8px 0 0", fontSize: "12px" } }, "Ejecuta el cron job o espera la próxima corrida programada.")
+        )
+      );
+    }
+    return h("div", { style: { display: "grid", gridTemplateColumns: "minmax(240px, 300px) minmax(0, 1fr)", gap: "0", minHeight: "400px", alignItems: "stretch" } },
+      // Feed sidebar
+      h("div", { style: { overflowY: "auto", maxHeight: "560px", paddingRight: "12px", borderRight: "1px solid color-mix(in srgb, var(--midground, #ffac02) 20%, transparent)" } },
+        executions.map(function (report) {
+          return reportListItem(report, selectedReport && selectedReport.id === report.id, setSelectedReport);
+        })
+      ),
+      // Reader
+      h("div", { style: { padding: "4px 16px 24px", overflowY: "auto", maxHeight: "560px" } },
+        reportReader(selectedReport, agent.name)
+      )
+    );
+  }
+
+  // ── Agent Detail View ───────────────────────────────────────────────
+  function AgentDetailView(props) {
+    var agent = props.agent;
+    var onRunJob = props.onRunJob;
+    var runningJobId = props.runningJobId;
+    var dtab = useState("overview"), detailTab = dtab[0], setDetailTab = dtab[1];
+    var rep = useState(null), selectedReport = rep[0], setSelectedReport = rep[1];
+
+    useEffect(function () {
+      setSelectedReport(executions[0] || null);
+    }, [agent.profile]);
+
+    var executions = (agent.executions || []).filter(function (r) { return !r.is_failed; });
+
+    // Sub-tab button helper
+    function detailTabBtn(key, label, count) {
+      var isActive = detailTab === key;
+      return h("button", {
+        key: key,
+        type: "button",
+        onClick: function () { setDetailTab(key); },
+        style: Object.assign({}, TAB_BTN_BASE, isActive ? TAB_BTN_ACTIVE : {}),
+      }, label + (count != null ? " (" + count + ")" : ""));
+    }
+
+    var jobCount = (agent.jobs || []).length;
+    var reportCount = agent.execution_count || 0;
+
+    return h("div", { style: { display: "flex", flexDirection: "column", height: "100%", minHeight: 0 } },
+      // Back button
+      h("button", { type: "button", onClick: props.onBack, style: BACK_BTN }, "← Volver a agentes"),
+
+      // Agent header card
+      h(Card, { style: { margin: "0 0 16px", background: "var(--color-muted, #f8fafc)" } },
+        h(CardContent, { style: { padding: "16px 20px" } },
+          h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", flexWrap: "wrap" } },
+            h("div", { style: { flex: 1, minWidth: "200px" } },
+              h("div", { style: { display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px", flexWrap: "wrap" } },
+                h("h2", { style: { margin: 0, fontSize: "22px", fontWeight: 700 } }, agent.name),
+                agent.template_id ? h(Badge, { variant: "secondary", style: { fontSize: "11px" } }, agent.template_id) : null
+              ),
+              agent.description ? h("p", { style: { margin: "4px 0 0", fontSize: "13px", color: "var(--color-text-tertiary, #b8942e)", lineHeight: 1.5, maxWidth: "60ch" } }, agent.description) : null
+            ),
+            // Quick stats
+            h("div", { style: { display: "flex", gap: "16px", flexShrink: 0 } },
+              h("div", { style: { textAlign: "right" } },
+                h("div", { style: { fontSize: "18px", fontWeight: 700 } }, String(jobCount)),
+                h("div", { style: { fontSize: "10px", color: "var(--color-text-tertiary, #b8942e)", textTransform: "uppercase" } }, "Jobs")
+              ),
+              h("div", { style: { textAlign: "right" } },
+                h("div", { style: { fontSize: "18px", fontWeight: 700 } }, String(reportCount)),
+                h("div", { style: { fontSize: "10px", color: "var(--color-text-tertiary, #b8942e)", textTransform: "uppercase" } }, "Reportes")
+              ),
+              h("div", { style: { textAlign: "right" } },
+                h("div", { style: { fontSize: "18px", fontWeight: 700, color: "var(--midground, #ffac02)" } }, agent.jobs[0] ? agent.jobs[0].deliver : "—"),
+                h("div", { style: { fontSize: "10px", color: "var(--color-text-tertiary, #b8942e)", textTransform: "uppercase" } }, "Delivery")
+              )
+            )
+          )
+        )
+      ),
+
+      // Sub-tabs bar
+      h("div", { style: TAB_BAR },
+        detailTabBtn("overview", "Overview"),
+        detailTabBtn("jobs", "Cron Jobs", jobCount),
+        detailTabBtn("history", "Historial", reportCount)
+      ),
+
+      // Tab content
+      h("div", { style: { flex: 1, overflowY: "auto", minHeight: 0 } },
+        detailTab === "overview" ? h(AgentOverviewTab, agent) :
+        detailTab === "jobs" ? h(AgentCronJobsTab, { agent: agent, onRunJob: onRunJob, runningJobId: runningJobId, runMessage: props.runMessage }) :
+        h(AgentHistoryTab, { agent: agent, selectedReport: selectedReport, setSelectedReport: setSelectedReport })
+      )
+    );
+  }
+
   // ── AgentsTab ──────────────────────────────────────────────────────────
   function AgentsTab(props) {
+    var sel = useState(null), selectedProfile = sel[0], setSelectedProfile = sel[1];
+    var det = useState(null), detail = det[0], setDetail = det[1];
+    var ld = useState(false), loadingDetail = ld[0], setLoadingDetail = ld[1];
+    var de = useState(null), detailErr = de[0], setDetailErr = de[1];
+    var rm = useState(null), runningJobId = rm[0], setRunningJobId = rm[1];
+    var rm2 = useState(null), runMessage = rm2[0], setRunMessage = rm2[1];
+
+    function handleRunJob(jobId) {
+      if (!selectedProfile || runningJobId) return;
+      setRunningJobId(jobId);
+      setRunMessage({ type: "info", text: "Ejecutando job " + jobId + "…" });
+      showToast("Ejecutando job " + jobId + "…", "info");
+      console.log("[AgentHub] Running job:", jobId, "profile:", selectedProfile);
+
+      var url = "/api/plugins/agenthub/agents/" + encodeURIComponent(selectedProfile) + "/run/" + encodeURIComponent(jobId);
+      console.log("[AgentHub] POST", url);
+
+      fetchJSON(url, {
+        method: "POST", headers: { "Content-Type": "application/json" }
+      })
+        .then(function (result) {
+          console.log("[AgentHub] Run result:", result);
+          if (result && result.detail) {
+            throw new Error(result.detail);
+          }
+          var msg = "Job ejecutado correctamente";
+          if (result && result.gateway_started) {
+            msg += " — Gateway iniciado automáticamente";
+          }
+          setRunMessage({ type: "success", text: msg });
+          showToast(msg, "success");
+          // Refresh agent detail after run
+          return fetchJSON("/api/plugins/agenthub/agents/" + encodeURIComponent(selectedProfile));
+        })
+        .then(function (d) {
+          console.log("[AgentHub] Refreshed agent data:", d);
+          setDetail(d);
+        })
+        .catch(function (e) {
+          console.error("[AgentHub] Run error:", e);
+          var msg = e && e.message ? e.message : String(e);
+          if (msg.includes("Unauthorized")) {
+            msg = "No autorizado — verifica la autenticación del dashboard";
+          }
+          setRunMessage({ type: "error", text: "Error: " + msg });
+          showToast("Error: " + msg, "error");
+        })
+        .finally(function () {
+          setRunningJobId(null);
+          // Auto-clear inline message after 5s
+          setTimeout(function () { setRunMessage(null); }, 5000);
+        });
+    }
+
+    useEffect(function () {
+      if (!selectedProfile) {
+        setDetail(null);
+        return;
+      }
+      setLoadingDetail(true);
+      setDetailErr(null);
+      fetchJSON("/api/plugins/agenthub/agents/" + encodeURIComponent(selectedProfile))
+        .then(function (d) { setDetail(d); })
+        .catch(function (e) { setDetailErr(String(e)); setDetail(null); })
+        .finally(function () { setLoadingDetail(false); });
+    }, [selectedProfile]);
+
     if (props.error) return h("p", { style: { color: "red" } }, "Error: " + props.error);
-    if (props.jobs == null) return h("p", null, "Loading…");
-    var content = (props.jobs.raw || "");
-    if (props.jobs.error) content += "\n\nError: " + props.jobs.error;
+    if (props.agentsData == null) return h("p", null, "Loading…");
+
+    if (selectedProfile) {
+      if (loadingDetail) return h("p", null, "Cargando agente…");
+      if (detailErr) return h("div", null,
+        h("button", { type: "button", onClick: function () { setSelectedProfile(null); }, style: BACK_BTN }, "← Volver"),
+        h("p", { style: { color: "red" } }, detailErr)
+      );
+      if (detail) {
+        return h(AgentDetailView, {
+          agent: detail,
+          onBack: function () { setSelectedProfile(null); },
+          onRunJob: handleRunJob,
+          runningJobId: runningJobId,
+          runMessage: runMessage
+        });
+      }
+    }
+
+    var agents = Array.isArray(props.agentsData.agents) ? props.agentsData.agents : [];
+
     return h("div", null,
-      h(Button, { variant: "outline", onClick: props.onRefresh, style: { marginBottom: "8px" } }, "Refresh"),
-      h("pre", { "data-testid": "agents-list", style: { background: "var(--color-muted, #f1f5f9)", padding: "12px", borderRadius: "6px", whiteSpace: "pre-wrap", fontSize: "12px" } }, content || "No agents yet.")
+      h("div", { style: HEADER_ROW },
+        h("p", { style: { margin: 0, fontSize: "13px", color: "var(--color-text-tertiary, #b8942e)" } },
+          agents.length ? agents.length + " agente(s) AgentHub" : "No hay agentes AgentHub todavía"
+        ),
+        h(Button, { variant: "outline", onClick: props.onRefresh, "data-testid": "agents-refresh" }, "Refresh")
+      ),
+      agents.length === 0
+        ? h("div", { style: EMPTY_STATE, "data-testid": "agents-list" },
+            h("p", { style: { margin: 0 } }, "No agents yet."),
+            h("p", { style: { margin: "8px 0 0", fontSize: "12px" } }, "Create one from the Templates tab.")
+          )
+        : h("div", { "data-testid": "agents-list", style: GRID },
+            agents.map(function (agent) {
+              return agentProfileCard(agent, setSelectedProfile);
+            })
+          )
     );
+  }
+
+  // ── Inject styles ─────────────────────────────────────────────────────
+  if (!document.getElementById("agenthub-styles")) {
+    var style = document.createElement("style");
+    style.id = "agenthub-styles";
+    style.textContent = [
+      "@keyframes agenthub-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }",
+      "@keyframes agenthub-toast-in { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }",
+      "@keyframes agenthub-toast-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-20px); opacity: 0; } }",
+      ".agenthub-toast { position: fixed; bottom: 24px; right: 24px; z-index: 99999; padding: 14px 22px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25); animation: agenthub-toast-in 0.25s ease-out; pointer-events: auto; max-width: 380px; line-height: 1.4; }",
+      ".agenthub-toast.agenthub-toast-success { background: #15803d; color: #fff; border: 2px solid #22c55e; }",
+      ".agenthub-toast.agenthub-toast-error { background: #b91c1c; color: #fff; border: 2px solid #ef4444; }",
+      ".agenthub-toast.agenthub-toast-info { background: #1d4ed8; color: #fff; border: 2px solid #60a5fa; }",
+      ".agenthub-toast.agenthub-toast-leaving { animation: agenthub-toast-out 0.2s ease-in forwards; }"
+    ].join("\n");
+    document.head.appendChild(style);
+  }
+
+  // ── Toast helper ─────────────────────────────────────────────────────
+  function showToast(message, type) {
+    try {
+      type = type || "info";
+      var el = document.createElement("div");
+      el.className = "agenthub-toast agenthub-toast-" + type;
+      el.textContent = message;
+      document.body.appendChild(el);
+      console.log("[AgentHub Toast]", type.toUpperCase(), message);
+      setTimeout(function () {
+        el.classList.add("agenthub-toast-leaving");
+        setTimeout(function () { el.remove(); }, 250);
+      }, 4000);
+    } catch (e) {
+      console.error("[AgentHub Toast Error]", e);
+    }
+  }
+
+  // ── Safe fetch wrapper ───────────────────────────────────────────────
+  function apiFetch(path, opts) {
+    return fetchJSON(path, opts).then(function (data) {
+      if (data && data.detail) {
+        throw new Error(data.detail);
+      }
+      return data;
+    });
   }
 
   // ── Main AgentHub component ────────────────────────────────────────────
@@ -659,7 +1170,7 @@
     var t = useState("templates"), tab = t[0], setTab = t[1];
     var tp = useState([]), templates = tp[0], setTemplates = tp[1];
     var te = useState(null), tErr = te[0], setTErr = te[1];
-    var jb = useState(null), jobs = jb[0], setJobs = jb[1];
+    var jb = useState(null), agentsData = jb[0], setAgentsData = jb[1];
     var je = useState(null), jErr = je[0], setJErr = je[1];
 
     // Wizard state
@@ -685,11 +1196,11 @@
     }, []);
 
     // Load jobs
-    var loadJobs = useCallback(function () {
+    var loadAgents = useCallback(function () {
       setJErr(null);
-      fetchJSON("/api/plugins/agenthub/jobs").then(setJobs).catch(function (e) { setJErr(String(e)); });
+      fetchJSON("/api/plugins/agenthub/agents").then(setAgentsData).catch(function (e) { setJErr(String(e)); });
     }, []);
-    useEffect(function () { loadJobs(); }, [loadJobs]);
+    useEffect(function () { loadAgents(); }, [loadAgents]);
 
     // Load providers
     useEffect(function () {
@@ -742,8 +1253,10 @@
     // API calls
     function postJSON(path, payload, onOk) {
       setLoading(true); setWErr(null);
-      fetchJSON(path, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } })
-        .then(onOk).catch(function (e) { setWErr(String(e)); }).finally(function () { setLoading(false); });
+      apiFetch(path, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } })
+        .then(onOk)
+        .catch(function (e) { setWErr(String(e)); showToast("Error: " + String(e), "error"); })
+        .finally(function () { setLoading(false); });
     }
 
     function handlePreview(payload) {
@@ -753,20 +1266,29 @@
     function handleCreate(payload) {
       postJSON("/api/plugins/agenthub/create-agent", payload, function (d) {
         setResult(d);
-        if (d.job_created) loadJobs();
+        if (d.job_created) {
+          loadAgents();
+          showToast("Agente creado correctamente", "success");
+        }
       });
     }
 
     // Tab navigation
-    function tabBtn(value, testid, label) {
-      return h(Button, { "data-testid": testid, variant: tab === value ? "default" : "outline",
-        onClick: function () { setTab(value); }, style: { marginRight: "8px" } }, label);
+    function tabBtn(value, testid, label, icon) {
+      var isActive = tab === value;
+      return h("button", {
+        key: value,
+        "data-testid": testid,
+        type: "button",
+        onClick: function () { setTab(value); },
+        style: Object.assign({}, TAB_BTN_BASE, isActive ? TAB_BTN_ACTIVE : {})
+      }, icon ? icon + " " + label : label);
     }
 
     // Determine main content
     var panel;
     if (tab === "agents") {
-      panel = h(AgentsTab, { jobs: jobs, error: jErr, onRefresh: loadJobs });
+      panel = h(AgentsTab, { agentsData: agentsData, error: jErr, onRefresh: loadAgents });
     } else if (tab === "create" && selectedTpl) {
       // Detail panel view — no scroll on the outer container
       panel = h(DetailPanel, {
@@ -785,21 +1307,34 @@
       panel = h(TemplatesTab, { templates: templates, error: tErr, onSelect: selectTemplate, selected: selectedTpl });
     }
 
-    // Header text
-    var headerText = selectedTpl ? "Configure Agent" :
-      tab === "agents" ? "Your Agents" : "Templates";
+    var showTabs = tab !== "create" || !selectedTpl;
 
     return h("div", { "data-testid": "agenthub-root", style: FILL_PANEL },
-      h("div", null,
-        h("div", { style: HEADER_ROW },
-          h("h2", { style: { margin: 0 } }, "AgentHub"),
-          h("div", null,
-            tabBtn("templates", "tab-templates", "Templates"),
-            tabBtn("agents", "tab-agents", "Agents")
-          )
+      // Header
+      h("div", { style: { padding: "12px 16px 0" } },
+        h("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" } },
+          h("h2", { style: { margin: 0, fontSize: "18px", fontWeight: 700 } }, "AgentHub"),
+          showTabs ? h(Button, {
+            variant: "default",
+            size: "sm",
+            "data-testid": "btn-create-agent",
+            onClick: function () { setTab("templates"); setSelectedTpl(null); },
+            style: { fontSize: "12px" }
+          }, "+ New Agent") : null
         ),
-        h(Separator, null)
+        // Tab bar (hidden during wizard)
+        showTabs ? h("div", { style: TAB_BAR },
+          tabBtn("templates", "tab-templates", "Templates"),
+          tabBtn("agents", "tab-agents", "Agents")
+        ) : h("div", { style: TAB_BAR },
+          h("button", {
+            type: "button",
+            onClick: backToGallery,
+            style: Object.assign({}, TAB_BTN_BASE, TAB_BTN_ACTIVE)
+          }, "← Templates")
+        )
       ),
+      // Content
       h("div", { style: SCROLL_AREA },
         panel
       )

@@ -1,14 +1,26 @@
 from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+import re
+import sys
 import yaml
 import subprocess
 import os
 import json
+import urllib.request
+import urllib.error
+from datetime import datetime
+
+_PLUGIN_DIR = Path(__file__).resolve().parent
+if str(_PLUGIN_DIR) not in sys.path:
+    sys.path.insert(0, str(_PLUGIN_DIR))
+
+from job_outputs import list_job_outputs
 
 router = APIRouter()
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+AGENT_PROFILE_PREFIX = "agent-"
 
 # ── Known Hermes toolsets ────────────────────────────────────────────────
 KNOWN_TOOLSETS: list[dict] = [
@@ -497,9 +509,9 @@ def create_agent(req: CreateAgentRequest):
            "--name", agent_name, "--deliver", deliver]
     # Add skills — only user-selected real skills, NOT the template_id
     # (templates render prompts; they are not executable skills)
-    for skill in req.skills:
-        if skill:  # skip empty strings
-            cmd.extend(["--skill", skill])
+    selected_skills = [s for s in req.skills if s]
+    for skill in selected_skills:
+        cmd.extend(["--skill", skill])
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     except subprocess.TimeoutExpired:
@@ -517,7 +529,8 @@ def create_agent(req: CreateAgentRequest):
         "template_id": req.template_id,
         "agent_name": agent_name,
         "profile": profile_name,
-        "skills": all_skills,
+        "created_at": datetime.now().astimezone().isoformat(),
+        "skills": selected_skills,
         "enabled_toolsets": req.enabled_toolsets,
         "model_override": {"provider": req.model_provider, "model": req.model_name}
         if req.model_provider or req.model_name else None,
@@ -536,18 +549,393 @@ def create_agent(req: CreateAgentRequest):
             "job_created": True, "metadata": metadata}
 
 
+def _parse_cron_list_output(text: str) -> list[dict]:
+    """Parse `hermes cron list` CLI output into structured job dicts."""
+    jobs: list[dict] = []
+    current: dict | None = None
+
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped[0] in "┌└│⚠" or stripped.startswith("Scheduled Jobs"):
+            continue
+
+        job_match = re.match(r"^([a-f0-9]+)\s+\[(\w+)\]", stripped)
+        if job_match:
+            if current:
+                jobs.append(current)
+            current = {"id": job_match.group(1), "status": job_match.group(2)}
+            continue
+
+        if current and ":" in stripped:
+            key, _, val = stripped.partition(":")
+            field = key.strip().lower().replace(" ", "_")
+            current[field] = val.strip()
+
+    if current:
+        jobs.append(current)
+
+    return jobs
+
+
+def _run_cron_list(profile: str | None = None) -> tuple[str, str, int]:
+    cmd = ["hermes"]
+    if profile:
+        cmd.extend(["-p", profile])
+    cmd.extend(["cron", "list"])
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    stderr = result.stderr.strip() if result.stderr else ""
+    return result.stdout or "", stderr, result.returncode
+
+
+def _hermes_home() -> Path:
+    return Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+
+
+def _hermes_api_get(path: str, params: dict | None = None) -> dict | list | None:
+    """Query the Hermes API server (port 8642) for data."""
+    port = 8642
+    url = f"http://127.0.0.1:{port}{path}"
+    if params:
+        qs = "&".join(f"{k}={v}" for k, v in params.items() if v is not None)
+        if qs:
+            url += f"?{qs}"
+    req = urllib.request.Request(url, headers={"X-API-Key": "agenthub-local"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.URLError, OSError, json.JSONDecodeError):
+        return None
+
+
+def _fetch_cron_run_history(profile: str, job_id: str, limit: int = 20) -> list[dict]:
+    """Fetch cron job run sessions from the Hermes API server."""
+    data = _hermes_api_get(f"/api/cron/jobs/{job_id}/runs", {"profile": profile, "limit": str(limit)})
+    if data is None:
+        return []
+    runs = data.get("runs", []) if isinstance(data, dict) else []
+    results: list[dict] = []
+    for run in runs:
+        started = run.get("started_at", "")
+        if isinstance(started, (int, float)):
+            from datetime import datetime as _dt
+            started = _dt.fromtimestamp(started).isoformat() if started else ""
+        ended = run.get("ended_at", "")
+        if isinstance(ended, (int, float)):
+            from datetime import datetime as _dt
+            ended = _dt.fromtimestamp(ended).isoformat() if ended else ""
+        title = run.get("title") or run.get("summary") or f"Cron run"
+        excerpt = run.get("summary") or run.get("last_user_message", "")[:240]
+        results.append({
+            "id": run.get("id", ""),
+            "job_id": job_id,
+            "title": title,
+            "excerpt": excerpt,
+            "started_at": started,
+            "ended_at": ended,
+            "status": "completed" if ended else ("active" if run.get("is_active") else "completed"),
+            "is_failed": bool(run.get("error")),
+            "link_count": 0,
+            "is_silent": False,
+            "output": run.get("last_assistant_message") or excerpt,
+            "profile": profile,
+        })
+    return results
+
+
+def _is_agenthub_profile(name: str, profile_dir: Path) -> bool:
+    if name.startswith(AGENT_PROFILE_PREFIX):
+        return True
+    return (profile_dir / "agenthub-metadata.json").is_file()
+
+
+def _list_agenthub_profiles(hermes_home: Path) -> list[str]:
+    profiles_dir = hermes_home / "profiles"
+    if not profiles_dir.is_dir():
+        return []
+    names: list[str] = []
+    for entry in sorted(profiles_dir.iterdir()):
+        if entry.is_dir() and _is_agenthub_profile(entry.name, entry):
+            names.append(entry.name)
+    return names
+
+
+def _load_profile_metadata(profile_dir: Path) -> dict:
+    meta_path = profile_dir / "agenthub-metadata.json"
+    if not meta_path.is_file():
+        return {}
+    try:
+        data = json.loads(meta_path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def _read_soul_header(profile_dir: Path) -> tuple[str | None, str | None]:
+    soul_path = profile_dir / "SOUL.md"
+    if not soul_path.is_file():
+        return None, None
+    try:
+        text = soul_path.read_text(encoding="utf-8")
+    except OSError:
+        return None, None
+    title = None
+    description = None
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("# ") and not title:
+            title = stripped[2:].strip()
+            continue
+        if title and not description and not stripped.startswith("#"):
+            description = stripped
+            break
+    return title, description
+
+
+def _profile_created_at(profile_dir: Path, meta: dict, jobs: list[dict]) -> str | None:
+    if meta.get("created_at"):
+        return str(meta["created_at"])
+    created_values = [j.get("created_at") for j in jobs if j.get("created_at")]
+    if created_values:
+        return min(created_values)
+    try:
+        return datetime.fromtimestamp(profile_dir.stat().st_ctime).isoformat()
+    except OSError:
+        return None
+
+
+def _load_profile_jobs(profile_dir: Path, profile: str, meta: dict) -> list[dict]:
+    jobs_path = profile_dir / "cron" / "jobs.json"
+    if jobs_path.is_file():
+        try:
+            data = json.loads(jobs_path.read_text(encoding="utf-8"))
+            raw_jobs = data.get("jobs", []) if isinstance(data, dict) else []
+            if isinstance(raw_jobs, list) and raw_jobs:
+                return [_normalize_job_from_json(job, profile, meta) for job in raw_jobs]
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    stdout, stderr, code = _run_cron_list(profile)
+    if code != 0:
+        return []
+    return [
+        _normalize_job(job, profile=profile, source="agenthub", metadata=meta)
+        for job in _parse_cron_list_output(stdout)
+    ]
+
+
+def _normalize_job(job: dict, *, profile: str | None, source: str, metadata: dict | None = None) -> dict:
+    meta = metadata or {}
+    name = job.get("name") or meta.get("agent_name") or job.get("id", "Agent")
+    return {
+        "id": job.get("id", ""),
+        "name": name,
+        "status": job.get("status", "unknown"),
+        "schedule": job.get("schedule", ""),
+        "repeat": job.get("repeat", ""),
+        "next_run": job.get("next_run", ""),
+        "deliver": job.get("deliver", ""),
+        "last_run": job.get("last_run", ""),
+        "last_status": job.get("last_status"),
+        "profile": profile,
+        "source": source,
+        "template_id": meta.get("template_id"),
+        "created_at": job.get("created_at"),
+    }
+
+
+def _normalize_job_from_json(job: dict, profile: str, meta: dict) -> dict:
+    schedule = job.get("schedule_display")
+    if not schedule and isinstance(job.get("schedule"), dict):
+        schedule = job["schedule"].get("display") or ""
+    status = "active"
+    if job.get("paused_at"):
+        status = "paused"
+    elif job.get("enabled") is False:
+        status = "disabled"
+    elif job.get("state"):
+        status = str(job["state"])
+    return {
+        "id": job.get("id", ""),
+        "name": job.get("name") or meta.get("agent_name") or profile,
+        "status": status,
+        "schedule": schedule or "",
+        "next_run": job.get("next_run_at", ""),
+        "deliver": job.get("deliver", ""),
+        "last_run": job.get("last_run_at", ""),
+        "last_status": job.get("last_status"),
+        "profile": profile,
+        "source": "agenthub",
+        "template_id": meta.get("template_id"),
+        "created_at": job.get("created_at"),
+    }
+
+
+def _build_agent_summary(profile: str, hermes_home: Path, *, include_outputs: bool = False) -> dict:
+    profile_dir = hermes_home / "profiles" / profile
+    meta = _load_profile_metadata(profile_dir)
+    soul_title, soul_desc = _read_soul_header(profile_dir)
+
+    template_id = meta.get("template_id")
+    tpl = _parse_template(template_id) if template_id else None
+
+    name = meta.get("agent_name") or soul_title or profile.replace("agent-", "").replace("-", " ").title()
+    description = soul_desc or (tpl or {}).get("description") or meta.get("description") or ""
+
+    jobs = _load_profile_jobs(profile_dir, profile, meta)
+    created_at = _profile_created_at(profile_dir, meta, jobs)
+
+    executions: list[dict] = []
+    for job in jobs:
+        job_id = job.get("id")
+        if not job_id:
+            continue
+        # Try API server first (sessions are stored there)
+        api_runs = _fetch_cron_run_history(profile, job_id, limit=20)
+        if api_runs:
+            for item in api_runs:
+                item["agent_name"] = name
+                if not include_outputs:
+                    item.pop("output", None)
+                executions.append(item)
+        else:
+            # Fallback: check .md output files
+            for report in list_job_outputs(hermes_home, profile, job_id):
+                item = {**report, "profile": profile, "agent_name": name}
+                if not include_outputs:
+                    item.pop("output", None)
+                executions.append(item)
+
+    executions.sort(key=lambda item: item.get("started_at", ""), reverse=True)
+
+    return {
+        "profile": profile,
+        "name": name,
+        "description": description,
+        "template_id": template_id,
+        "template_name": (tpl or {}).get("name"),
+        "created_at": created_at,
+        "jobs": jobs,
+        "execution_count": len(executions),
+        "last_execution_at": executions[0]["started_at"] if executions else None,
+        "executions": executions,
+    }
+
+
+@router.get("/agents")
+def list_agents():
+    """List AgentHub-managed agent profiles with linked cron jobs and report summaries."""
+    hermes_home = _hermes_home()
+    agents = [
+        _build_agent_summary(profile, hermes_home, include_outputs=False)
+        for profile in _list_agenthub_profiles(hermes_home)
+    ]
+    return {"agents": agents, "count": len(agents)}
+
+
+@router.get("/agents/{profile}")
+def get_agent(profile: str):
+    """Full agent detail including execution history and report bodies."""
+    if not re.fullmatch(r"[a-zA-Z0-9_-]+", profile):
+        raise HTTPException(status_code=400, detail="Invalid profile name")
+    hermes_home = _hermes_home()
+    profile_dir = hermes_home / "profiles" / profile
+    if not profile_dir.is_dir() or not _is_agenthub_profile(profile, profile_dir):
+        raise HTTPException(status_code=404, detail="Agent profile not found")
+    return _build_agent_summary(profile, hermes_home, include_outputs=True)
+
+
+@router.post("/agents/{profile}/run/{job_id}")
+def run_job(profile: str, job_id: str):
+    """Trigger an immediate run of a cron job. Auto-starts gateway if needed."""
+    if not re.fullmatch(r"[a-zA-Z0-9_-]+", profile):
+        raise HTTPException(status_code=400, detail="Invalid profile name")
+    hermes_home = _hermes_home()
+    profile_dir = hermes_home / "profiles" / profile
+    if not profile_dir.is_dir() or not _is_agenthub_profile(profile, profile_dir):
+        raise HTTPException(status_code=404, detail="Agent profile not found")
+
+    # Check gateway status first
+    gw_running = False
+    try:
+        gw_result = subprocess.run(
+            ["hermes", "-p", profile, "gateway", "status"],
+            capture_output=True, text=True, timeout=10,
+        )
+        gw_running = gw_result.returncode == 0 and "running" in gw_result.stdout.lower()
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+
+    # Auto-start gateway if not running
+    if not gw_running:
+        try:
+            subprocess.run(
+                ["hermes", "-p", profile, "gateway", "start"],
+                capture_output=True, text=True, timeout=30,
+            )
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+
+    cmd = ["hermes", "-p", profile, "cron", "run", job_id]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=504, detail="Hermes cron run timed out")
+    except FileNotFoundError:
+        raise HTTPException(status_code=503, detail="Hermes CLI not found")
+
+    if result.returncode != 0:
+        raise HTTPException(status_code=500, detail=result.stderr.strip() or "cron run failed")
+
+    msg = result.stdout.strip()
+    return {"ok": True, "job_id": job_id, "profile": profile, "output": msg, "gateway_started": not gw_running}
+
+
+@router.post("/agents/{profile}/run")
+def run_agent(profile: str):
+    """Trigger the first (or only) cron job in a profile."""
+    if not re.fullmatch(r"[a-zA-Z0-9_-]+", profile):
+        raise HTTPException(status_code=400, detail="Invalid profile name")
+    hermes_home = _hermes_home()
+    profile_dir = hermes_home / "profiles" / profile
+    if not profile_dir.is_dir() or not _is_agenthub_profile(profile, profile_dir):
+        raise HTTPException(status_code=404, detail="Agent profile not found")
+
+    # Find the job ID
+    jobs_path = profile_dir / "cron" / "jobs.json"
+    if jobs_path.is_file():
+        try:
+            data = json.loads(jobs_path.read_text(encoding="utf-8"))
+            jobs = data.get("jobs", []) if isinstance(data, dict) else []
+            if jobs:
+                job_id = jobs[0].get("id")
+                if job_id:
+                    return run_job(profile, job_id)
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Fallback: parse from CLI
+    stdout, _, code = _run_cron_list(profile)
+    if code != 0:
+        raise HTTPException(status_code=500, detail="Could not list jobs")
+    parsed = _parse_cron_list_output(stdout)
+    if not parsed:
+        raise HTTPException(status_code=404, detail="No cron jobs in this profile")
+    return run_job(profile, parsed[0]["id"])
+
+
 @router.get("/jobs")
 def list_jobs():
-    try:
-        result = subprocess.run(
-            ["hermes", "cron", "list"],
-            capture_output=True, text=True, timeout=30,
-        )
-        if result.returncode != 0:
-            return {"raw": "", "error": result.stderr.strip()}
-        return {"raw": result.stdout}
-    except Exception as e:
-        return {"raw": "", "error": str(e)}
+    """Legacy endpoint — returns AgentHub agents only (no global cron jobs)."""
+    data = list_agents()
+    flat: list[dict] = []
+    for agent in data["agents"]:
+        for job in agent.get("jobs", []):
+            flat.append({**job, "agent_name": agent.get("name"), "description": agent.get("description")})
+    return {"agents": flat, "count": len(flat), "error": None}
 
 
 @router.get("/health")
