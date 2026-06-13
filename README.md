@@ -4,17 +4,33 @@ Plugin para Hermes Agent que añade un dashboard con wizard para crear agentes a
 
 ## Qué es
 
-Un plugin que se instala en `~/.hermes/plugins/` y añade al dashboard de Hermes:
+Un plugin para Hermes Agent que añade al dashboard una pestaña **AgentHub** con:
 
-- **Wizard de creación** — selector de templates, configuración de provider/modelo, skills, toolsets, schedule y delivery
+- **Wizard de creación** — selector de 12 templates, configuración de provider/modelo, skills, toolsets, schedule y delivery
 - **Gestión de agentes** — listar, pausar, reanudar, eliminar cron jobs
-- **12 templates** — plantillas predefinidas para diferentes casos de uso
+- **12 templates** — plantillas predefinidas para Research, DevOps, Development y Multi-Skill
 
 ## Instalación
 
 ```bash
+# Clonar el repo
+git clone https://github.com/Canopix/hermes-research-lab.git
+cd hermes-research-lab
+
+# Instalar el plugin en el profile activo
 bash scripts/install-plugin.sh
+
+# Abrir el dashboard
 hermes dashboard
+```
+
+El script detecta automáticamente tu profile activo (el que tiene `~/.hermes/active_profile`) e instala el plugin en `~/.hermes/profiles/<tu-profile>/plugins/agenthub/`.
+
+Si no tienes un profile activo, créalo primero:
+
+```bash
+hermes profile create mi-profile
+echo "mi-profile" > ~/.hermes/active_profile
 ```
 
 ## Estructura
