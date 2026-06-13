@@ -51,14 +51,18 @@ def _wizard_payload_to_hermes_job(body: dict, *, profile_name: str | None = None
     if profile_name:
         payload["profile"] = profile_name
 
-    toolsets = hermes_config.get("toolsets") or []
-    skills_list = hermes_config.get("skills") or []
+    # Skills: user selection > template defaults
+    skills = body.get("skills") or hermes_config.get("skills") or []
+    if skills:
+        payload["skills"] = skills
+
+    # Toolsets: user selection > template defaults
+    toolsets = body.get("enabled_toolsets") or hermes_config.get("toolsets") or []
     if toolsets:
         payload["enabled_toolsets"] = toolsets
-    if skills_list:
-        payload["skills"] = skills_list
 
-    model = hermes_config.get("model")
+    # Model: user selection > template defaults
+    model = body.get("model") or hermes_config.get("model")
     if model:
         payload["model"] = model
 
