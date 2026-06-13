@@ -1,0 +1,11 @@
+{
+  "name": "agenthub",
+  "label": "AgentHub",
+  "description": "Create and monitor autonomous agents from templates",
+  "icon": "Bot",
+  "version": "0.1.0",
+  "tab": { "path": "/agenthub", "position": "after:skills" },
+  "entry": "dist/index.js",
+  "css": "dist/style.css",
+  "api": "plugin_api.py"
+}

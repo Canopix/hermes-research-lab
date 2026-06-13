@@ -1,0 +1,43 @@
+- name: repos
+  label: Repositorios a monitorizar
+  type: text
+  required: true
+  help: "Ej: Canopix/hermes-research-lab, nousresearch/hermes-agent"
+
+- name: check_prs
+  label: Monitorizar Pull Requests
+  type: toggle
+  required: false
+  default: "true"
+
+- name: check_issues
+  label: Monitorizar Issues
+  type: toggle
+  required: false
+  default: "true"
+
+- name: timeframe
+  label: Ventana de tiempo
+  type: select
+  options:
+    - 24h
+    - 7d
+    - 30d
+  default: 24h
+
+- name: frequency
+  label: Frecuencia de ejecución
+  type: select
+  options:
+    - diario
+    - cada 12h
+    - semanal
+  default: diario
+
+- name: language
+  label: Idioma
+  type: select
+  options:
+    - español
+    - english
+  default: español

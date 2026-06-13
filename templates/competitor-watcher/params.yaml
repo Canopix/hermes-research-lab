@@ -1,0 +1,42 @@
+- name: urls
+  label: URLs a monitorizar
+  type: text
+  required: true
+  help: "Ej: https://competitor1.com, https://competitor2.com/pricing"
+
+- name: check_elements
+  label: Qué rastrear
+  type: select
+  options:
+    - todo
+    - precios
+    - contenido
+    - estructura
+    - meta
+  default: todo
+
+- name: sensitivity
+  label: Sensibilidad de detección
+  type: select
+  options:
+    - baja
+    - media
+    - alta
+  default: media
+
+- name: frequency
+  label: Frecuencia de ejecución
+  type: select
+  options:
+    - diario
+    - cada 12h
+    - semanal
+  default: diario
+
+- name: language
+  label: Idioma
+  type: select
+  options:
+    - español
+    - english
+  default: español

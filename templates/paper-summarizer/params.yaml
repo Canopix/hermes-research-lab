@@ -1,0 +1,37 @@
+- name: query
+  label: Búsqueda de papers
+  type: text
+  required: true
+  help: "Ej: retrieval augmented generation, transformers attention, RLHF alignment"
+
+- name: max_papers
+  label: Máximo de papers a resumir
+  type: number
+  required: false
+  default: "5"
+
+- name: detail_level
+  label: Nivel de detalle
+  type: select
+  options:
+    - breve
+    - estándar
+    - detallado
+  default: estándar
+
+- name: frequency
+  label: Frecuencia de ejecución
+  type: select
+  options:
+    - diario
+    - cada 12h
+    - semanal
+  default: diario
+
+- name: language
+  label: Idioma
+  type: select
+  options:
+    - español
+    - english
+  default: español

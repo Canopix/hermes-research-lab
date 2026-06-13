@@ -13,6 +13,7 @@ __pycache__/
 .next/
 out/
 dist/
+!plugin/**/dist/
 build/
 
 # IDE
@@ -39,3 +40,6 @@ coverage/
 
 # Planning (local only, not shared via git)
 PHASES.md
+
+# Plan de fusión hackathon (local, no compartir)
+plan-finalizarhackaton.md

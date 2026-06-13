@@ -1,0 +1,21 @@
+.agenthub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 16px 0;
+}
+
+[data-testid="agenthub-root"] [data-testid="wizard-form"] {
+  border-top: 1px solid var(--border, #e0e0e0);
+  padding-top: 16px;
+}
+
+[data-testid="agenthub-root"] pre {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+[data-testid="agenthub-root"] [data-testid="create-result"] {
+  font-size: 14px;
+  font-weight: 500;
+}
