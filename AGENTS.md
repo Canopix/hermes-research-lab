@@ -169,7 +169,36 @@ Each template exists in:
 
 Frontend + plugin show templates grouped by category.
 
+### Wizard Improvements (June 13, 2026) ✅
+Upgraded the `/create` wizard to expose all Hermes cronjob parameters:
+
+- **Scroll automático** — smooth scroll al seleccionar template
+- **Provider/Modelo** — `GET /api/system/providers` lee config.yaml real, selector dropdown
+- **Skills** — multi-select con búsqueda, filtros, recomendaciones por template
+- **Toolsets** — checkbox de herramientas con pre-selección del template
+- **Schedule** — presets (30m, 1h, 6h, diario, semanal) + cron personalizado
+- **Delivery** — local, chat actual, Telegram (con chat_id/thread_id), all
+
+New backend endpoints: `/api/system/providers`, `/api/system/channels`, enriched `/v1/skills`.
+New frontend components: ProviderModelSelector, SkillsSelector, ToolsetsSelector, ScheduleSelector, DeliverySelector.
+Backend `_wizard_payload_to_hermes_job` now forwards user-selected skills, toolsets, and model.
+
+**Known issue:** Plugin dashboard at :9119 uses stale `dist/index.js` (old build). Standalone frontend at :3000 has all changes.
+
 ### Commits on feature/dashboardv1
+- `a72a72b` — feat(frontend): integrate provider, skills, toolsets, schedule, delivery tabs + scroll fix
+- `eade2c2` — feat(api): forward user-selected skills, toolsets, model to Hermes job
+- `01b3223` — feat(frontend): add DeliverySelector component
+- `178968b` — feat(frontend): add ScheduleSelector component
+- `8aca58e` — feat(frontend): add ToolsetsSelector component
+- `bc8940a` — feat(frontend): add SkillsSelector component with checkbox support
+- `021017a` — feat(frontend): add ProviderModelSelector component
+- `b647856` — feat(frontend): add types and API functions for providers, channels, skills, toolsets
+- `73a498a` — feat(api): add GET /api/system/channels endpoint
+- `495d8f3` — feat(api): add GET /api/system/providers endpoint
+- `189be77` — feat(api): enrich skills endpoint with metadata
+- `dbf7b8e` — docs: add wizard improvements plan + execution plan for subagent dispatch
+- `e28d325` — docs: update AGENTS.md with current project state
 - `d612877` — chore: remove stray SKILL.md from standalone templates
 - `e624f25` — feat: add 8 automation blueprints + category grouping
 - `e1f0db0` — feat: add Hermes dashboard plugin + convert 3 templates
