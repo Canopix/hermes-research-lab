@@ -1,0 +1,14 @@
+- name: repos
+  label: Repositorios a monitorear
+  type: text
+  required: true
+  help: "Ej: anthropics/claude-code, openai/codex"
+- name: language
+  label: Idioma de salida
+  type: select
+  required: true
+  options:
+    - español
+    - english
+  default: español
+  help: "Idioma en el que se genera el reporte"

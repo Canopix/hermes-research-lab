@@ -1,0 +1,30 @@
+- name: repo
+  label: Repositorio GitHub
+  type: text
+  required: true
+  help: "Ej: Canopix/hermes-research-lab"
+- name: max_issues
+  label: Máximo de issues a procesar
+  type: number
+  required: false
+  default: 30
+  help: "Número máximo de issues a recuperar"
+- name: frequency
+  label: Frecuencia
+  type: select
+  required: true
+  options:
+    - diario
+    - cada 12h
+    - semanal
+  default: diario
+  help: "Frecuencia de ejecución del triage"
+- name: language
+  label: Idioma de salida
+  type: select
+  required: true
+  options:
+    - español
+    - english
+  default: español
+  help: "Idioma en el que se genera el resumen"

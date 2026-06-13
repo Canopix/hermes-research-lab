@@ -1,0 +1,25 @@
+- name: project_path
+  label: Ruta del proyecto
+  type: text
+  required: false
+  help: "Ruta absoluta al directorio del proyecto"
+  options: []
+  default: "~/.hermes/hermes-agent"
+
+- name: cvss_threshold
+  label: Umbral CVSS mínimo
+  type: number
+  required: false
+  help: "Puntuación CVSS mínima para reportar vulnerabilidades"
+  options: []
+  default: "7"
+
+- name: language
+  label: Idioma de respuesta
+  type: select
+  required: false
+  help: "Selecciona el idioma para el informe"
+  options:
+    - español
+    - english
+  default: español

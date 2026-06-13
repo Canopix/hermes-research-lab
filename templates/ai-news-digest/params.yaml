@@ -1,0 +1,29 @@
+- name: topics
+  label: Temas de IA a cubrir
+  type: text
+  required: true
+  help: "Ej: LLMs, RAG, agents, multimodal"
+- name: sources
+  label: Fuentes adicionales (una por línea)
+  type: text
+  required: false
+  help: "Ej: https://arxiv.org, https://news.ycombinator.com"
+- name: frequency
+  label: Frecuencia
+  type: select
+  required: true
+  options:
+    - diario
+    - cada 12h
+    - semanal
+  default: semanal
+  help: "Frecuencia del digest de noticias"
+- name: language
+  label: Idioma de salida
+  type: select
+  required: true
+  options:
+    - español
+    - english
+  default: español
+  help: "Idioma en el que se genera el digest"

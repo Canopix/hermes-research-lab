@@ -17,6 +17,8 @@ export interface Template {
   name: string
   description: string
   icon: string
+  category: string
+  categoryLabel: string
   params: ParamDef[]
   hermesConfig: { toolsets: string[]; skills: string[] }
 }

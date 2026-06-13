@@ -1,0 +1,17 @@
+- name: repo
+  label: Repositorio GitHub
+  type: text
+  required: true
+  help: "Ej: Canopix/hermes-research-lab"
+  options: []
+  default: ""
+
+- name: language
+  label: Idioma de respuesta
+  type: select
+  required: false
+  help: "Selecciona el idioma para el informe"
+  options:
+    - español
+    - english
+  default: español

@@ -29,6 +29,43 @@ ICON_MAP = {
     "default": "📦",
 }
 
+# ── Category system ──────────────────────────────────────────────────────
+CATEGORY_MAP: dict[str, str] = {
+    # Research & Intelligence
+    "ai-researcher": "research-intelligence",
+    "paper-summarizer": "research-intelligence",
+    "competitor-watcher": "research-intelligence",
+    "repo-scout": "research-intelligence",
+    "ai-news-digest": "research-intelligence",
+    "morning-briefing": "research-intelligence",
+    # Development Workflow
+    "backlog-triage": "development-workflow",
+    "docs-drift": "development-workflow",
+    "dep-audit": "development-workflow",
+    # DevOps & Monitoring
+    "repo-monitor": "devops-monitoring",
+    "uptime-monitor": "devops-monitoring",
+    # Multi-Skill Workflows
+    "security-audit": "multi-skill-workflows",
+    "content-pipeline": "multi-skill-workflows",
+}
+
+CATEGORY_ORDER: list[str] = [
+    "research-intelligence",
+    "development-workflow",
+    "devops-monitoring",
+    "multi-skill-workflows",
+]
+
+CATEGORY_LABELS: dict[str, str] = {
+    "research-intelligence": "Research & Intelligence",
+    "development-workflow": "Development Workflow",
+    "devops-monitoring": "DevOps & Monitoring",
+    "multi-skill-workflows": "Multi-Skill Workflows",
+    "business-operations": "Business Operations",
+    "github-automations": "GitHub Automations",
+}
+
 
 def _derive_icon(name: str) -> str:
     lower = name.lower()
@@ -114,16 +151,29 @@ def scan_templates(templates_dir: str | None = None) -> list[dict]:
         first_line = soul.strip().split("\n")[0] if soul.strip() else ""
         description = first_line.lstrip("#").strip() if first_line else template_id
 
+        category = CATEGORY_MAP.get(template_id, "other")
+
         result.append({
             "id": template_id,
             "name": template_id,
             "description": description,
             "icon": _derive_icon(template_id),
+            "category": category,
+            "categoryLabel": CATEGORY_LABELS.get(category, category),
             "params": params,
             "hermesConfig": hermes_config,
         })
 
-    return sorted(result, key=lambda t: t["name"])
+    # Sort by category order, then by name within category
+    def _cat_sort_key(t: dict) -> tuple[int, str]:
+        cat = t.get("category", "zzz")
+        try:
+            idx = CATEGORY_ORDER.index(cat)
+        except ValueError:
+            idx = len(CATEGORY_ORDER)
+        return (idx, t["name"])
+
+    return sorted(result, key=_cat_sort_key)
 
 
 def get_template(template_id: str, templates_dir: str | None = None) -> dict | None:
@@ -147,11 +197,15 @@ def get_template(template_id: str, templates_dir: str | None = None) -> dict | N
     first_line = soul.strip().split("\n")[0] if soul.strip() else ""
     description = first_line.lstrip("#").strip() if first_line else template_id
 
+    category = CATEGORY_MAP.get(template_id, "other")
+
     return {
         "id": template_id,
         "name": template_id,
         "description": description,
         "icon": _derive_icon(template_id),
+        "category": category,
+        "categoryLabel": CATEGORY_LABELS.get(category, category),
         "params": params,
         "hermesConfig": hermes_config,
         "body": soul,

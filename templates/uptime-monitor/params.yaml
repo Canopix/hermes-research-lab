@@ -1,0 +1,17 @@
+- name: endpoints
+  label: Endpoints a monitorear
+  type: text
+  required: true
+  help: "Uno por línea, formato: Nombre | https://url.com/health"
+  options: []
+  default: ""
+
+- name: language
+  label: Idioma de respuesta
+  type: select
+  required: false
+  help: "Selecciona el idioma para el informe"
+  options:
+    - español
+    - english
+  default: español

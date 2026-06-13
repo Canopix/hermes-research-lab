@@ -9,6 +9,39 @@ router = APIRouter()
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
+# ── Category system ──────────────────────────────────────────────────────
+CATEGORY_MAP: dict[str, str] = {
+    "ai-researcher": "research-intelligence",
+    "paper-summarizer": "research-intelligence",
+    "competitor-watcher": "research-intelligence",
+    "repo-scout": "research-intelligence",
+    "ai-news-digest": "research-intelligence",
+    "morning-briefing": "research-intelligence",
+    "backlog-triage": "development-workflow",
+    "docs-drift": "development-workflow",
+    "dep-audit": "development-workflow",
+    "repo-monitor": "devops-monitoring",
+    "uptime-monitor": "devops-monitoring",
+    "security-audit": "multi-skill-workflows",
+    "content-pipeline": "multi-skill-workflows",
+}
+
+CATEGORY_ORDER: list[str] = [
+    "research-intelligence",
+    "development-workflow",
+    "devops-monitoring",
+    "multi-skill-workflows",
+]
+
+CATEGORY_LABELS: dict[str, str] = {
+    "research-intelligence": "Research & Intelligence",
+    "development-workflow": "Development Workflow",
+    "devops-monitoring": "DevOps & Monitoring",
+    "multi-skill-workflows": "Multi-Skill Workflows",
+    "business-operations": "Business Operations",
+    "github-automations": "GitHub Automations",
+}
+
 
 def _parse_template(template_id: str) -> dict | None:
     skill_path = TEMPLATES_DIR / template_id / "SKILL.md"
@@ -24,11 +57,16 @@ def _parse_template(template_id: str) -> dict | None:
         return None
     if not isinstance(meta, dict):
         return None
+
+    category = CATEGORY_MAP.get(template_id, "other")
+
     return {
         "id": template_id,
         "name": meta.get("name", template_id),
         "description": meta.get("description", ""),
         "tags": meta.get("tags", []),
+        "category": category,
+        "categoryLabel": CATEGORY_LABELS.get(category, category),
         "params": meta.get("params", []),
     }
 
@@ -54,7 +92,15 @@ def list_templates():
             tpl = _parse_template(child.name)
             if tpl:
                 results.append(tpl)
-    return results
+    # Sort by category order, then by name within category
+    def _cat_sort_key(t: dict) -> tuple[int, str]:
+        cat = t.get("category", "zzz")
+        try:
+            idx = CATEGORY_ORDER.index(cat)
+        except ValueError:
+            idx = len(CATEGORY_ORDER)
+        return (idx, t["name"])
+    return sorted(results, key=_cat_sort_key)
 
 
 @router.get("/templates/{template_id}")

@@ -15,6 +15,8 @@ const MOCK_TEMPLATES: Template[] = [
     name: "Investigador Web",
     description: "Agente que busca información en la web y genera resúmenes estructurados con fuentes.",
     icon: "search",
+    category: "research-intelligence",
+    categoryLabel: "Research & Intelligence",
     params: [
       { name: "topic", label: "Tema de investigación", type: "text", required: true, default: "" },
       { name: "max_results", label: "Máximo de resultados", type: "number", required: false, default: 5 },
@@ -27,6 +29,8 @@ const MOCK_TEMPLATES: Template[] = [
     name: "Monitor de Actividad",
     description: "Monitorea un sitio web o API y notifica sobre cambios o eventos específicos.",
     icon: "activity",
+    category: "devops-monitoring",
+    categoryLabel: "DevOps & Monitoring",
     params: [
       { name: "target_url", label: "URL a monitorear", type: "url", required: true, default: "" },
       { name: "check_interval", label: "Intervalo de chequeo (min)", type: "number", required: true, default: 30 },
@@ -39,6 +43,8 @@ const MOCK_TEMPLATES: Template[] = [
     name: "Resumidor de Documentos",
     description: "Procesa documentos y genera resúmenes ejecutivos con puntos clave.",
     icon: "file_text",
+    category: "research-intelligence",
+    categoryLabel: "Research & Intelligence",
     params: [
       { name: "document_url", label: "URL del documento", type: "url", required: true, default: "" },
       { name: "summary_length", label: "Longitud del resumen", type: "select", required: true, options: ["Corto (1 párrafo)", "Medio (3 párrafos)", "Largo (5 párrafos)"], default: "Medio (3 párrafos)" },
@@ -51,6 +57,8 @@ const MOCK_TEMPLATES: Template[] = [
     name: "Asistente de Código",
     description: "Analiza repositorios, genera código y revisa pull requests automáticamente.",
     icon: "code",
+    category: "development-workflow",
+    categoryLabel: "Development Workflow",
     params: [
       { name: "repo_url", label: "URL del repositorio", type: "url", required: true, default: "" },
       { name: "task_type", label: "Tipo de tarea", type: "select", required: true, options: ["code_review", "generate_code", "bug_fix", "refactor"], default: "code_review" },
@@ -63,6 +71,8 @@ const MOCK_TEMPLATES: Template[] = [
     name: "Analista de Datos",
     description: "Analiza datasets, genera gráficos y produce reportes con insights accionables.",
     icon: "bar_chart",
+    category: "research-intelligence",
+    categoryLabel: "Research & Intelligence",
     params: [
       { name: "data_source", label: "Fuente de datos", type: "text", required: true, default: "" },
       { name: "analysis_depth", label: "Profundidad del análisis", type: "select", required: true, options: ["Básico", "Intermedio", "Avanzado"], default: "Intermedio" },
@@ -75,6 +85,8 @@ const MOCK_TEMPLATES: Template[] = [
     name: "Asistente de Email",
     description: "Clasifica, redacta y responde emails de forma automática basada en contexto.",
     icon: "mail",
+    category: "business-operations",
+    categoryLabel: "Business Operations",
     params: [
       { name: "inbox_folder", label: "Carpeta de inbox", type: "text", required: true, default: "INBOX" },
       { name: "auto_reply", label: "Respuesta automática", type: "toggle", required: false, default: false },

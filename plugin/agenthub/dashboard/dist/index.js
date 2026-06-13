@@ -15,6 +15,38 @@
 
   var GRID = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px", marginTop: "16px" };
 
+  var CATEGORY_ORDER = ["research-intelligence", "development-workflow", "devops-monitoring", "multi-skill-workflows", "other"];
+  var CATEGORY_LABELS = {
+    "research-intelligence": "Research & Intelligence",
+    "development-workflow": "Development Workflow",
+    "devops-monitoring": "DevOps & Monitoring",
+    "multi-skill-workflows": "Multi-Skill Workflows",
+    "other": "Other"
+  };
+
+  function groupByCategory(templates) {
+    var grouped = {};
+    templates.forEach(function (t) {
+      var cat = t.category || "other";
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(t);
+    });
+    return CATEGORY_ORDER.filter(function (c) { return grouped[c] && grouped[c].length > 0; })
+      .concat(Object.keys(grouped).filter(function (c) { return CATEGORY_ORDER.indexOf(c) === -1; }))
+      .map(function (c) { return { key: c, label: CATEGORY_LABELS[c] || c, items: grouped[c] }; });
+  }
+
+  function categorySection(group, renderCards) {
+    var header = h("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginTop: "16px", marginBottom: "4px" } },
+      h("span", { style: { fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#888" } }, group.label),
+      h(Badge, { variant: "secondary", style: { fontSize: "10px", padding: "1px 6px" } }, String(group.items.length))
+    );
+    return h("div", { key: group.key },
+      header,
+      renderCards(group.items)
+    );
+  }
+
   function templateCard(tpl, opts) {
     opts = opts || {};
     var badges = (tpl.tags || []).map(function (t) { return h(Badge, { key: t, variant: "secondary" }, t); });
@@ -34,7 +66,14 @@
   function TemplatesTab(props) {
     if (props.error) return h("p", { style: { color: "red" } }, "Error: " + props.error);
     if (!props.templates.length) return h("p", null, "Loading templates…");
-    return h("div", { style: GRID }, props.templates.map(function (t) { return templateCard(t); }));
+    var groups = groupByCategory(props.templates);
+    return h("div", null,
+      groups.map(function (g) {
+        return categorySection(g, function (items) {
+          return h("div", { style: GRID }, items.map(function (t) { return templateCard(t); }));
+        });
+      })
+    );
   }
 
   function paramField(p, value, onChange) {
@@ -82,11 +121,19 @@
     }
 
     if (props.error) return h("p", { style: { color: "red" } }, "Error: " + props.error);
-
-    var gallery = h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" } },
-      props.templates.map(function (t) {
-        return templateCard(t, { onClick: function () { select(t); }, selected: selected && selected.id === t.id });
-      }));
+    if (!props.templates.length) return h("p", null, "Loading templates…");
+    var groups = groupByCategory(props.templates);
+    var gallery = h("div", null,
+      groups.map(function (g) {
+        return categorySection(g, function (items) {
+          return h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" } },
+            items.map(function (t) {
+              return templateCard(t, { onClick: function () { select(t); }, selected: selected && selected.id === t.id });
+            })
+          );
+        });
+      })
+    );
 
     var form = null;
     if (selected) {
@@ -118,7 +165,6 @@
       );
     }
 
-    if (!props.templates.length) return h("p", null, "Loading templates…");
     return h("div", null, gallery, form);
   }
 

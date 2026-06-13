@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Code, Settings2, FlaskConical, FileText, ArrowLeft, RotateCcw } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Loader2, Code, Settings2, FlaskConical, FileText, ArrowLeft, RotateCcw, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorState } from "@/components/ErrorState";
 import { AnimateIn } from "@/components/AnimateIn";
@@ -211,7 +211,7 @@ function CreateAgentWizard() {
       <div className="mt-8 sm:mt-12">
         {wizard.step === 1 && (
           <AnimateIn key={wizard.step} direction="up" delay={100} duration={300}>
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="flex items-center gap-2 text-lg font-medium text-foreground">
               <FlaskConical className="h-5 w-5 text-primary" />
               <span>Selecciona una base para tu agente</span>
@@ -225,16 +225,59 @@ function CreateAgentWizard() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {templates.map((t) => (
-                  <TemplateCard
-                    key={t.id}
-                    template={t}
-                    isSelected={wizard.selectedTemplate?.id === t.id}
-                    onClick={handleTemplateSelect}
-                  />
-                ))}
-              </div>
+              (() => {
+                // Group templates by category
+                const grouped: Record<string, typeof templates> = {};
+                templates.forEach((t) => {
+                  const cat = t.category || "other";
+                  if (!grouped[cat]) grouped[cat] = [];
+                  grouped[cat].push(t);
+                });
+                const categoryOrder = [
+                  "research-intelligence",
+                  "development-workflow",
+                  "devops-monitoring",
+                  "multi-skill-workflows",
+                  "other",
+                ];
+                const categoryLabels: Record<string, string> = {
+                  "research-intelligence": "Research & Intelligence",
+                  "development-workflow": "Development Workflow",
+                  "devops-monitoring": "DevOps & Monitoring",
+                  "multi-skill-workflows": "Multi-Skill Workflows",
+                  "other": "Other",
+                };
+                const orderedCats = Object.keys(grouped).sort(
+                  (a, b) => {
+                    const ai = categoryOrder.indexOf(a);
+                    const bi = categoryOrder.indexOf(b);
+                    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+                  }
+                );
+                return orderedCats.map((cat) => (
+                  <div key={cat} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                        {categoryLabels[cat] || cat}
+                      </h3>
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        {grouped[cat].length}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {grouped[cat].map((t) => (
+                        <TemplateCard
+                          key={t.id}
+                          template={t}
+                          isSelected={wizard.selectedTemplate?.id === t.id}
+                          onClick={handleTemplateSelect}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()
             )}
           </div>
           </AnimateIn>

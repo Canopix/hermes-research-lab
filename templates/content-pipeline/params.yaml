@@ -1,0 +1,25 @@
+- name: topics
+  label: Temas de investigación
+  type: text
+  required: true
+  help: "Ej: AI agents, LLM deployment, open source AI"
+  options: []
+  default: ""
+
+- name: output_dir
+  label: Directorio de salida
+  type: text
+  required: false
+  help: "Ruta donde guardar los borradores"
+  options: []
+  default: "~/drafts"
+
+- name: language
+  label: Idioma de respuesta
+  type: select
+  required: false
+  help: "Selecciona el idioma para el contenido"
+  options:
+    - español
+    - english
+  default: español
