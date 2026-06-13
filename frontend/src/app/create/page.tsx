@@ -2,12 +2,18 @@
 
 import React, { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getTemplates, previewTemplate, createJob } from "@/lib/api";
-import { Template, Agent } from "@/lib/types";
+import { getTemplates, previewTemplate, createJob, getProviders, getChannels, getSkillsList, getToolsetsList } from "@/lib/api";
+import type { Template, Agent, ProviderOption, DeliveryChannel, SkillInfo, ToolsetInfo } from "@/lib/types";
 import { TemplateCard } from "@/components/builder/TemplateCard";
 import { TemplateCardSkeleton } from "@/components/builder/TemplateCardSkeleton";
 import { WizardStepper } from "@/components/builder/WizardStepper";
 import { DynamicParam } from "@/components/builder/DynamicParam";
+import { ProviderModelSelector } from "@/components/builder/ProviderModelSelector";
+import { SkillsSelector } from "@/components/builder/SkillsSelector";
+import { ToolsetsSelector } from "@/components/builder/ToolsetsSelector";
+import { ScheduleSelector } from "@/components/builder/ScheduleSelector";
+import { DeliverySelector } from "@/components/builder/DeliverySelector";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +42,10 @@ interface WizardState {
   errorType: ErrorType;
   schedule: string;
   deliver: string;
+  selectedProvider: string;
+  selectedModel: string;
+  selectedSkills: string[];
+  selectedToolsets: string[];
 }
 
 const STEPS = [
@@ -51,6 +61,11 @@ function CreateAgentWizard() {
   
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
+  const [providers, setProviders] = useState<ProviderOption[]>([]);
+  const [channels, setChannels] = useState<DeliveryChannel[]>([]);
+  const [skillsList, setSkillsList] = useState<SkillInfo[]>([]);
+  const [toolsetsList, setToolsetsList] = useState<ToolsetInfo[]>([]);
+  const [configTab, setConfigTab] = useState<"params" | "model" | "skills" | "toolsets" | "schedule" | "delivery">("params");
   const [wizard, setWizard] = useState<WizardState>({
     step: 1,
     selectedTemplate: null,
@@ -62,16 +77,39 @@ function CreateAgentWizard() {
     errorType: null,
     schedule: DEFAULT_SCHEDULE,
     deliver: DEFAULT_DELIVER,
+    selectedProvider: "default",
+    selectedModel: "",
+    selectedSkills: [],
+    selectedToolsets: [],
   });
 
   const wizardRef = useRef(wizard);
   wizardRef.current = wizard;
+
+  const stepContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (stepContentRef.current) {
+      stepContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [wizard.step]);
 
   useEffect(() => {
     async function load() {
       try {
         const data = await getTemplates();
         setTemplates(data);
+
+        const [providersData, channelsData, skillsData, toolsetsData] = await Promise.all([
+          getProviders().catch(() => ({ default_provider: "custom", default_model: "", options: [] })),
+          getChannels().catch(() => []),
+          getSkillsList().catch(() => []),
+          getToolsetsList().catch(() => []),
+        ]);
+        setProviders(providersData.options || []);
+        setChannels(channelsData);
+        setSkillsList(skillsData);
+        setToolsetsList(toolsetsData);
         
         const templateId = searchParams.get("templateId");
         if (templateId) {
@@ -92,8 +130,9 @@ function CreateAgentWizard() {
 
   const handleTemplateSelect = (template: Template) => {
     const hasParams = template.params && template.params.length > 0;
-    setWizard({
-      ...wizard,
+    const templateToolsets = template.hermesConfig?.toolsets || [];
+    setWizard(prev => ({
+      ...prev,
       selectedTemplate: template,
       agentName: template.name,
       step: hasParams ? 2 : 3,
@@ -101,7 +140,8 @@ function CreateAgentWizard() {
         ...acc,
         [p.name]: p.default !== undefined ? p.default : (p.type === 'toggle' ? false : "")
       }), {}),
-    });
+      selectedToolsets: templateToolsets,
+    }));
   };
 
   const nextStep = useCallback(async () => {
@@ -125,12 +165,15 @@ function CreateAgentWizard() {
       try {
         setWizard(prev => ({ ...prev, step: 4, isCreating: true }));
         await createJob({
-          name: wizard.agentName || current.selectedTemplate.name,
+          name: wizardRef.current.agentName || current.selectedTemplate.name,
           template: current.selectedTemplate.id,
           config: current.config,
           prompt: current.preview || "",
-          schedule: DEFAULT_SCHEDULE,
-          deliver: DEFAULT_DELIVER,
+          schedule: current.schedule,
+          deliver: current.deliver,
+          skills: current.selectedSkills.length > 0 ? current.selectedSkills : undefined,
+          enabled_toolsets: current.selectedToolsets.length > 0 ? current.selectedToolsets : undefined,
+          model: current.selectedModel ? { model: current.selectedModel, provider: current.selectedProvider } : undefined,
         });
         toast.success("Agente creado con éxito");
         router.push("/agents");
@@ -208,7 +251,7 @@ function CreateAgentWizard() {
 
       <WizardStepper currentStep={wizard.step} steps={STEPS} />
 
-      <div className="mt-8 sm:mt-12">
+      <div ref={stepContentRef} className="mt-8 sm:mt-12">
         {wizard.step === 1 && (
           <AnimateIn key={wizard.step} direction="up" delay={100} duration={300}>
           <div className="space-y-8">
@@ -296,35 +339,122 @@ function CreateAgentWizard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="agentName" className="text-sm font-medium">
-                  Nombre del agente <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  id="agentName"
-                  type="text"
-                  placeholder={wizard.selectedTemplate.name}
-                  value={wizard.agentName}
-                  onChange={(e) => setWizard(prev => ({ ...prev, agentName: e.target.value }))}
-                  className="w-full"
-                />
-                <p className="text-xs text-muted-foreground/60">
-                  Nombre descriptivo para tu agente personalizado.
-                </p>
+              {/* Tab bar */}
+              <div className="flex flex-wrap gap-1 border-b pb-2">
+                {([
+                  ["params", "Parámetros"],
+                  ["model", "Modelo"],
+                  ["skills", "Skills"],
+                  ["toolsets", "Toolsets"],
+                  ["schedule", "Schedule"],
+                  ["delivery", "Entrega"],
+                ] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setConfigTab(key)}
+                    className={cn(
+                      "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                      configTab === key
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
-              <Separator />
-              {wizard.selectedTemplate.params.map((p) => (
-                <DynamicParam
-                  key={p.name}
-                  param={p}
-                  value={wizard.config[p.name]}
-                  onChange={(val) => setWizard(prev => ({
-                    ...prev,
-                    config: { ...prev.config, [p.name]: val }
-                  }))}
-                  required={p.required}
+
+              {/* Tab: Params */}
+              {configTab === "params" && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="agentName" className="text-sm font-medium">
+                      Nombre del agente <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="agentName"
+                      type="text"
+                      placeholder={wizard.selectedTemplate.name}
+                      value={wizard.agentName}
+                      onChange={(e) => setWizard(prev => ({ ...prev, agentName: e.target.value }))}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground/60">
+                      Nombre descriptivo para tu agente personalizado.
+                    </p>
+                  </div>
+                  <Separator />
+                  {wizard.selectedTemplate.params.map((p) => (
+                    <DynamicParam
+                      key={p.name}
+                      param={p}
+                      value={wizard.config[p.name]}
+                      onChange={(val) => setWizard(prev => ({
+                        ...prev,
+                        config: { ...prev.config, [p.name]: val }
+                      }))}
+                      required={p.required}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Tab: Model */}
+              {configTab === "model" && (
+                <ProviderModelSelector
+                  providers={providers}
+                  selectedProvider={wizard.selectedProvider}
+                  selectedModel={wizard.selectedModel}
+                  onProviderChange={(v) => setWizard(prev => ({ ...prev, selectedProvider: v }))}
+                  onModelChange={(v) => setWizard(prev => ({ ...prev, selectedModel: v }))}
                 />
-              ))}
+              )}
+
+              {/* Tab: Skills */}
+              {configTab === "skills" && (
+                <SkillsSelector
+                  skills={skillsList}
+                  selectedSkills={wizard.selectedSkills}
+                  recommendedSkills={wizard.selectedTemplate.hermesConfig?.skills || []}
+                  onToggle={(name) => setWizard(prev => ({
+                    ...prev,
+                    selectedSkills: prev.selectedSkills.includes(name)
+                      ? prev.selectedSkills.filter(s => s !== name)
+                      : [...prev.selectedSkills, name]
+                  }))}
+                />
+              )}
+
+              {/* Tab: Toolsets */}
+              {configTab === "toolsets" && (
+                <ToolsetsSelector
+                  toolsets={toolsetsList}
+                  selectedToolsets={wizard.selectedToolsets}
+                  onToggle={(name) => setWizard(prev => ({
+                    ...prev,
+                    selectedToolsets: prev.selectedToolsets.includes(name)
+                      ? prev.selectedToolsets.filter(t => t !== name)
+                      : [...prev.selectedToolsets, name]
+                  }))}
+                />
+              )}
+
+              {/* Tab: Schedule */}
+              {configTab === "schedule" && (
+                <ScheduleSelector
+                  value={wizard.schedule}
+                  onChange={(v) => setWizard(prev => ({ ...prev, schedule: v }))}
+                />
+              )}
+
+              {/* Tab: Delivery */}
+              {configTab === "delivery" && (
+                <DeliverySelector
+                  channels={channels}
+                  selectedDelivery={wizard.deliver}
+                  onChange={(v) => setWizard(prev => ({ ...prev, deliver: v }))}
+                />
+              )}
             </CardContent>
             <CardFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 border-t pt-6">
               <Button variant="ghost" onClick={prevStep}>Atrás</Button>
@@ -374,6 +504,21 @@ function CreateAgentWizard() {
                     <p className="text-sm font-medium">{wizard.selectedTemplate?.name}</p>
                   </div>
                   <Separator />
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1">Modelo</p>
+                    <p className="text-sm font-medium font-mono text-xs">{wizard.selectedProvider}/{wizard.selectedModel || "(default)"}</p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-2">Skills</p>
+                    <div className="flex flex-wrap gap-1">
+                      {wizard.selectedSkills.map(s => (
+                        <Badge key={s} variant="outline" className="rounded-md text-[10px]">{s}</Badge>
+                      ))}
+                      {wizard.selectedSkills.length === 0 && <span className="text-xs text-muted-foreground/60">Ninguna seleccionada</span>}
+                    </div>
+                  </div>
+                  <Separator />
                   {wizard.selectedTemplate?.params && wizard.selectedTemplate.params.length > 0 && (
                     <>
                       <div>
@@ -393,9 +538,10 @@ function CreateAgentWizard() {
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1">Toolsets</p>
                     <div className="flex flex-wrap gap-1">
-                      {wizard.selectedTemplate?.hermesConfig?.toolsets?.map(t => (
+                      {wizard.selectedToolsets.map(t => (
                         <Badge key={t} variant="outline" className="rounded-md text-[10px]">{t}</Badge>
                       ))}
+                      {wizard.selectedToolsets.length === 0 && <span className="text-xs text-muted-foreground/60">Ninguno seleccionado</span>}
                     </div>
                   </div>
                   <Separator />
