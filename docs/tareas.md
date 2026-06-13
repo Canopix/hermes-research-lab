@@ -174,3 +174,26 @@ P3 (templates listos) ────→ P2 (puede testear con templates reales)
 2. Crea su rama: `p1-frontend`, `p2-backend`, `p3-templates`
 3. Empieza con sus tareas del día 1
 4. Al final del día, PRs a main
+
+---
+
+## Completado (Post-Hackathon)
+
+### Plugin Integration ✅
+- [x] Plugin extraído y empaquetado
+- [x] 8 mejoras al plugin implementadas
+- [x] Playwright E2E tests
+
+### Security Hardening ✅
+- [x] Auditoría completa (69 bugs, docs/bug-audit.md)
+- [x] Path traversal validation
+- [x] Async I/O conversions
+- [x] API key security (server-side, constant-time comparison)
+- [x] JSON injection prevention
+
+### CLI Wizard ✅
+- [x] Provider/Model selection
+- [x] Skills multi-select
+- [x] Toolsets selection
+- [x] Schedule presets + custom cron
+- [x] Delivery channels with chat_id/thread_id

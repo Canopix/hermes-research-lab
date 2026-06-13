@@ -253,6 +253,37 @@ async def get_hooks():
     return hooks
 ```
 
+#### `GET /api/system/providers`
+
+Lee `config.yaml` → `model`, `providers`, `fallback_providers`. Retorna:
+
+```json
+{
+  "default_provider": "openrouter",
+  "default_model": "anthropic/claude-sonnet-4",
+  "options": [
+    {"id": "openrouter", "name": "OpenRouter", "models": ["anthropic/claude-sonnet-4", "qwen/qwen3-30b-a3b:free", "..."]}
+  ]
+}
+```
+
+#### `GET /api/system/channels`
+
+Lee `config.yaml` → `gateway.platforms`. Detecta Telegram, Discord, Slack automáticamente.
+Siempre incluye: local, origin (chat actual), all.
+Telegram/Discord incluyen `supports_chat_id: true, supports_thread_id: true`.
+
+```json
+{
+  "channels": [
+    {"id": "local", "name": "Local (stdout)"},
+    {"id": "origin", "name": "Chat actual"},
+    {"id": "telegram", "name": "Telegram", "supports_chat_id": true, "supports_thread_id": true},
+    {"id": "all", "name": "Todos los canales"}
+  ]
+}
+```
+
 #### `GET /api/system/mcp-servers`
 
 Lee configuración MCP de config.yaml.
@@ -261,7 +292,7 @@ Lee configuración MCP de config.yaml.
 @app.get("/api/system/mcp-servers")
 async def get_mcp_servers():
     config_path = Path.home() / ".hermes" / "config.yaml"
-    config = yaml.safe_load(config_path.read_text()) if config_path.exists() else {}
+    config = yaml.safe_load(await asyncio.to_thread(config_path.read_text)) if config_path.exists() else {}
     return config.get("mcp", {}).get("servers", [])
 ```
 
@@ -276,10 +307,8 @@ async def get_activity(limit: int = 50):
     if not activity_log.exists():
         return []
 
-    entries = []
-    with open(activity_log) as f:
-        for line in f:
-            entries.append(json.loads(line))
+    content = await asyncio.to_thread(activity_log.read_text)
+    entries = [json.loads(line) for line in content.strip().split("\n") if line.strip()]
     return entries[-limit:]
 ```
 
@@ -312,6 +341,7 @@ events:
 ```python
 import json
 import os
+import asyncio
 from pathlib import Path
 from datetime import datetime
 
@@ -338,7 +368,7 @@ def handle_event(event_type: str, payload: dict):
         entry["duration_ms"] = payload.get("duration_ms", 0)
         entry["tokens"] = payload.get("tokens", {})
 
-    # Append to JSONL
+    # Append to JSONL (async-safe)
     with open(ACTIVITY_LOG, "a") as f:
         f.write(json.dumps(entry) + "\n")
 ```
@@ -431,6 +461,22 @@ interface McpServer {
   url?: string;
 }
 ```
+
+---
+
+## Seguridad
+
+### Validación de IDs
+Todos los path parameters (`name`, `template_id`) se validan con regex `^[a-zA-Z0-9_-]+$` para prevenir path traversal.
+
+### Autenticación
+API key comparison usa `hmac.compare_digest()` para prevenir timing attacks.
+Middleware valida `Authorization: Bearer` o `X-API-Key` headers.
+
+### Async I/O
+Operaciones de archivo síncronas envueltas con `asyncio.to_thread()`.
+Subprocess convertido a `asyncio.create_subprocess_exec()`.
+Singleton hermes_client protegido con `asyncio.Lock()`.
 
 ---
 

@@ -11,7 +11,7 @@ AgentHub es un sistema completo para gestionar agentes AI basados en Hermes Agen
 - **Historial** - Revisa outputs de ejecuciones anteriores con markdown rendering
 - **Exploración** - Navega profiles, skills, toolsets, hooks, MCP servers, cron jobs y config de Hermes
 - **Streaming SSE** - Monitorea la ejecución de agentes en tiempo real
-- **CLI unificada** - Scripts de gestión para setup, start, stop y status
+- **CLI unificada** - Scripts de gestión para setup, start, stop, status y wizard de creación de 6 tabs (Params, Model, Skills, Toolsets, Schedule, Delivery)
 
 ## Arquitectura
 
@@ -47,16 +47,41 @@ El usuario final solo necesita que el Exploration API esté corriendo. La comuni
 | agenthub start  | Arranca Exploration API + Frontend en background                     |
 | agenthub stop   | Detiene todos los servicios                                          |
 | agenthub status | Verifica estado de Hermes, Explore API y Frontend                    |
+| agenthub wizard | Lanza wizard de 6 tabs (Params, Model, Skills, Toolsets, Schedule, Delivery) |
 | agenthub demo   | Ejecuta demo de 5 pasos                                              |
 
 ## Templates Disponibles
 
-| Template          | Descripción                                           | Toolsets      |
-|-------------------|------------------------------------------------------|---------------|
-| AI Researcher     | Monitorea web/RSS, genera resúmenes + podcast TTS     | web, tts      |
-| Repo Monitor      | Monitorea repos GitHub: PRs, issues, releases        | web, terminal |
-| Paper Summarizer  | Monitorea arXiv por categoría, resúmenes técnicos    | web           |
-| Competitor Watcher| Monitorea URLs de competidores y detecta cambios      | web           |
+**12 templates** en 4 categorías:
+
+### Research & Intelligence
+| Template | Descripción | Toolsets |
+|----------|-------------|----------|
+| AI Researcher | Monitorea web/RSS, genera resúmenes + podcast TTS | web, tts |
+| Paper Summarizer | Monitorea arXiv por categoría, resúmenes técnicos | web |
+| Competitor Watcher | Monitorea URLs de competidores y detecta cambios | web |
+| Repo Scout | Analiza repos GitHub y genera insights | web, terminal |
+| AI News Digest | Resumen diario de noticias AI | web |
+| Morning Briefing | Briefing matutino personalizado | web, tts |
+
+### Development Workflow
+| Template | Descripción | Toolsets |
+|----------|-------------|----------|
+| Backlog Triage | Clasifica y prioriza backlog automáticamente | web |
+| Docs Drift | Detecta desviaciones entre código y documentación | web, terminal |
+| Dep Audit | Auditoría de dependencias y vulnerabilidades | web, terminal |
+
+### DevOps & Monitoring
+| Template | Descripción | Toolsets |
+|----------|-------------|----------|
+| Repo Monitor | Monitorea repos GitHub: PRs, issues, releases | web, terminal |
+| Uptime Monitor | Monitorea disponibilidad de servicios | web |
+
+### Multi-Skill Workflows
+| Template | Descripción | Toolsets |
+|----------|-------------|----------|
+| Security Audit | Auditoría de seguridad automatizada | web, terminal |
+| Content Pipeline | Pipeline de generación y publicación de contenido | web, tts |
 
 ## Endpoints
 
@@ -83,6 +108,8 @@ El usuario final solo necesita que el Exploration API esté corriendo. La comuni
     │       └── hermes_client.py  # Async client → Hermes API Server
     ├── scripts/               # CLI scripts + agenthub.py
     ├── docs/                  # Documentación
+    │   ├── bug-audit.md       # Comprehensive bug audit (69 bugs catalogued)
+    │   └── plan.md            # Implementation plan
     ├── README.md
     └── PHASES.md
 
@@ -95,3 +122,12 @@ El usuario final solo necesita que el Exploration API esté corriendo. La comuni
 ## Licencia
 
 MIT
+
+## Recent Improvements
+
+- **Path traversal validation** on profiles/templates endpoints (`_validate_id` regex)
+- **Constant-time API key comparison** (`hmac.compare_digest`) to prevent timing attacks
+- **Async I/O conversions** for better performance (subprocess.run → asyncio.create_subprocess_exec, sync file I/O → asyncio.to_thread)
+- **JSON injection prevention** in CLI wizard (safe construction via `jq`)
+- **API key moved server-side** (no longer exposed in client bundle — `EXPLORE_API_KEY` without `NEXT_PUBLIC_` prefix)
+- **Process ownership verification** in `start.sh` before killing on ports

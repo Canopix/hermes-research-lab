@@ -28,7 +28,7 @@ El usuario NO programa. Elige un template de una galería y lo configura:
 └─────────────┘     └──────────────┘     └─────────────┘
 ```
 
-### Templates iniciales (4)
+### Templates (12)
 
 | Template | Qué hace | Herramientas |
 |----------|---------|-------------|
@@ -36,8 +36,29 @@ El usuario NO programa. Elige un template de una galería y lo configura:
 | 📦 **Repo Monitor** | GitHub → digest de PRs/issues/releases | web, terminal |
 | 📄 **Paper Summarizer** | arXiv → resumen técnico semanal | web, arxiv |
 | 👀 **Competitor Watcher** | URLs → detección de cambios | web |
+| 📰 **AI News Digest** | Noticias de IA curadas | web |
+| 🌅 **Morning Briefing** | Resumen matutino | web, tts |
+| 🔍 **Repo Scout** | Descubrimiento de repos GitHub | web, terminal |
+| 📋 **Backlog Triage** | Auto-clasificación de issues | web, terminal |
+| 📝 **Docs Drift** | Detección de drift en docs | web, terminal |
+| 🔒 **Dep Audit** | Auditoría de dependencias | terminal |
+| ⏱️ **Uptime Monitor** | Monitoreo de disponibilidad | web |
+| 🛡️ **Security Audit** | Auditoría de vulnerabilidades | web, terminal |
 
 Cada template se implementa como un **Skill de Hermes** con params configurables en frontmatter YAML.
+
+---
+
+## Las interfaces del producto
+
+### 1. 🖥️ Standalone (Next.js, :3000)
+Dashboard web completo con Builder wizard de 9 pasos, historial de ejecuciones y exploración del sistema.
+
+### 2. 🔌 Plugin (Hermes Dashboard, :9119)
+Plugin integrado dentro de Hermes Dashboard. Interfaz principal del usuario final con las mismas capacidades que el standalone.
+
+### 3. 🎛️ CLI Wizard (`scripts/wizard.sh`)
+Wizard interactivo por terminal con los mismos parámetros que el dashboard: provider/modelo, skills, toolsets, schedule y delivery. Ideal para usuarios avanzados.
 
 ---
 
@@ -75,7 +96,7 @@ AgentHub es un **plugin** que se instala encima de Hermes existente. No reemplaz
 - Wizard de creación de agentes (3-4 pasos)
 - Historial de outputs con búsqueda
 - Vista de exploración del sistema
-- 4 templates funcionales
+- 12 templates funcionales
 - Streaming en tiempo real (SSE)
 - Delivery multi-plataforma (Telegram, Discord, etc.)
 

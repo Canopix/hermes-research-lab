@@ -18,6 +18,15 @@ AgentHub se instala **encima** de su Hermes existente. No reemplaza nada, no toc
 
 ---
 
+## Dependencias del CLI
+- bash 4+
+- curl
+- jq (para construcción segura de JSON)
+- Python 3.10+
+- Node.js 18+
+
+---
+
 ## Instalación (1 comando)
 
 ```bash
@@ -74,6 +83,27 @@ AgentHub puede hacer esto automáticamente al primer arranque.
 ---
 
 ## El `agenthub` CLI
+
+### Wizard interactivo (9 pasos)
+
+El wizard CLI (`scripts/wizard.sh`) guía al usuario en 9 pasos para crear un agente:
+
+1. **Selección de template** — galería de templates disponibles
+2. **Parámetros** — configurar params del template
+3. **Provider/Modelo** — elegir provider y modelo de `config.yaml`
+4. **Skills** — multi-select de skills con búsqueda
+5. **Toolsets** — selección de herramientas
+6. **Schedule** — presets (30m, 1h, 6h, diario, semanal) + cron personalizado
+7. **Delivery** — local, chat actual, Telegram (con chat_id/thread_id), all
+8. **Preview** — ver el payload JSON antes de crear
+9. **Crear** — ejecuta `hermes cron create` con el payload completo
+
+```bash
+# Ejecutar el wizard
+bash scripts/wizard.sh
+```
+
+### Comandos CLI
 
 ```bash
 # Ver comandos disponibles
@@ -161,8 +191,15 @@ agenthub uninstall
 ```
 
 ---
+---
 
--
+## Instalación del Plugin
+```bash
+bash scripts/install-plugin.sh
+```
+Esto copia el plugin a `~/.hermes/plugins/agenthub/` y reinicia el dashboard.
+
+---
 
 ## Resumen
 

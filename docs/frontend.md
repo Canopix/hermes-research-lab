@@ -58,39 +58,29 @@ Cada 30s refresca datos vía react-query.
 
 ## Vista 2: Builder (`/create`)
 
-**Qué muestra:** Wizard de 4 pasos para crear un agente.
+**Qué muestra:** Wizard de 4 pasos con 6 tabs de configuración para crear un agente.
 > Detalle completo del flujo: [[🎯 AH-Wizard]]
 
-### Paso 1: Elegir template
+### Componentes del Builder Wizard
 
 | Componente | Descripción |
 |-----------|-------------|
-| `TemplateGrid` | Cards con icono, nombre, descripción, tags |
-| `TemplateCard` | Click → siguiente paso con template pre-seleccionado |
+| ProviderModelSelector | Selector de provider y modelo con dropdown |
+| SkillsSelector | Multi-select de skills con búsqueda |
+| ToolsetsSelector | Checkbox grid de toolsets |
+| ScheduleSelector | Presets de schedule + cron personalizado |
+| DeliverySelector | Selector de canal con chat_id/thread_id para Telegram |
+| WizardStepper | Barra de progreso del wizard |
+| TemplateCard | Card de template con selección |
 
-**Datos:** `GET :8643/api/templates`
+### Flujo
 
-### Paso 2: Configurar parámetros
+1. **Selección de template** — Galería de cards con icono, nombre, descripción, tags
+2. **Configuración (6 tabs)** — Params, Model, Skills, Toolsets, Schedule, Delivery
+3. **Preview** — Resumen + prompt renderizado
+4. **Create** — `POST :8642/api/jobs`
 
-| Componente | Descripción |
-|-----------|-------------|
-| `DynamicParam` | Renderiza form según `template.params[]` |
-| `ParamInput` | type=text → Input |
-| `ParamSelect` | type=select → Select con options |
-| `ParamToggle` | type=toggle → Switch |
-| `ParamNumber` | type=number → Input number |
-
-**Validación:** campos required con asterisco, botón disabled si falta alguno.
-
-### Paso 3: Resumen + Crear
-
-| Componente | Descripción |
-|-----------|-------------|
-| `WizardSummary` | Card con todos los parámetros configurados |
-| `PromptPreview` | Preview del prompt renderizado |
-
-**Datos:** `GET :8643/api/templates/{id}/preview?...params`
-**Crear:** `POST :8642/api/jobs`
+**Datos:** `GET :8643/api/templates`, `GET :8643/api/system/providers`, `GET :8643/api/system/channels`
 
 ---
 
@@ -205,45 +195,55 @@ frontend/
 
 ## API Client (`lib/api.ts`)
 
+> **Nota de seguridad:** La API key es server-side only (`EXPLORE_API_KEY` en `.env.local`, sin prefijo `NEXT_PUBLIC_`). Nunca se expone al cliente.
+
 ```typescript
 const HERMES_URL = process.env.NEXT_PUBLIC_HERMES_URL || 'http://localhost:8642';
 const EXPLORE_URL = process.env.NEXT_PUBLIC_EXPLORE_URL || 'http://localhost:8643';
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
+
+// Server-side API key (solo en Next.js API routes / server components)
+// En el cliente, todas las llamadas usan fetchApi() que gestiona auth automáticamente
 
 // Hermes API Server
 export const hermes = {
   // Jobs
-  getJobs: () => fetch(`${HERMES_URL}/api/jobs`, { headers: auth() }),
-  createJob: (data: CreateJob) => post(`${HERMES_URL}/api/jobs`, data),
-  pauseJob: (id: string) => post(`${HERMES_URL}/api/jobs/${id}/pause`),
-  resumeJob: (id: string) => post(`${HERMES_URL}/api/jobs/${id}/resume`),
-  triggerJob: (id: string) => post(`${HERMES_URL}/api/jobs/${id}/run`),
-  getJobOutputs: (id: string) => get(`${HERMES_URL}/api/jobs/${id}/outputs`),
+  getJobs: () => fetchApi(`${HERMES_URL}/api/jobs`),
+  createJob: (data: CreateJob) => fetchApi(`${HERMES_URL}/api/jobs`, { method: 'POST', body: data }),
+  pauseJob: (id: string) => fetchApi(`${HERMES_URL}/api/jobs/${id}/pause`, { method: 'POST' }),
+  resumeJob: (id: string) => fetchApi(`${HERMES_URL}/api/jobs/${id}/resume`, { method: 'POST' }),
+  triggerJob: (id: string) => fetchApi(`${HERMES_URL}/api/jobs/${id}/run`, { method: 'POST' }),
+  getJobOutputs: (id: string) => fetchApi(`${HERMES_URL}/api/jobs/${id}/outputs`),
 
   // Sessions
-  getSessions: () => get(`${HERMES_URL}/api/sessions`),
-  getMessages: (id: string) => get(`${HERMES_URL}/api/sessions/${id}/messages`),
+  getSessions: () => fetchApi(`${HERMES_URL}/api/sessions`),
+  getMessages: (id: string) => fetchApi(`${HERMES_URL}/api/sessions/${id}/messages`),
 
   // Discovery
-  getSkills: () => get(`${HERMES_URL}/v1/skills`),
-  getToolsets: () => get(`${HERMES_URL}/v1/toolsets`),
-  getHealth: () => get(`${HERMES_URL}/health/detailed`),
+  getSkills: () => fetchApi(`${HERMES_URL}/v1/skills`),
+  getToolsets: () => fetchApi(`${HERMES_URL}/v1/toolsets`),
+  getHealth: () => fetchApi(`${HERMES_URL}/health/detailed`),
 
   // Runs (SSE)
-  createRun: (data: CreateRun) => post(`${HERMES_URL}/v1/runs`, data),
+  createRun: (data: CreateRun) => fetchApi(`${HERMES_URL}/v1/runs`, { method: 'POST', body: data }),
   streamRun: (id: string) => new EventSource(`${HERMES_URL}/v1/runs/${id}/events`),
 };
 
 // Exploration API
 export const explore = {
-  getOverview: () => get(`${EXPLORE_URL}/api/system/overview`),
-  getProfiles: () => get(`${EXPLORE_URL}/api/system/profiles`),
-  getMemory: (name: string) => get(`${EXPLORE_URL}/api/system/profiles/${name}/memory`),
-  getTemplates: () => get(`${EXPLORE_URL}/api/templates`),
+  getOverview: () => fetchApi(`${EXPLORE_URL}/api/system/overview`),
+  getProfiles: () => fetchApi(`${EXPLORE_URL}/api/system/profiles`),
+  getMemory: (name: string) => fetchApi(`${EXPLORE_URL}/api/system/profiles/${name}/memory`),
+  getTemplates: () => fetchApi(`${EXPLORE_URL}/api/templates`),
   getTemplatePreview: (id: string, params: object) =>
-    get(`${EXPLORE_URL}/api/templates/${id}/preview`, params),
-  getHooks: () => get(`${EXPLORE_URL}/api/system/hooks`),
-  getMcpServers: () => get(`${EXPLORE_URL}/api/system/mcp-servers`),
-  searchSessions: (q: string) => get(`${EXPLORE_URL}/api/system/sessions/search`, { q }),
+    fetchApi(`${EXPLORE_URL}/api/templates/${id}/preview`, { params }),
+  getHooks: () => fetchApi(`${EXPLORE_URL}/api/system/hooks`),
+  getMcpServers: () => fetchApi(`${EXPLORE_URL}/api/system/mcp-servers`),
+  searchSessions: (q: string) => fetchApi(`${EXPLORE_URL}/api/system/sessions/search`, { params: { q } }),
 };
 ```
+
+> Todas las llamadas `fetchApi()` incluyen un `AbortSignal` con timeout de 12 segundos para evitar requests colgados.
+
+### OutputViewer
+
+El componente `OutputViewer` ahora usa el componente `Dialog` de shadcn/ui en lugar de un modal custom, proporcionando mejor accesibilidad y consistencia visual.

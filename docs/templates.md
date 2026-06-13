@@ -7,7 +7,7 @@ up: "[[🎯 Hackathon AgentHub]]"
 
 # 📋 Templates — P3
 
-> **Entregable:** 4 templates funcionales + sistema de params YAML + deployment
+> **Entregable:** 12 templates funcionales + sistema de params YAML + deployment
 > **Persona:** P3 — Templates + DevOps
 > **Dependencia:** Skills de Hermes instalados + Exploration API
 
@@ -74,7 +74,7 @@ Tu tarea es buscar información actualizada sobre `{topic}` y generar un resumen
 
 ---
 
-## Los 4 Templates iniciales
+## Los 12 Templates iniciales
 
 ### 1. 🔬 AI Researcher (`ai-researcher`)
 
@@ -135,7 +135,7 @@ Tu tarea es buscar información actualizada sobre `{topic}` y generar un resumen
 
 ### Opción A: Skills bundled (recomendada para hackathon)
 
-Los 4 templates se crean como skills dentro de `~/.hermes/skills/` directamente. No necesitan instalación externa.
+Los 12 templates se crean como skills dentro de `~/.hermes/skills/` directamente. No necesitan instalación externa.
 
 ```bash
 # Crear estructura de cada template
@@ -217,6 +217,56 @@ async def create_agent_from_template(id: str, config: dict):
     async with httpx.AsyncClient() as client:
         resp = await client.post(f"{HERMES_URL}/api/jobs", json=job_data)
         return resp.json()
+```
+
+---
+
+## Automation Blueprints (12 templates)
+
+### Research & Intelligence
+| Template | Descripción | Toolsets |
+|----------|-------------|----------|
+| ai-researcher | Daily AI research digest | web, tts |
+| paper-summarizer | Academic paper summaries | web |
+| competitor-watcher | Website change detection | web |
+| repo-scout | GitHub repo discovery | web, terminal |
+| ai-news-digest | Curated AI news digest | web |
+| morning-briefing | Daily morning briefing | web, tts |
+
+### Development Workflow
+| Template | Descripción | Toolsets |
+|----------|-------------|----------|
+| backlog-triage | Auto-triage issue backlog | web, terminal |
+| docs-drift | Detect documentation drift | web, terminal |
+| dep-audit | Dependency security audit | terminal |
+
+### DevOps & Monitoring
+| Template | Descripción | Toolsets |
+|----------|-------------|----------|
+| repo-monitor | GitHub repo activity monitor | web, terminal |
+| uptime-monitor | Website uptime monitoring | web |
+
+### Multi-Skill Workflows
+| Template | Descripción | Toolsets |
+|----------|-------------|----------|
+| security-audit | Security vulnerability audit | web, terminal |
+| content-pipeline | Content generation pipeline | web, tts |
+
+---
+
+## Formatos de Template
+
+### Standalone (CLI/wizard)
+```
+templates/{name}/
+  ├── hermes.yaml    # Configuración del cron job
+  ├── params.yaml    # Parámetros dinámicos
+  └── soul.md        # Identidad del agente
+```
+
+### Plugin (dashboard)
+```
+plugin/agenthub/dashboard/templates/{name}/SKILL.md  # Template completo
 ```
 
 ---

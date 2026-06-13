@@ -23,6 +23,14 @@ up: "[[🎯 Hackathon AgentHub]]"
 | **Endpoints clave** | `/v1/chat/completions`, `/v1/responses`, `/v1/runs` |
 | **Para qué** | Ejecución de agentes, chat, streaming |
 
+### Plugin API (:9119)
+| Qué es | Interfaz web embebida en Hermes Dashboard |
+|--------|------------------------------------------|
+| **En Hermes** | Plugin registrado en `~/.hermes/plugins/agenthub/` |
+| **En AgentHub** | Tab "AgentHub" dentro del dashboard Hermes |
+| **Endpoints** | `/api/plugins/agenthub/templates`, `/api/plugins/agenthub/create-agent`, `/api/plugins/agenthub/providers`, `/api/plugins/agenthub/channels` |
+| **Para qué** | Crear agentes sin salir de Hermes Dashboard |
+
 ### AIAgent (Python Library)
 
 | Qué es | Clase `AIAgent` embebible en Python |
@@ -76,6 +84,21 @@ up: "[[🎯 Hackathon AgentHub]]"
 | **Tablas** | `sessions`, `messages`, `messages_fts`, `state_meta` |
 | **API Python** | `SessionDB.search_messages("query")` — búsqueda full-text |
 | **Para qué** | Historial de agentes, búsqueda de outputs |
+
+### System Endpoints (Exploration API)
+| Qué es | Endpoints de configuración del sistema |
+|--------|----------------------------------------|
+| **En Hermes** | Lee de `config.yaml` y archivos del sistema |
+| **En AgentHub** | Exploration API expone datos del sistema |
+| **Endpoints nuevos** | `GET /api/system/providers` — providers configurados, `GET /api/system/channels` — canales de delivery |
+
+### Seguridad del Backend
+| Medida | Descripción |
+|--------|-------------|
+| **Path traversal** | Validación de rutas para prevenir acceso a archivos fuera del directorio permitido |
+| **Async I/O** | Conversiones a async para evitar race conditions |
+| **API key** | Clave movida server-side, comparación constant-time |
+| **JSON injection** | Construcción segura de JSON con escape de caracteres |
 
 ### Cron Output Storage
 

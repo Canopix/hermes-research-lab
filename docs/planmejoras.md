@@ -69,9 +69,9 @@ useEffect(() => {
 - `frontend/src/app/create/page.tsx`
 
 ### Criterio
-- [ ] Scroll suave al seleccionar template
-- [ ] Scroll al avanzar entre pasos
-- [ ] WizardStepper siempre visible
+- [x] Scroll suave al seleccionar template
+- [x] Scroll al avanzar entre pasos
+- [x] WizardStepper siempre visible
 
 ---
 
@@ -153,10 +153,10 @@ interface ProviderOption {
 ```
 
 ### Criterio
-- [ ] Endpoint retorna providers configurados
-- [ ] Provider por defecto pre-seleccionado
-- [ ] Usuario puede cambiar provider y modelo
-- [ ] Cambio reflejado en `model` override del cronjob
+- [x] Endpoint retorna providers configurados
+- [x] Provider por defecto pre-seleccionado
+- [x] Usuario puede cambiar provider y modelo
+- [x] Cambio reflejado en `model` override del cronjob
 
 ---
 
@@ -223,10 +223,10 @@ const TEMPLATE_SKILL_RECOMMENDATIONS: Record<string, string[]> = {
 ```
 
 ### Criterio
-- [ ] Skills disponibles listadas desde la API
-- [ ] Skills del template pre-seleccionadas
-- [ ] Búsqueda y filtro por categoría
-- [ ] Selección reflejada en `skills` del cronjob
+- [x] Skills disponibles listadas desde la API
+- [x] Skills del template pre-seleccionadas
+- [x] Búsqueda y filtro por categoría
+- [x] Selección reflejada en `skills` del cronjob
 
 ---
 
@@ -256,10 +256,10 @@ Ya existe. Retorna la lista de toolsets disponibles.
 ```
 
 ### Criterio
-- [ ] Toolsets listados desde la API
-- [ ] Toolsets del template pre-seleccionados
-- [ ] Descripción de cada toolset visible
-- [ ] Selección reflejada en `enabled_toolsets` del cronjob
+- [x] Toolsets listados desde la API
+- [x] Toolsets del template pre-seleccionados
+- [x] Descripción de cada toolset visible
+- [x] Selección reflejada en `enabled_toolsets` del cronjob
 
 ---
 
@@ -286,10 +286,10 @@ Hermes acepta múltiples formatos ([docs cron](https://hermes-agent.nousresearch
 ```
 
 ### Criterio
-- [ ] Selector de frecuencia predefinida
-- [ ] Input para cron personalizado
-- [ ] Preview legible del schedule
-- [ ] Valor reflejado en `schedule` del cronjob
+- [x] Selector de frecuencia predefinida
+- [x] Input para cron personalizado
+- [x] Preview legible del schedule
+- [x] Valor reflejado en `schedule` del cronjob
 
 ---
 
@@ -366,10 +366,10 @@ async def list_delivery_channels() -> list[dict]:
 ```
 
 ### Criterio
-- [ ] Canales detectados desde config de Hermes
-- [ ] Telegram permite especificar chat_id y thread_id
-- [ ] Preview del valor de delivery
-- [ ] Valor reflejado en `deliver` del cronjob
+- [x] Canales detectados desde config de Hermes
+- [x] Telegram permite especificar chat_id y thread_id
+- [x] Preview del valor de delivery
+- [x] Valor reflejado en `deliver` del cronjob
 
 ---
 
@@ -515,3 +515,21 @@ Esto mapea directamente a los parámetros del `cronjob` tool de Hermes.
 
 ### El agente = un cron job
 El wizard de AgentHub es esencialmente una interfaz gráfica para crear cron jobs de Hermes. El payload final se envía a la Exploration API que internamente llama al `cronjob` tool. Por eso es crucial que los campos del wizard correspondan exactamente a los parámetros soportados por Hermes.
+
+---
+
+## Completado ✅
+
+### Todas las mejoras implementadas (13 junio 2026)
+
+Las 6 mejoras del wizard están completas. Ver criterios marcados en cada sección arriba.
+
+### CLI Wizard Parity ✅
+
+El wizard CLI (`scripts/wizard.sh`) ahora tiene los mismos parámetros que el dashboard:
+- Provider/Model selection
+- Skills multi-select
+- Toolsets selection
+- Schedule presets + custom cron
+- Delivery channels con chat_id/thread_id
+- JSON seguro con jq

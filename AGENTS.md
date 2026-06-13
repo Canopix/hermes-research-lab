@@ -14,7 +14,7 @@ You are working on **AgentHub**, a web platform for creating, configuring, and m
 - **Frontend:** Next.js 14+ / React 18+ / TypeScript / Tailwind CSS / shadcn/ui
 - **Backend:** FastAPI (Exploration API on :8643) + Hermes API Server (:8642)
 - **Agent Runtime:** Hermes Agent (open-source AI agent framework by Nous Research)
-- **Templates:** SKILL.md files for agent creation (4 templates)
+- **Templates:** SKILL.md files for agent creation (12 templates in 4 categories)
 - **Monitoring:** Gateway hooks for activity logging
 - **CLI:** `agenthub` wrapper scripts (setup, start, stop, status, demo)
 
@@ -65,7 +65,7 @@ hermes-research-lab/
 │   │   ├── template_service.py # Template parsing
 │   │   └── session_service.py  # Session search
 │   └── requirements.txt
-├── templates/                 # 4 SKILL.md agent templates
+├── templates/                 # 12 SKILL.md agent templates (4 categories)
 │   ├── ai-researcher/        # Daily AI research digest (web, tts)
 │   ├── repo-monitor/         # GitHub repo activity (web, terminal)
 │   ├── paper-summarizer/     # Academic paper summaries (web)
@@ -87,7 +87,9 @@ hermes-research-lab/
 │   ├── backend.md            # Backend docs
 │   ├── templates.md          # Template system docs
 │   ├── deployment.md         # Deployment instructions
-│   └── tareas.md             # Task breakdown by role (P1/P2/P3)
+│   ├── tareas.md             # Task breakdown by role (P1/P2/P3)
+│   ├── bug-audit.md          # Comprehensive bug audit (69 bugs catalogued)
+│   └── plan.md               # Implementation plan
 ├── PHASES.md                 # Development phases tracker
 ├── CLAUDE.md                 # Agent context file
 ├── README.md                 # Project overview
@@ -184,6 +186,35 @@ New frontend components: ProviderModelSelector, SkillsSelector, ToolsetsSelector
 Backend `_wizard_payload_to_hermes_job` now forwards user-selected skills, toolsets, and model.
 
 **Known issue:** Plugin dashboard at :9119 uses stale `dist/index.js` (old build). Standalone frontend at :3000 has all changes.
+
+### Bug audit & security hardening (June 13, 2026) ✅
+Comprehensive code audit found 69 bugs across plugin, frontend, backend, and scripts. Fixed 14 critical/high issues:
+
+**Plugin fixes:**
+- Fixed double-toggle on checkbox rows (skills, toolsets, delivery were non-functional)
+- Fixed provider initialized with template ID instead of empty string
+- Added supports_chat_id/supports_thread_id to channel detection in plugin_api.py
+
+**Backend security:**
+- Added path traversal validation (`_validate_id` regex) on profiles and templates endpoints
+- Fixed race condition in hermes_client singleton with asyncio.Lock
+- Converted blocking subprocess.run to asyncio.create_subprocess_exec
+- Wrapped sync file I/O with asyncio.to_thread in async endpoints
+- Fixed API key timing attack with hmac.compare_digest
+
+**Frontend:**
+- Removed duplicate DynamicParam.tsx (dead code)
+- Moved API key server-side (EXPLORE_API_KEY, no NEXT_PUBLIC_ prefix)
+- Replaced manual OutputViewer modal with shadcn Dialog (accessibility)
+- Added 12s timeouts to all API fetch calls
+
+**Scripts:**
+- Fixed JSON injection in wizard.sh using jq for safe construction
+- Added process ownership check in start.sh before killing on ports
+
+**Docs:**
+- Created comprehensive bug audit (docs/bug-audit.md) with 69 bugs catalogued
+- Created implementation plan (plan.md)
 
 ### Commits on feature/dashboardv1
 - `a72a72b` — feat(frontend): integrate provider, skills, toolsets, schedule, delivery tabs + scroll fix

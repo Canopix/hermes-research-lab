@@ -1,6 +1,6 @@
 # Plan de Mejoras — Plugin AgentHub para Hermes Dashboard
 
-> Fecha: 13 junio 2026 | Estado: v2 (implementado)
+> Fecha: 13 junio 2026 | Estado: v3 (implementado + fixes)
 > Basado en: [Automation Blueprints](https://hermes-agent.nousresearch.com/docs/guides/automation-blueprints), [Cron Docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/cron), [Providers](https://hermes-agent.nousresearch.com/docs/integrations/providers), [Tools & Toolsets](https://hermes-agent.nousresearch.com/docs/user-guide/features/tools)
 
 ---
@@ -1121,3 +1121,12 @@ Commits en `feature/dashboardv1`:
 | `6448b6c` | feat(plugin): usa `hermes profile create --clone` para profiles dedicados |
 
 **Todas las mejoras completadas (8/8).**
+
+### v3 — Bug fixes y seguridad (13 junio 2026)
+
+- ✅ Fix double-toggle en checkboxes (skills, toolsets, delivery)
+- ✅ Fix provider inicializado con template ID
+- ✅ Añadido supports_chat_id/supports_thread_id a canales del plugin
+- ✅ Path traversal validation en backend
+- ✅ Async I/O y race condition fixes
+- ✅ API key moved server-side
