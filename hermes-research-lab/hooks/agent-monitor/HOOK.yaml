@@ -1,7 +1,0 @@
-name: agent-monitor
-version: "1.0"
-description: "Logs agent activity for AgentHub dashboard"
-events:
-  - agent:start
-  - agent:step
-  - agent:end

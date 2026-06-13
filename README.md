@@ -1,133 +1,83 @@
-# AgentHub
+# AgentHub — Hermes Plugin
 
-> Plataforma de gestión multi-agente sobre Hermes Agent. Crea, configura, monitorea y explora tus agentes AI desde una interfaz web unificada.
+Plugin para Hermes Agent que añade un dashboard con wizard para crear agentes autónomos.
 
-## Descripción
+## Qué es
 
-AgentHub es un sistema completo para gestionar agentes AI basados en Hermes Agent. Proporciona:
+Un plugin que se instala en `~/.hermes/plugins/` y añade al dashboard de Hermes:
 
-- **Dashboard** - Visualiza todos tus agentes activos con métricas en tiempo real
-- **Wizard de creación** - Crea agentes desde templates predefinidos con configuración guiada
-- **Historial** - Revisa outputs de ejecuciones anteriores con markdown rendering
-- **Exploración** - Navega profiles, skills, toolsets, hooks, MCP servers, cron jobs y config de Hermes
-- **Streaming SSE** - Monitorea la ejecución de agentes en tiempo real
-- **CLI unificada** - Scripts de gestión para setup, start, stop, status y wizard de creación de 6 tabs (Params, Model, Skills, Toolsets, Schedule, Delivery)
+- **Wizard de creación** — selector de templates, configuración de provider/modelo, skills, toolsets, schedule y delivery
+- **Gestión de agentes** — listar, pausar, reanudar, eliminar cron jobs
+- **12 templates** — plantillas predefinidas para diferentes casos de uso
 
-## Arquitectura
+## Instalación
 
-El frontend solo habla con la Exploration API, que actúa como gateway unificado:
+```bash
+bash scripts/install-plugin.sh
+hermes dashboard
+```
 
-    Frontend (:3000) ──> Exploration API (:8643) ──> Hermes Agent (:8642)
-                                  │
-                                  ├── Jobs CRUD (crear, listar, trigger, pausar...)
-                                  ├── SSE streaming (eventos en tiempo real)
-                                  ├── System overview, profiles, skills
-                                  ├── Templates
-                                  └── Sessions search, hooks, MCP, cron
+## Estructura
 
-El usuario final solo necesita que el Exploration API esté corriendo. La comunicación con el API Server de Hermes (:8642) es interna.
+```
+plugin/agenthub/dashboard/
+├── plugin_api.py          # Backend (FastAPI routes)
+├── dist/
+│   ├── index.js           # Frontend compilado (React)
+│   └── style.css
+├── manifest.json
+└── templates/             # SKILL.md templates (12 agentes)
+    ├── ai-researcher/
+    ├── ai-news-digest/
+    ├── competitor-watcher/
+    ├── paper-summarizer/
+    ├── repo-monitor/
+    ├── repo-scout/
+    ├── morning-briefing/
+    ├── security-audit/
+    ├── content-pipeline/
+    ├── backlog-triage/
+    ├── docs-drift/
+    └── dep-audit/
 
-## Requisitos
+templates/                 # Templates standalone (hermes.yaml + params.yaml + soul.md)
+tests/                     # E2E tests (Playwright)
+docs/                      # Documentación
+scripts/                   # Script de instalación
+```
 
-- **Hermes Agent** v0.12.0+ instalado
-- **Python** 3.10+
-- **Node.js** 18+
+## Templates
 
-## Quick Start
+| Template | Categoría | Descripción |
+|----------|-----------|-------------|
+| ai-researcher | Research | Investigación diaria de AI |
+| ai-news-digest | Research | Resumen semanal de noticias AI |
+| competitor-watcher | Research | Monitoreo de competidores |
+| paper-summarizer | Research | Resumen de papers académicos |
+| repo-scout | Research | Exploración de repositorios |
+| morning-briefing | Research | Briefing matutino |
+| repo-monitor | DevOps | Monitoreo de repositorios |
+| uptime-monitor | DevOps | Monitoreo de uptime |
+| security-audit | DevOps | Auditoría de seguridad |
+| content-pipeline | Multi-Skill | Pipeline de contenido |
+| backlog-triage | Development | Triagem de backlog |
+| docs-drift | Development | Detección de drift en docs |
+| dep-audit | Development | Auditoría de dependencias |
 
-    agenthub setup    # Instala dependencias, configura Hermes API Server
-    agenthub start    # Arranca Exploration API + Frontend
-    agenthub status   # Verifica que todo funcione
+## Cómo funciona
 
-## Scripts CLI (agenthub)
+1. El wizard renderiza el prompt del template seleccionado con los parámetros del usuario
+2. Crea un perfil dedicado (`hermes profile create --clone`)
+3. Crea un cron job en ese perfil con el prompt renderizado
+4. El agente ejecuta según el schedule configurado
 
-| Comando         | Descripción                                                          |
-|-----------------|----------------------------------------------------------------------|
-| agenthub setup  | Instala dependencias, habilita Hermes API Server, configura entornos |
-| agenthub start  | Arranca Exploration API + Frontend en background                     |
-| agenthub stop   | Detiene todos los servicios                                          |
-| agenthub status | Verifica estado de Hermes, Explore API y Frontend                    |
-| agenthub wizard | Lanza wizard de 6 tabs (Params, Model, Skills, Toolsets, Schedule, Delivery) |
-| agenthub demo   | Ejecuta demo de 5 pasos                                              |
+## Testing
 
-## Templates Disponibles
+```bash
+cd tests && npm install && npx playwright install
+npx playwright test
+```
 
-**12 templates** en 4 categorías:
-
-### Research & Intelligence
-| Template | Descripción | Toolsets |
-|----------|-------------|----------|
-| AI Researcher | Monitorea web/RSS, genera resúmenes + podcast TTS | web, tts |
-| Paper Summarizer | Monitorea arXiv por categoría, resúmenes técnicos | web |
-| Competitor Watcher | Monitorea URLs de competidores y detecta cambios | web |
-| Repo Scout | Analiza repos GitHub y genera insights | web, terminal |
-| AI News Digest | Resumen diario de noticias AI | web |
-| Morning Briefing | Briefing matutino personalizado | web, tts |
-
-### Development Workflow
-| Template | Descripción | Toolsets |
-|----------|-------------|----------|
-| Backlog Triage | Clasifica y prioriza backlog automáticamente | web |
-| Docs Drift | Detecta desviaciones entre código y documentación | web, terminal |
-| Dep Audit | Auditoría de dependencias y vulnerabilidades | web, terminal |
-
-### DevOps & Monitoring
-| Template | Descripción | Toolsets |
-|----------|-------------|----------|
-| Repo Monitor | Monitorea repos GitHub: PRs, issues, releases | web, terminal |
-| Uptime Monitor | Monitorea disponibilidad de servicios | web |
-
-### Multi-Skill Workflows
-| Template | Descripción | Toolsets |
-|----------|-------------|----------|
-| Security Audit | Auditoría de seguridad automatizada | web, terminal |
-| Content Pipeline | Pipeline de generación y publicación de contenido | web, tts |
-
-## Endpoints
-
-| Servicio          | Puerto | URL                        |
-|-------------------|--------|----------------------------|
-| Exploration API   | 8643   | http://localhost:8643      |
-| Frontend          | 3000   | http://localhost:3000      |
-| Hermes API Server | 8642   | http://localhost:8642 (interno) |
-
-> **Nota:** El Hermes API Server (:8642) es un servicio interno que usa la Exploration API. Los usuarios solo interactúan con el frontend (:3000).
-
-## Estructura del Proyecto
-
-    agenthub/
-    ├── frontend/              # Next.js 15 + TypeScript + Tailwind
-    ├── explore-api/           # FastAPI - Exploration API (gateway unificado)
-    │   ├── routers/
-    │   │   ├── jobs.py        # Jobs CRUD + SSE proxy → Hermes API Server
-    │   │   ├── system.py      # Overview, profiles, skills, toolsets
-    │   │   ├── templates.py   # Catálogo de templates
-    │   │   ├── sessions.py    # Búsqueda FTS5
-    │   │   └── extras.py      # Hooks, MCP, cron, activity
-    │   └── services/
-    │       └── hermes_client.py  # Async client → Hermes API Server
-    ├── scripts/               # CLI scripts + agenthub.py
-    ├── docs/                  # Documentación
-    │   ├── bug-audit.md       # Comprehensive bug audit (69 bugs catalogued)
-    │   └── plan.md            # Implementation plan
-    ├── README.md
-    └── PHASES.md
-
-## Docs
-
-- [Hermes Agent Docs](https://hermes-agent.nousresearch.com/docs)
-- [Next.js Docs](https://nextjs.org/docs)
-- [FastAPI Docs](https://fastapi.tiangolo.com/)
-
-## Licencia
+## License
 
 MIT
-
-## Recent Improvements
-
-- **Path traversal validation** on profiles/templates endpoints (`_validate_id` regex)
-- **Constant-time API key comparison** (`hmac.compare_digest`) to prevent timing attacks
-- **Async I/O conversions** for better performance (subprocess.run → asyncio.create_subprocess_exec, sync file I/O → asyncio.to_thread)
-- **JSON injection prevention** in CLI wizard (safe construction via `jq`)
-- **API key moved server-side** (no longer exposed in client bundle — `EXPLORE_API_KEY` without `NEXT_PUBLIC_` prefix)
-- **Process ownership verification** in `start.sh` before killing on ports
