@@ -636,7 +636,7 @@
         return categorySection(g, function (items) {
           return h("div", { style: GRID }, items.map(function (t) {
             return templateCard(t, {
-              onClick: function () { props.onSelect(t); },
+              onClick: props.onSelect ? function () { props.onSelect(t); } : null,
               selected: props.selected && props.selected.id === t.id
             });
           }));

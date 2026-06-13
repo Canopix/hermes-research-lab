@@ -172,6 +172,19 @@ def list_providers():
 
     # Build configured providers list
     providers = []
+    
+    # Add the default provider first
+    if default_model.get("provider"):
+        providers.append({
+            "id": "default",
+            "name": default_model["provider"] + " (default)",
+            "provider": default_model["provider"],
+            "model": default_model.get("model", ""),
+            "base_url": default_model.get("base_url", ""),
+            "is_default": True,
+            "models": [],
+        })
+    
     if isinstance(providers_raw, dict):
         for name, prov in providers_raw.items():
             if isinstance(prov, dict):
@@ -179,11 +192,13 @@ def list_providers():
                     "id": name,
                     "name": prov.get("name", name),
                     "provider": prov.get("provider", ""),
+                    "model": prov.get("model", ""),
                     "base_url": prov.get("base_url", ""),
+                    "is_default": False,
                     "models": prov.get("models", []),
                 })
             elif isinstance(prov, str):
-                providers.append({"id": name, "name": name, "provider": prov})
+                providers.append({"id": name, "name": name, "provider": prov, "model": "", "is_default": False, "models": []})
 
     # Add fallback providers
     fallback_list = []
@@ -194,8 +209,9 @@ def list_providers():
             fallback_list.append(fb.get("name", str(fb)))
 
     return {
-        "default_model": default_model,
-        "providers": providers,
+        "default_provider": default_model.get("provider", ""),
+        "default_model": default_model.get("model", ""),
+        "options": providers,
         "fallback_providers": fallback_list,
     }
 
