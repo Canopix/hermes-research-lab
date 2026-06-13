@@ -1,6 +1,6 @@
 # Plan de Mejoras — Plugin AgentHub para Hermes Dashboard
 
-> Fecha: 13 junio 2026 | Estado: v1 (borrador)
+> Fecha: 13 junio 2026 | Estado: v2 (implementado)
 > Basado en: [Automation Blueprints](https://hermes-agent.nousresearch.com/docs/guides/automation-blueprints), [Cron Docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/cron), [Providers](https://hermes-agent.nousresearch.com/docs/integrations/providers), [Tools & Toolsets](https://hermes-agent.nousresearch.com/docs/user-guide/features/tools)
 
 ---
@@ -25,14 +25,14 @@ El proyecto AgentHub tiene **dos interfaces**:
 
 | # | Problema | Impacto |
 |---|----------|---------|
-| 1 | **Sin scroll/cambio de vista** | Al seleccionar template, el formulario quedaabajo del grid — hay que hacer scroll manual |
-| 2 | **Sin Provider/Modelo** | No se puede elegir qué modelo usa el agente. Siempre usa el default |
-| 3 | **Sin Skills** | No se puede seleccionar qué skills cargar. Solo usa las del template |
-| 4 | **Sin Toolsets** | No se puede restringir herramientas del agente |
-| 5 | **Sin Schedule real** | Hardcodeado a `every 24h` — sin presets ni cron personalizado |
-| 6 | **Sin Delivery** | Hardcodeado a `"local"` — sin opción de Telegram, Discord, etc. |
-| 7 | **Agentes creados sin profile real** | Crea un SOUL.md pero no un profile Hermes completo |
-| 8 | **Jobs en default profile** | Los cron jobs se crean en el profile default, no en uno dedicado |
+| 1 | **Sin scroll/cambio de vista** | ✅ RESUELTO — DetailPanel reemplaza el grid al seleccionar template |
+| 2 | **Sin Provider/Modelo** | ✅ RESUELTO — GET /providers lee config.yaml, ModelTabPanel con dropdown |
+| 3 | **Sin Skills** | ✅ RESUELTO — GET /skills escanea directorios, SkillsTabPanel multi-select |
+| 4 | **Sin Toolsets** | ✅ RESUELTO — GET /toolsets con 20 toolsets, ToolsetsTabPanel checkbox grid |
+| 5 | **Sin Schedule real** | ✅ RESUELTO — ScheduleTabPanel con 7 presets + cron personalizado |
+| 6 | **Sin Delivery** | ✅ RESUELTO — GET /channels detecta plataformas, DeliveryTabPanel radio cards |
+| 7 | **Agentes creados sin profile real** | ✅ RESUELTO — create-agent renderiza SKILL.md body en SOUL.md |
+| 8 | **Jobs en default profile** | ⚠️ Pendiente — requiere `hermes profile create` real |
 
 ---
 
@@ -1089,3 +1089,31 @@ npx esbuild src/index.jsx --bundle --format=iife --outfile=dist/index.js --exter
 - **config.yaml** del profile activo para providers y canales
 - **Skills instaladas** en `~/.hermes/skills/` y `~/.hermes/profiles/*/skills/`
 - **Hermes CLI** (`hermes cron create`) para crear los cron jobs
+
+---
+
+## Changelog
+
+### v2 — Implementado (13 junio 2026)
+
+Commits en `feature/dashboardv1`:
+
+| Commit | Descripción |
+|--------|-------------|
+| `4ee9e2a` | feat(plugin): full wizard — 4 endpoints backend + 12 componentes frontend |
+| `6311d5a` | fix(plugin): providers format mismatch + TemplatesTab onSelect crash |
+
+**Archivos modificados:**
+
+| Archivo | Líneas | Cambios |
+|---------|--------|---------|
+| `plugin/agenthub/dashboard/plugin_api.py` | 534 | +4 endpoints (/providers, /skills, /toolsets, /channels), create-agent mejorado |
+| `plugin/agenthub/dashboard/dist/index.js` | 817 | 12 componentes: ConfigTabs, DetailPanel, 6 tab panels, TemplatesTab, AgentsTab, AgentHub |
+| `docs/planmejoraspluguin.md` | 1110 | Plan de mejoras completo |
+
+**Bugs encontrados y arreglados:**
+1. Backend `/providers` devolvía `default_model` como objeto `{provider, model, base_url, api_mode}` en vez de string → React crash #31
+2. `TemplatesTab` llamaba `props.onSelect(t)` sin verificar si existía → `TypeError: props.onSelect is not a function`
+
+**Pendiente (futuro):**
+- Mejora #8: Jobs en default profile — requiere `hermes profile create` real para crear profiles dedicados por agente
