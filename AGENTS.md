@@ -1,6 +1,6 @@
 # AgentHub — hermes-research-lab
 
-You are working on **AgentHub**, a web platform for creating, configuring, and monitoring autonomous AI agents built on top of Hermes Agent. This is a hackathon project (deadline: June 13, 2026 23:59).
+You are working on **AgentHub**, a web platform for creating, configuring, and monitoring autonomous AI agents built on top of Hermes Agent. Originally a hackathon project (deadline: June 13, 2026), now post-hackathon development.
 
 ## Project Identity
 
@@ -145,17 +145,34 @@ Use conventional commits: `type(scope): description`
 - Node modules in `frontend/node_modules/`
 - Hermes API Server must be running on :8642 for the Exploration API to work
 
-## Tasks Completed (as of PHASES.md)
+## Tasks Completed
 
-All 11 phases (F0-F10) are ✅ completed:
-- F0: Setup + Infrastructure
-- F1: Exploration API
-- F2: Templates (Skills)
-- F3-F6: Frontend views (Dashboard, Builder, History, Exploration)
-- F7: SSE Streaming + Real-time
-- F8: Monitoring Hook
-- F9: Scripts + CLI
-- F10: Integration + Polish
+### Hackathon phases (F0-F10) ✅
+All original phases completed. See PHASES.md for details.
+
+### Plugin integration (June 13, 2026) ✅
+- Plugin extracted from `feat/agenthub-hermes-plugin` (commit 347c33e)
+- `scripts/install-plugin.sh` for local installation
+- Playwright E2E tests in `tests/`
+- `.gitignore` updated with exception for `plugin/**/dist/`
+
+### Automation Blueprints (June 13, 2026) ✅
+8 templates from Hermes Automation Blueprints docs integrated:
+- **Research & Intelligence:** ai-researcher, paper-summarizer, competitor-watcher, repo-scout, ai-news-digest, morning-briefing
+- **Development Workflow:** backlog-triage, docs-drift, dep-audit
+- **DevOps & Monitoring:** repo-monitor, uptime-monitor
+- **Multi-Skill Workflows:** security-audit, content-pipeline
+
+Each template exists in:
+- **Standalone format:** `templates/{name}/{hermes.yaml, params.yaml, soul.md}`
+- **Plugin format:** `plugin/agenthub/dashboard/templates/{name}/SKILL.md`
+
+Frontend + plugin show templates grouped by category.
+
+### Commits on feature/dashboardv1
+- `d612877` — chore: remove stray SKILL.md from standalone templates
+- `e624f25` — feat: add 8 automation blueprints + category grouping
+- `e1f0db0` — feat: add Hermes dashboard plugin + convert 3 templates
 
 ## Known Issues / Areas for Improvement
 
