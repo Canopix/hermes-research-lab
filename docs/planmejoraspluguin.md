@@ -32,7 +32,7 @@ El proyecto AgentHub tiene **dos interfaces**:
 | 5 | **Sin Schedule real** | ✅ RESUELTO — ScheduleTabPanel con 7 presets + cron personalizado |
 | 6 | **Sin Delivery** | ✅ RESUELTO — GET /channels detecta plataformas, DeliveryTabPanel radio cards |
 | 7 | **Agentes creados sin profile real** | ✅ RESUELTO — create-agent renderiza SKILL.md body en SOUL.md |
-| 8 | **Jobs en default profile** | ⚠️ Pendiente — requiere `hermes profile create` real |
+| 8 | **Jobs en default profile** | ✅ RESUELTO — usa `hermes profile create --clone` + `hermes -p <name> cron create` |
 
 ---
 
@@ -1115,5 +1115,9 @@ Commits en `feature/dashboardv1`:
 1. Backend `/providers` devolvía `default_model` como objeto `{provider, model, base_url, api_mode}` en vez de string → React crash #31
 2. `TemplatesTab` llamaba `props.onSelect(t)` sin verificar si existía → `TypeError: props.onSelect is not a function`
 
-**Pendiente (futuro):**
-- Mejora #8: Jobs en default profile — requiere `hermes profile create` real para crear profiles dedicados por agente
+**Commits adicionales:**
+| Commit | Descripción |
+|--------|-------------|
+| `6448b6c` | feat(plugin): usa `hermes profile create --clone` para profiles dedicados |
+
+**Todas las mejoras completadas (8/8).**
