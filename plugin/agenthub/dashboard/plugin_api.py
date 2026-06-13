@@ -419,21 +419,33 @@ class CreateAgentRequest(BaseModel):
 @router.post("/create-agent")
 def create_agent(req: CreateAgentRequest):
     hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
-    profile_name = f"agent-{req.template_id}"
+    # Sanitize name for profile (lowercase, hyphens only)
+    safe_name = req.name.lower().replace(" ", "-").replace("_", "-")
+    profile_name = f"agent-{safe_name}"
     profile_dir = hermes_home / "profiles" / profile_name
-    profile_dir.mkdir(parents=True, exist_ok=True)
 
     tpl = _parse_template(req.template_id)
     if tpl is None:
         raise HTTPException(status_code=404, detail="Template not found")
 
-    # Render the SKILL.md body with user params
+    # 1. Create profile with --clone (copies config.yaml, .env, SOUL.md from current)
+    profile_created = False
+    if not profile_dir.exists():
+        create_cmd = ["hermes", "profile", "create", profile_name, "--clone",
+                      "--description", f"AgentHub agent: {tpl['name']}"]
+        result = subprocess.run(create_cmd, capture_output=True, text=True, timeout=30)
+        if result.returncode != 0:
+            return {"profile": profile_name, "profile_created": False,
+                    "job_created": False, "error": f"Profile create failed: {result.stderr.strip()}"}
+        profile_created = True
+
+    # 2. Render the SKILL.md body with user params
     body = _read_skill_body(req.template_id)
     rendered = body or ""
     for k, v in req.config.items():
         rendered = rendered.replace("{" + k + "}", str(v))
 
-    # Build SOUL.md from the rendered prompt (not just metadata)
+    # 3. Write SOUL.md with the rendered prompt as instructions
     soul_lines = [
         f"# {req.name}",
         "",
@@ -446,79 +458,64 @@ def create_agent(req: CreateAgentRequest):
         val = req.config.get(p["name"], p.get("default", ""))
         soul_lines.append(f"- {p['name']}: {val}")
 
-    soul_lines.extend([
-        "",
-        "---",
-        "",
-        "## Instructions",
-        "",
-        rendered,
-    ])
+    soul_lines.extend(["", "---", "", "## Instructions", "", rendered])
     (profile_dir / "SOUL.md").write_text("\n".join(soul_lines), encoding="utf-8")
 
+    # 4. If user selected a specific model, write profile-level config.yaml
+    if req.model_provider or req.model_name:
+        profile_config = profile_dir / "config.yaml"
+        model_block = {}
+        if req.model_provider:
+            model_block["provider"] = req.model_provider
+        if req.model_name:
+            model_block["default"] = req.model_name
+        config_content = {"model": model_block}
+        import io
+        profile_config.write_text(yaml.dump(config_content, default_flow_style=False), encoding="utf-8")
+
+    # 5. Resolve schedule
     schedule = req.schedule
     if not schedule:
         freq = req.config.get("frequency", "")
-        if freq == "Diario":
-            schedule = "every 24h"
-        elif freq == "Cada 12 horas":
-            schedule = "every 12h"
-        elif freq == "Semanal":
-            schedule = "every 7d"
-        else:
-            schedule = "every 24h"
+        schedule_map = {"Diario": "every 24h", "Cada 12 horas": "every 12h",
+                        "Cada 6 horas": "every 6h", "Semanal": "every 7d"}
+        schedule = schedule_map.get(freq, "every 24h")
 
     agent_name = req.name or tpl["name"]
     deliver = req.deliver or "local"
 
-    # Build hermes cron create command with --skill flags for each skill
-    cmd = [
-        "hermes", "cron", "create", schedule, rendered,
-        "--name", agent_name,
-        "--deliver", deliver,
-    ]
-    # Add template skill itself
-    cmd.extend(["--skill", req.template_id])
-    # Add additional user-selected skills
-    for skill in req.skills:
-        if skill != req.template_id:  # avoid duplicate
-            cmd.extend(["--skill", skill])
+    # 6. Create cron job IN the new profile context using -p flag
+    cmd = ["hermes", "-p", profile_name, "cron", "create", schedule, rendered,
+           "--name", agent_name, "--deliver", deliver]
+    # Add skills
+    all_skills = [req.template_id] + [s for s in req.skills if s != req.template_id]
+    for skill in all_skills:
+        cmd.extend(["--skill", skill])
 
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
-    # Save agenthub-metadata.json with toolsets, model override, etc.
+    # 7. Save metadata
     metadata = {
         "template_id": req.template_id,
         "agent_name": agent_name,
-        "skills": [req.template_id] + [s for s in req.skills if s != req.template_id],
+        "profile": profile_name,
+        "skills": all_skills,
         "enabled_toolsets": req.enabled_toolsets,
-        "model_override": {
-            "provider": req.model_provider,
-            "model": req.model_name,
-        } if req.model_provider or req.model_name else None,
+        "model_override": {"provider": req.model_provider, "model": req.model_name}
+        if req.model_provider or req.model_name else None,
         "schedule": schedule,
         "deliver": deliver,
         "config": req.config,
     }
     (profile_dir / "agenthub-metadata.json").write_text(
-        json.dumps(metadata, indent=2), encoding="utf-8"
-    )
+        json.dumps(metadata, indent=2), encoding="utf-8")
 
     if result.returncode != 0:
-        return {
-            "profile": profile_name,
-            "profile_created": True,
-            "job_created": False,
-            "error": result.stderr.strip(),
-            "metadata": metadata,
-        }
+        return {"profile": profile_name, "profile_created": profile_created,
+                "job_created": False, "error": result.stderr.strip(), "metadata": metadata}
 
-    return {
-        "profile": profile_name,
-        "profile_created": True,
-        "job_created": True,
-        "metadata": metadata,
-    }
+    return {"profile": profile_name, "profile_created": profile_created,
+            "job_created": True, "metadata": metadata}
 
 
 @router.get("/jobs")
