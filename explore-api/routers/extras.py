@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
 
@@ -87,7 +88,7 @@ async def get_activity() -> dict:
 
     if log_path.is_file():
         try:
-            content = log_path.read_text(encoding="utf-8")
+            content = await asyncio.to_thread(log_path.read_text, encoding="utf-8")
             return {
                 "source": str(log_path),
                 "content": content,

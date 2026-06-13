@@ -103,7 +103,20 @@ fi
 # ─────────────────────────────────────────────
 for port in 3001 3002 3003; do
     if port_in_use "$port"; then
-        kill "$(lsof -ti:"$port")" 2>/dev/null || true
+        pids=$(lsof -ti:"$port" 2>/dev/null || true)
+        for pid in $pids; do
+            # On Linux, check /proc for process ownership; skip on macOS
+            if [ -d "/proc/$pid" ]; then
+                cmdline=$(cat /proc/$pid/cmdline 2>/dev/null | tr '\0' ' ' || true)
+                if echo "$cmdline" | grep -qiE 'uvicorn|agenthub|next'; then
+                    kill "$pid" 2>/dev/null || true
+                fi
+            else
+                # macOS / BSD — fall back to killing with warning
+                log_warn "Cannot verify ownership on port $port (macOS) — killing PID $pid"
+                kill "$pid" 2>/dev/null || true
+            fi
+        done
     fi
 done
 

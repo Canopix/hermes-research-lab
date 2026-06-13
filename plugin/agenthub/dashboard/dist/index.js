@@ -49,7 +49,7 @@
   var SCHEDULE_INPUT = { width: "100%", padding: "8px 12px", border: "1px solid var(--border, #e2e8f0)", borderRadius: "6px", fontSize: "13px", fontFamily: "monospace" };
   var RESULT_SUCCESS = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "#e6ffe6", border: "1px solid #b3e6b3" };
   var RESULT_ERROR = { marginTop: "12px", padding: "12px", borderRadius: "6px", background: "#ffe6e6", border: "1px solid #e6b3b3" };
-  var PREVIEW_BOX = { background: "#f5f5f5", padding: "12px", borderRadius: "6px", marginTop: "12px", whiteSpace: "pre-wrap", fontSize: "12px", maxHeight: "200px", overflowY: "auto" };
+  var PREVIEW_BOX = { background: "var(--muted, #f1f5f9)", padding: "12px", borderRadius: "6px", marginTop: "12px", whiteSpace: "pre-wrap", fontSize: "12px", maxHeight: "200px", overflowY: "auto" };
   var EMPTY_STATE = { textAlign: "center", padding: "48px 24px", color: "var(--muted-foreground, #64748b)" };
   var BACK_BTN = { marginBottom: "12px", fontSize: "13px", cursor: "pointer", background: "none", border: "none", color: "var(--primary, #3b82f6)", padding: "0", display: "flex", alignItems: "center", gap: "4px" };
   var SECTION_TITLE = { fontSize: "14px", fontWeight: 600, marginBottom: "8px", color: "var(--foreground, #0f172a)" };
@@ -243,7 +243,7 @@
                 var isOn = selected.indexOf(s.name) !== -1;
                 var rowStyle = Object.assign({}, CHECKBOX_ROW, isOn ? CHECKBOX_ROW_SELECTED : {});
                 return h("div", { key: s.name, style: rowStyle, onClick: function () { onToggle(s.name); } },
-                  h(Checkbox, { checked: isOn, onChange: function () { onToggle(s.name); } }),
+                  h(Checkbox, { checked: isOn }),
                   h("div", null,
                     h("div", { style: { fontWeight: 500, fontSize: "13px" } }, s.name),
                     s.description ? h("div", { style: { fontSize: "11px", color: "var(--muted-foreground, #64748b)" } }, s.description) : null
@@ -287,7 +287,7 @@
             var isOn = selected.indexOf(t.id) !== -1;
             var rowStyle = Object.assign({}, CHECKBOX_ROW, isOn ? CHECKBOX_ROW_SELECTED : {});
             return h("div", { key: t.id, style: rowStyle, onClick: function () { onToggle(t.id); } },
-              h(Checkbox, { checked: isOn, onChange: function () { onToggle(t.id); } }),
+              h(Checkbox, { checked: isOn }),
               h("div", { style: { flex: 1 } },
                 h("div", { style: { fontWeight: 500, fontSize: "13px" } }, t.name),
                 t.description ? h("div", { style: { fontSize: "11px", color: "var(--muted-foreground, #64748b)" } }, t.description) : null
@@ -315,10 +315,7 @@
             onScheduleChange(preset.value);
             onIsCustomChange(false);
           } },
-            h(Checkbox, { checked: isActive, onChange: function () {
-              onScheduleChange(preset.value);
-              onIsCustomChange(false);
-            } }),
+            h(Checkbox, { checked: isActive }),
             h("span", null, preset.label)
           );
         })
@@ -375,7 +372,7 @@
             var isActive = selected === ch.id;
             var rowStyle = Object.assign({}, CHECKBOX_ROW, isActive ? CHECKBOX_ROW_SELECTED : {});
             return h("div", { key: ch.id, style: rowStyle, onClick: function () { onSelect(ch.id); } },
-              h(Checkbox, { checked: isActive, onChange: function () { onSelect(ch.id); } }),
+              h(Checkbox, { checked: isActive }),
               h("div", { style: { flex: 1 } },
                 h("div", { style: { fontWeight: 500, fontSize: "13px" } },
                   ch.icon ? h("span", { style: { marginRight: "6px" } }, ch.icon) : null,
@@ -454,7 +451,7 @@
     var onCreate = props.onCreate;
 
     var s1 = useState("params"), configTab = s1[0], setConfigTab = s1[1];
-    var s2 = useState(tpl.id), provider = s2[0], setProvider = s2[1];
+    var s2 = useState(""), provider = s2[0], setProvider = s2[1];
     var s3 = useState(""), model = s3[0], setModel = s3[1];
     var s4 = useState([]), skillsSel = s4[0], setSkillsSel = s4[1];
     var s5 = useState([]), toolsetsSel = s5[0], setToolsetsSel = s5[1];
@@ -653,7 +650,7 @@
     if (props.jobs.error) content += "\n\nError: " + props.jobs.error;
     return h("div", null,
       h(Button, { variant: "outline", onClick: props.onRefresh, style: { marginBottom: "8px" } }, "Refresh"),
-      h("pre", { "data-testid": "agents-list", style: { background: "#f5f5f5", padding: "12px", borderRadius: "6px", whiteSpace: "pre-wrap", fontSize: "12px" } }, content || "No agents yet.")
+      h("pre", { "data-testid": "agents-list", style: { background: "var(--muted, #f1f5f9)", padding: "12px", borderRadius: "6px", whiteSpace: "pre-wrap", fontSize: "12px" } }, content || "No agents yet.")
     );
   }
 
@@ -754,7 +751,6 @@
     function handleCreate(payload) {
       postJSON("/api/plugins/agenthub/create-agent", payload, function (d) {
         setResult(d);
-        if (d.job_created && props && props.onCreated) props.onCreated();
         if (d.job_created) loadJobs();
       });
     }
@@ -783,15 +779,12 @@
         loading: loading, error: wErr, result: result, preview: preview,
         onPreview: handlePreview, onCreate: handleCreate
       });
-    } else if (tab === "create") {
-      panel = h(TemplatesTab, { templates: templates, error: tErr, onSelect: selectTemplate, selected: selectedTpl });
     } else {
-      panel = h(TemplatesTab, { templates: templates, error: tErr });
+      panel = h(TemplatesTab, { templates: templates, error: tErr, onSelect: selectTemplate, selected: selectedTpl });
     }
 
     // Header text
-    var headerText = tab === "create" && selectedTpl ? "Configure Agent" :
-      tab === "create" ? "Choose a Template" :
+    var headerText = selectedTpl ? "Configure Agent" :
       tab === "agents" ? "Your Agents" : "Templates";
 
     return h("div", { "data-testid": "agenthub-root", style: FILL_PANEL },
@@ -800,7 +793,6 @@
           h("h2", { style: { margin: 0 } }, "AgentHub"),
           h("div", null,
             tabBtn("templates", "tab-templates", "Templates"),
-            tabBtn("create", "tab-create", "Create"),
             tabBtn("agents", "tab-agents", "Agents")
           )
         ),

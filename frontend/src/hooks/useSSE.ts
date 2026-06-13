@@ -169,7 +169,8 @@ export function useSSE(
   // Polling fallback — only as last resort, not simultaneous with SSE
   const startPolling = useCallback(() => {
     if (!runId || pollingRef.current) return
-    const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'agenthub-local'
+    // Server-side only — no NEXT_PUBLIC_ prefix to avoid client bundle leak
+    const API_KEY = process.env.EXPLORE_API_KEY || 'agenthub-local'
 
     const fetchStatus = async () => {
       if (stoppedRef.current) return

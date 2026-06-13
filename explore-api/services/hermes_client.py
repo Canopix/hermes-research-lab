@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import httpx
 
 from config import HERMES_API_KEY, HERMES_API_URL
@@ -182,14 +183,16 @@ class HermesClient:
 
 # Module-level singleton for convenience
 _client: HermesClient | None = None
+_client_lock = asyncio.Lock()
 
 
 async def get_client() -> HermesClient:
     """Return a shared HermesClient singleton."""
     global _client
-    if _client is None:
-        _client = HermesClient()
-    return _client
+    async with _client_lock:
+        if _client is None:
+            _client = HermesClient()
+        return _client
 
 
 async def close_client() -> None:

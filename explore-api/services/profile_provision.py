@@ -1,11 +1,10 @@
 """Provision Hermes profiles for AgentHub agents via the Hermes CLI only."""
-
 from __future__ import annotations
 
+import asyncio
 import os
 import re
 import shutil
-import subprocess
 from pathlib import Path
 
 from config import HERMES_HOME
@@ -38,13 +37,13 @@ def _profile_dir(name: str) -> Path:
     return Path(HERMES_HOME) / "profiles" / name
 
 
-def profile_exists(name: str) -> bool:
+async def profile_exists(name: str) -> bool:
     """Return True if Hermes reports the profile exists."""
-    result = _run_hermes(["profile", "show", name], check=False)
-    return result.returncode == 0
+    returncode, _, _ = await _run_hermes(["profile", "show", name], check=False)
+    return returncode == 0
 
 
-def resolve_profile_name(template_id: str, agent_name: str) -> str:
+async def resolve_profile_name(template_id: str, agent_name: str) -> str:
     """Resolve a unique AgentHub profile name for a new agent."""
     slug = slugify_agent_name(agent_name)
     safe_template = re.sub(r"[^a-z0-9-]+", "-", template_id.lower()).strip("-") or "template"
@@ -52,7 +51,7 @@ def resolve_profile_name(template_id: str, agent_name: str) -> str:
 
     candidate = base
     suffix = 2
-    while profile_exists(candidate):
+    while await profile_exists(candidate):
         existing = candidate
         if not existing.startswith(AGENT_PROFILE_PREFIX):
             raise ProfileProvisionError(
@@ -77,69 +76,72 @@ def _hermes_binary() -> str:
     return path
 
 
-def _run_hermes(args: list[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:
+async def _run_hermes(args: list[str], *, check: bool = True) -> tuple[int, str, str]:
+    """Run a hermes CLI command asynchronously. Returns (returncode, stdout, stderr)."""
     cmd = [_hermes_binary(), *args]
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=False,
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
+        stdout, stderr = await proc.communicate()
+        result_stdout = stdout.decode() if stdout else ""
+        result_stderr = stderr.decode() if stderr else ""
     except OSError as exc:
         raise ProfileProvisionError(f"Hermes CLI not available: {exc}", status_code=503) from exc
 
-    if check and result.returncode != 0:
-        detail = (result.stderr or result.stdout or "unknown error").strip()
+    if check and proc.returncode != 0:
+        detail = (result_stderr or result_stdout or "unknown error").strip()
         raise ProfileProvisionError(
             f"hermes {' '.join(args)} failed: {detail}",
             status_code=502,
         )
-    return result
+    return proc.returncode, result_stdout, result_stderr
 
 
-def _resolve_base_profile() -> str | None:
+async def _resolve_base_profile() -> str | None:
     """Return the profile to clone from, if any."""
     override = os.environ.get("AGENTHUB_BASE_PROFILE", "").strip()
     if override:
-        if profile_exists(override):
+        if await profile_exists(override):
             return override
         raise ProfileProvisionError(
             f"AGENTHUB_BASE_PROFILE '{override}' does not exist",
             status_code=502,
         )
 
-    result = _run_hermes(["profile", "list"], check=False)
-    if result.returncode != 0:
+    returncode, stdout, _ = await _run_hermes(["profile", "list"], check=False)
+    if returncode != 0:
         return None
 
-    for line in result.stdout.splitlines():
+    for line in stdout.splitlines():
         stripped = line.strip()
         if stripped.startswith("◆"):
             # e.g. "◆default         qwen3.6 ..."
             name = stripped[1:].split()[0] if len(stripped) > 1 else ""
-            if name and profile_exists(name):
+            if name and await profile_exists(name):
                 return name
 
     profiles_dir = Path(HERMES_HOME) / "profiles"
     if profiles_dir.is_dir():
         for entry in sorted(profiles_dir.iterdir()):
-            if entry.is_dir() and profile_exists(entry.name):
+            if entry.is_dir() and await profile_exists(entry.name):
                 return entry.name
 
-    if profile_exists("default"):
+    if await profile_exists("default"):
         return "default"
 
     return None
 
 
-def _create_profile_via_cli(name: str, description: str) -> None:
+async def _create_profile_via_cli(name: str, description: str) -> None:
     """Create a profile using Hermes CLI only."""
     args = ["profile", "create", name, "--description", description]
-    base = _resolve_base_profile()
+    base = await _resolve_base_profile()
     if base and base != name:
         args.extend(["--clone-from", base])
-    _run_hermes(args)
+    await _run_hermes(args)
 
 
 def _write_soul_md(profile_name: str, template_id: str, config: dict | None) -> None:
@@ -175,10 +177,10 @@ async def delete_agent_profile(profile_name: str) -> None:
     if not is_agenthub_profile(profile_name):
         return
 
-    if not profile_exists(profile_name):
+    if not await profile_exists(profile_name):
         return
 
-    _run_hermes(["profile", "delete", profile_name, "--yes"])
+    await _run_hermes(["profile", "delete", profile_name, "--yes"])
 
 
 async def provision_agent_profile(
@@ -198,13 +200,13 @@ async def provision_agent_profile(
             status_code=400,
         )
 
-    profile_name = resolve_profile_name(template_id, agent_name)
+    profile_name = await resolve_profile_name(template_id, agent_name)
 
     tmpl = get_template(template_id, TEMPLATES_DIR)
     tmpl_desc = (tmpl or {}).get("description") or template_id
     desc = description or f"{tmpl_desc} — {agent_name}"
 
-    _create_profile_via_cli(profile_name, desc)
+    await _create_profile_via_cli(profile_name, desc)
     _write_soul_md(profile_name, template_id, config)
 
     return profile_name

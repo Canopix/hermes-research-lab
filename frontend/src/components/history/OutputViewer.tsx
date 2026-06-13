@@ -6,6 +6,7 @@ import 'highlight.js/styles/github-dark.css';
 import { Execution } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Copy, Clock, Database, Info } from 'lucide-react';
 
 interface OutputViewerProps {
@@ -24,16 +25,16 @@ export function OutputViewer({ execution, agentName, onClose }: OutputViewerProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4 sm:p-0 bg-black/50 backdrop-blur-sm">
-      <div className="bg-background w-full max-w-4xl max-h-[90vh] rounded-lg border shadow-xl flex flex-col overflow-hidden">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b flex items-center justify-between bg-muted/30">
+        <DialogHeader className="p-4 border-b flex-row items-center justify-between bg-muted/30 space-y-0">
           <div className="flex items-center gap-3">
             <div className="bg-primary/10 p-2 rounded">
               <Database className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg leading-none">Execution Output</h3>
+              <DialogTitle className="font-semibold text-lg leading-none">Execution Output</DialogTitle>
               <p className="text-xs text-muted-foreground mt-1">
                 ID: {execution.id} • {agentName || 'Unknown Agent'}
               </p>
@@ -44,12 +45,8 @@ export function OutputViewer({ execution, agentName, onClose }: OutputViewerProp
               <Copy className="w-4 h-4 mr-2" />
               Copy
             </Button>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <span className="sr-only">Close</span>
-              ✕
-            </Button>
           </div>
-        </div>
+        </DialogHeader>
 
         {/* Stats Bar */}
         <div className="px-4 py-2 border-b bg-muted/10 flex flex-wrap gap-4 text-xs text-muted-foreground">
@@ -70,7 +67,7 @@ export function OutputViewer({ execution, agentName, onClose }: OutputViewerProp
         </div>
 
         {/* Content */}
-        <ScrollArea className="flex-1 p-4">
+        <ScrollArea className="flex-1 p-4 min-h-[200px] max-h-[60vh]">
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]} 
@@ -85,7 +82,7 @@ export function OutputViewer({ execution, agentName, onClose }: OutputViewerProp
         <div className="p-3 border-t bg-muted/10 text-[10px] text-center text-muted-foreground">
           End of output.
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

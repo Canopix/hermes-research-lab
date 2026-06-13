@@ -6,6 +6,7 @@ expose GET /api/jobs/{id}/outputs, so AgentHub reads the files directly.
 
 from __future__ import annotations
 
+import asyncio
 import re
 from datetime import datetime
 from pathlib import Path
@@ -73,8 +74,8 @@ def _parse_run_timestamp(run_time: str | None, filename_stem: str) -> str:
         return datetime.utcnow().isoformat()
 
 
-def _parse_output_file(path: Path, job_id: str) -> dict:
-    content = path.read_text(encoding="utf-8")
+async def _parse_output_file(path: Path, job_id: str) -> dict:
+    content = await asyncio.to_thread(path.read_text, encoding="utf-8")
     job_name_match = _CRON_JOB_RE.search(content)
     run_time = _RUN_TIME_RE.search(content)
     response = _RESPONSE_RE.search(content)
@@ -138,7 +139,7 @@ def _parse_output_file(path: Path, job_id: str) -> dict:
     }
 
 
-def list_job_outputs(job_id: str, hermes_home: str | None = None) -> list[dict]:
+async def list_job_outputs(job_id: str, hermes_home: str | None = None) -> list[dict]:
     """List execution outputs for a job, newest first."""
     base = Path(hermes_home or HERMES_HOME) / "cron" / "output" / job_id
     if not base.is_dir():
@@ -147,13 +148,13 @@ def list_job_outputs(job_id: str, hermes_home: str | None = None) -> list[dict]:
     results: list[dict] = []
     for path in sorted(base.glob("*.md"), reverse=True):
         try:
-            results.append(_parse_output_file(path, job_id))
+            results.append(await _parse_output_file(path, job_id))
         except OSError:
             continue
     return results
 
 
-def list_all_job_outputs(hermes_home: str | None = None) -> list[dict]:
+async def list_all_job_outputs(hermes_home: str | None = None) -> list[dict]:
     """Scan every job output directory under cron/output/."""
     root = Path(hermes_home or HERMES_HOME) / "cron" / "output"
     if not root.is_dir():
@@ -163,6 +164,6 @@ def list_all_job_outputs(hermes_home: str | None = None) -> list[dict]:
     for job_dir in sorted(root.iterdir()):
         if not job_dir.is_dir():
             continue
-        results.extend(list_job_outputs(job_dir.name, hermes_home))
+        results.extend(await list_job_outputs(job_dir.name, hermes_home))
     results.sort(key=lambda item: item.get("started_at", ""), reverse=True)
     return results

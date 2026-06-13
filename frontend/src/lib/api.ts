@@ -6,7 +6,9 @@ import { Agent, Template, Execution, ProvidersResponse, DeliveryChannel, SkillIn
  * This makes the app work from any network (SSH tunnel, VPN, etc.).
  */
 const API_BASE = '/api/explore'
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'agenthub-local'
+// Server-side only — proxy route injects auth header upstream.
+// Never use NEXT_PUBLIC_ prefix: the key must not leak into the client bundle.
+const API_KEY = process.env.EXPLORE_API_KEY || 'agenthub-local'
 
 export const exploreApiHeaders = {
   'Content-Type': 'application/json',
@@ -40,25 +42,25 @@ export async function checkExploreApiOnline(): Promise<boolean> {
 // --- Exploration API (proxied via /api/explore) ---
 
 export async function getSystemOverview() {
-  const res = await fetch(`${API_BASE}/api/system/overview`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/overview`, { headers })
   if (!res.ok) throw new Error('Failed to fetch system overview')
   return res.json()
 }
 
 export async function getTemplates(): Promise<Template[]> {
-  const res = await fetch(`${API_BASE}/api/templates`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/templates`, { headers })
   if (!res.ok) throw new Error('Failed to fetch templates')
   return res.json()
 }
 
 export async function getTemplate(id: string): Promise<Template> {
-  const res = await fetch(`${API_BASE}/api/templates/${id}`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/templates/${id}`, { headers })
   if (!res.ok) throw new Error('Failed to fetch template')
   return res.json()
 }
 
 export async function previewTemplate(id: string, config: Record<string, any>): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/templates/${id}/preview`, {
+  const res = await fetchApi(`${API_BASE}/api/templates/${id}/preview`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ config }),
@@ -69,73 +71,73 @@ export async function previewTemplate(id: string, config: Record<string, any>): 
 }
 
 export async function getProfiles() {
-  const res = await fetch(`${API_BASE}/api/system/profiles`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/profiles`, { headers })
   if (!res.ok) throw new Error('Failed to fetch profiles')
   return res.json()
 }
 
 export async function getProfileDetail(name: string) {
-  const res = await fetch(`${API_BASE}/api/system/profiles/${name}`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/profiles/${name}`, { headers })
   if (!res.ok) throw new Error('Failed to fetch profile detail')
   return res.json()
 }
 
 export async function getProfileMemory(name: string) {
-  const res = await fetch(`${API_BASE}/api/system/profiles/${name}/memory`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/profiles/${name}/memory`, { headers })
   if (!res.ok) throw new Error('Failed to fetch profile memory')
   return res.json()
 }
 
 export async function getProfileConfig(name: string) {
-  const res = await fetch(`${API_BASE}/api/system/profiles/${name}/config`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/profiles/${name}/config`, { headers })
   if (!res.ok) throw new Error('Failed to fetch profile config')
   return res.json()
 }
 
 export async function getSystemHooks() {
-  const res = await fetch(`${API_BASE}/api/system/hooks`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/hooks`, { headers })
   if (!res.ok) throw new Error('Failed to fetch hooks')
   return res.json()
 }
 
 export async function getSystemActivity() {
-  const res = await fetch(`${API_BASE}/api/system/activity`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/activity`, { headers })
   if (!res.ok) throw new Error('Failed to fetch activity')
   return res.json()
 }
 
 export async function getMcpServers() {
-  const res = await fetch(`${API_BASE}/api/system/mcp-servers`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/mcp-servers`, { headers })
   if (!res.ok) throw new Error('Failed to fetch MCP servers')
   return res.json()
 }
 
 export async function getCronOverview() {
-  const res = await fetch(`${API_BASE}/api/system/cron-overview`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/cron-overview`, { headers })
   if (!res.ok) throw new Error('Failed to fetch cron overview')
   return res.json()
 }
 
 export async function getGlobalConfig() {
-  const res = await fetch(`${API_BASE}/api/system/config`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/config`, { headers })
   if (!res.ok) throw new Error('Failed to fetch global config')
   return res.json()
 }
 
 export async function getSkills() {
-  const res = await fetch(`${API_BASE}/v1/skills`, { headers })
+  const res = await fetchApi(`${API_BASE}/v1/skills`, { headers })
   if (!res.ok) throw new Error('Failed to fetch skills')
   return res.json()
 }
 
 export async function getToolsets() {
-  const res = await fetch(`${API_BASE}/v1/toolsets`, { headers })
+  const res = await fetchApi(`${API_BASE}/v1/toolsets`, { headers })
   if (!res.ok) throw new Error('Failed to fetch toolsets')
   return res.json()
 }
 
 export async function searchSessions(query: string) {
-  const res = await fetch(`${API_BASE}/api/system/sessions/search?q=${encodeURIComponent(query)}`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/sessions/search?q=${encodeURIComponent(query)}`, { headers })
   if (!res.ok) throw new Error('Failed to search sessions')
   const data = await res.json()
   return Array.isArray(data) ? data : (data.results ?? [])
@@ -241,13 +243,13 @@ export async function getJobs(): Promise<Agent[]> {
 }
 
 export async function getJob(id: string): Promise<Agent> {
-  const res = await fetch(`${API_BASE}/api/jobs/${id}`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/jobs/${id}`, { headers })
   if (!res.ok) throw new Error('Failed to fetch job')
   return normalizeAgent(await res.json())
 }
 
 export async function createJob(data: any): Promise<Agent> {
-  const res = await fetch(`${API_BASE}/api/jobs`, {
+  const res = await fetchApi(`${API_BASE}/api/jobs`, {
     method: 'POST',
     headers,
     body: JSON.stringify(data)
@@ -272,7 +274,7 @@ export async function createJob(data: any): Promise<Agent> {
 }
 
 export async function updateJob(id: string, data: any): Promise<Agent> {
-  const res = await fetch(`${API_BASE}/api/jobs/${id}`, {
+  const res = await fetchApi(`${API_BASE}/api/jobs/${id}`, {
     method: 'PATCH',
     headers,
     body: JSON.stringify(data)
@@ -282,7 +284,7 @@ export async function updateJob(id: string, data: any): Promise<Agent> {
 }
 
 export async function deleteProfile(name: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/system/profiles/${encodeURIComponent(name)}`, {
+  const res = await fetchApi(`${API_BASE}/api/system/profiles/${encodeURIComponent(name)}`, {
     method: 'DELETE',
     headers,
   })
@@ -297,7 +299,7 @@ export async function deleteProfile(name: string): Promise<void> {
 }
 
 export async function deleteJob(id: string): Promise<{ profile?: string; profile_deleted?: boolean }> {
-  const res = await fetch(`${API_BASE}/api/jobs/${id}`, {
+  const res = await fetchApi(`${API_BASE}/api/jobs/${id}`, {
     method: 'DELETE',
     headers
   })
@@ -313,7 +315,7 @@ export async function deleteJob(id: string): Promise<{ profile?: string; profile
 }
 
 export async function pauseJob(id: string): Promise<Agent> {
-  const res = await fetch(`${API_BASE}/api/jobs/${id}/pause`, {
+  const res = await fetchApi(`${API_BASE}/api/jobs/${id}/pause`, {
     method: 'POST',
     headers
   })
@@ -322,7 +324,7 @@ export async function pauseJob(id: string): Promise<Agent> {
 }
 
 export async function resumeJob(id: string): Promise<Agent> {
-  const res = await fetch(`${API_BASE}/api/jobs/${id}/resume`, {
+  const res = await fetchApi(`${API_BASE}/api/jobs/${id}/resume`, {
     method: 'POST',
     headers
   })
@@ -331,7 +333,7 @@ export async function resumeJob(id: string): Promise<Agent> {
 }
 
 export async function triggerJob(id: string): Promise<Agent> {
-  const res = await fetch(`${API_BASE}/api/jobs/${id}/trigger`, {
+  const res = await fetchApi(`${API_BASE}/api/jobs/${id}/trigger`, {
     method: 'POST',
     headers
   })
@@ -366,25 +368,25 @@ export async function getJobOutputs(id: string): Promise<Execution[]> {
 // --- Wizard improvement API calls ---
 
 export async function getProviders(): Promise<ProvidersResponse> {
-  const res = await fetch(`${API_BASE}/api/system/providers`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/providers`, { headers })
   if (!res.ok) throw new Error('Failed to fetch providers')
   return res.json()
 }
 
 export async function getChannels(): Promise<DeliveryChannel[]> {
-  const res = await fetch(`${API_BASE}/api/system/channels`, { headers })
+  const res = await fetchApi(`${API_BASE}/api/system/channels`, { headers })
   if (!res.ok) throw new Error('Failed to fetch channels')
   return res.json()
 }
 
 export async function getSkillsList(): Promise<SkillInfo[]> {
-  const res = await fetch(`${API_BASE}/v1/skills`, { headers })
+  const res = await fetchApi(`${API_BASE}/v1/skills`, { headers })
   if (!res.ok) throw new Error('Failed to fetch skills')
   return res.json()
 }
 
 export async function getToolsetsList(): Promise<ToolsetInfo[]> {
-  const res = await fetch(`${API_BASE}/v1/toolsets`, { headers })
+  const res = await fetchApi(`${API_BASE}/v1/toolsets`, { headers })
   if (!res.ok) throw new Error('Failed to fetch toolsets')
   return res.json()
 }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,15 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from config import HERMES_HOME
+
+
+def _validate_id(id_str: str) -> str:
+    """Validate that an ID contains only safe characters."""
+    if not re.match(r'^[a-zA-Z0-9_-]+$', id_str):
+        raise HTTPException(status_code=400, detail=f"Invalid ID format: {id_str}")
+    return id_str
+
+
 from services.profile_provision import (
     ProfileProvisionError,
     delete_agent_profile,
@@ -116,6 +126,7 @@ async def list_profiles() -> list[dict]:
 @router.get("/api/system/profiles/{name}")
 async def get_profile(name: str) -> dict:
     """GET /api/system/profiles/{name} — detailed profile info."""
+    _validate_id(name)
     profile_dir = _profiles_dir() / name
     if not profile_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"Profile '{name}' not found")
@@ -139,6 +150,7 @@ async def get_profile(name: str) -> dict:
 @router.get("/api/system/profiles/{name}/memory")
 async def get_profile_memory(name: str) -> dict:
     """GET /api/system/profiles/{name}/memory — raw MEMORY.md + USER.md content."""
+    _validate_id(name)
     profile_dir = _profiles_dir() / name
     if not profile_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"Profile '{name}' not found")
@@ -156,6 +168,7 @@ async def get_profile_memory(name: str) -> dict:
 @router.get("/api/system/profiles/{name}/config")
 async def get_profile_config(name: str) -> dict:
     """GET /api/system/profiles/{name}/config — parsed config.yaml."""
+    _validate_id(name)
     profile_dir = _profiles_dir() / name
     if not profile_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"Profile '{name}' not found")
@@ -173,6 +186,7 @@ async def get_profile_config(name: str) -> dict:
 @router.delete("/api/system/profiles/{name}")
 async def delete_profile(name: str) -> dict:
     """DELETE /api/system/profiles/{name} — remove an AgentHub profile via Hermes CLI."""
+    _validate_id(name)
     if not is_agenthub_profile(name):
         raise HTTPException(
             status_code=403,

@@ -219,7 +219,7 @@ async def get_job_outputs(job_id: str) -> list[dict]:
     Reads ~/.hermes/cron/output/{id}/*.md first (fast, reliable).
     Falls back to Hermes API only if no local files exist.
     """
-    disk_outputs = list_job_outputs(job_id)
+    disk_outputs = await list_job_outputs(job_id)
     if disk_outputs:
         return disk_outputs
     client = await get_client()
@@ -229,7 +229,7 @@ async def get_job_outputs(job_id: str) -> list[dict]:
 @router.get("/api/reports")
 async def list_reports() -> list[dict]:
     """All agent reports from disk — single call for the history UI."""
-    return list_all_job_outputs()
+    return await list_all_job_outputs()
 
 
 # ── SSE proxy: GET /api/jobs/{id}/events ──────────────────────

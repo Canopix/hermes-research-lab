@@ -320,29 +320,38 @@ def list_channels():
         "microsoft_teams": "teams",
         "matrix": "matrix",
     }
+    platform_features = {
+        "telegram": {"supports_chat_id": True, "supports_thread_id": True},
+        "discord": {"supports_chat_id": True, "supports_thread_id": True},
+        "slack": {"supports_chat_id": True, "supports_thread_id": False},
+    }
 
     if isinstance(platforms, dict):
         for name, platform_cfg in platforms.items():
+            ptype = platform_type_map.get(str(name), str(name))
+            features = platform_features.get(str(ptype), {})
             if isinstance(platform_cfg, dict):
                 enabled = platform_cfg.get("enabled", True)
                 channels.append({
                     "id": name,
                     "name": name.replace("_", " ").title(),
-                    "type": platform_type_map.get(name, name),
+                    "type": ptype,
                     "connected": enabled,
                     "description": f"Deliver via {name.replace('_', ' ').title()}",
                     "config": {
                         k: v for k, v in platform_cfg.items()
                         if k not in ("api_key", "token", "secret", "webhook_secret")
                     },
+                    **features,
                 })
             elif isinstance(platform_cfg, bool):
                 channels.append({
                     "id": name,
                     "name": name.replace("_", " ").title(),
-                    "type": platform_type_map.get(name, name),
+                    "type": ptype,
                     "connected": platform_cfg,
                     "description": f"Deliver via {name.replace('_', ' ').title()}",
+                    **features,
                 })
 
     # Add a catch-all "all" option

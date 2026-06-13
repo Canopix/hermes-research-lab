@@ -54,8 +54,10 @@ async def validate_api_key(request: Request, call_next):
     x_api_key = request.headers.get("X-API-Key", "")
     token = auth.replace("Bearer ", "") if auth.startswith("Bearer ") else ""
 
+    import hmac
     from config import HERMES_API_KEY
-    if token != HERMES_API_KEY and x_api_key != HERMES_API_KEY:
+    auth_ok = hmac.compare_digest(token or "", HERMES_API_KEY) or hmac.compare_digest(x_api_key or "", HERMES_API_KEY)
+    if not auth_ok:
         return JSONResponse(
             status_code=401,
             content={"detail": "Invalid or missing API key"},

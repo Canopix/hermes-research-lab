@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 import yaml
@@ -81,8 +82,7 @@ async def get_global_config() -> dict:
     if not config_path.is_file():
         raise HTTPException(status_code=404, detail="No global config.yaml found")
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            content = f.read()
+        content = await asyncio.to_thread(config_path.read_text, encoding="utf-8")
         parsed = yaml.safe_load(content)
         return {
             "content": content,
@@ -114,11 +114,12 @@ async def list_delivery_channels() -> list[dict]:
 
     if config_path.is_file():
         try:
-            config = yaml.safe_load(config_path.read_text())
+            raw = await asyncio.to_thread(config_path.read_text)
+            config = yaml.safe_load(raw)
             gateway = config.get("gateway", {})
             platforms = gateway.get("platforms", {})
 
-            if platforms.get("telegram", {}).get("enabled"):
+            if "telegram" in platforms and platforms["telegram"]:
                 channels.append({
                     "id": "telegram",
                     "name": "Telegram",
@@ -128,7 +129,7 @@ async def list_delivery_channels() -> list[dict]:
                     "supports_thread_id": True,
                 })
 
-            if platforms.get("discord", {}).get("enabled"):
+            if "discord" in platforms and platforms["discord"]:
                 channels.append({
                     "id": "discord",
                     "name": "Discord",
@@ -136,7 +137,7 @@ async def list_delivery_channels() -> list[dict]:
                     "description": "Envía a Discord",
                 })
 
-            if platforms.get("slack", {}).get("enabled"):
+            if "slack" in platforms and platforms["slack"]:
                 channels.append({
                     "id": "slack",
                     "name": "Slack",
@@ -164,7 +165,8 @@ async def list_providers() -> dict:
         return {"default_provider": None, "default_model": None, "options": []}
     
     try:
-        config = yaml.safe_load(config_path.read_text())
+        raw = await asyncio.to_thread(config_path.read_text)
+        config = yaml.safe_load(raw)
     except (yaml.YAMLError, OSError):
         return {"default_provider": None, "default_model": None, "options": []}
     

@@ -9,6 +9,12 @@ from pathlib import Path
 import yaml
 
 
+def _validate_id(id_str: str) -> None:
+    """Validate that a template ID contains only safe characters."""
+    if not re.match(r'^[a-zA-Z0-9_-]+$', id_str):
+        raise ValueError(f"Invalid template ID format: {id_str}")
+
+
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "templates")
 
 # Icon map: derive icon from template name/keywords
@@ -178,6 +184,7 @@ def scan_templates(templates_dir: str | None = None) -> list[dict]:
 
 def get_template(template_id: str, templates_dir: str | None = None) -> dict | None:
     """Get full template data by ID."""
+    _validate_id(template_id)
     if templates_dir is None:
         templates_dir = TEMPLATES_DIR
 
@@ -217,6 +224,7 @@ def render_preview(template_id: str, config: dict | None = None, templates_dir: 
 
     Falls back to parameter defaults for any missing keys.
     """
+    _validate_id(template_id)
     if templates_dir is None:
         templates_dir = TEMPLATES_DIR
 

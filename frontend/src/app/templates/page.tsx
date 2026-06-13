@@ -108,7 +108,7 @@ export default function TemplatesPage() {
         const res = await fetch("/api/explore/api/templates", {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_API_KEY || "agenthub-local"}`,
+            "Authorization": `Bearer ${process.env.EXPLORE_API_KEY || "agenthub-local"}`,
           },
         });
         if (res.ok) {
