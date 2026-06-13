@@ -1,4 +1,4 @@
-import { Agent, Template, Execution } from '../lib/types'
+import { Agent, Template, Execution, ProvidersResponse, DeliveryChannel, SkillInfo, ToolsetInfo } from '../lib/types'
 
 /**
  * All API calls go through the Next.js server-side proxy (/api/explore/*)
@@ -361,6 +361,32 @@ export async function getJobOutputs(id: string): Promise<Execution[]> {
   const data = await res.json()
   const items = Array.isArray(data) ? data : (data.outputs ?? [])
   return items.map((item: Record<string, unknown>) => normalizeExecution(item, id))
+}
+
+// --- Wizard improvement API calls ---
+
+export async function getProviders(): Promise<ProvidersResponse> {
+  const res = await fetch(`${API_BASE}/api/system/providers`, { headers })
+  if (!res.ok) throw new Error('Failed to fetch providers')
+  return res.json()
+}
+
+export async function getChannels(): Promise<DeliveryChannel[]> {
+  const res = await fetch(`${API_BASE}/api/system/channels`, { headers })
+  if (!res.ok) throw new Error('Failed to fetch channels')
+  return res.json()
+}
+
+export async function getSkillsList(): Promise<SkillInfo[]> {
+  const res = await fetch(`${API_BASE}/v1/skills`, { headers })
+  if (!res.ok) throw new Error('Failed to fetch skills')
+  return res.json()
+}
+
+export async function getToolsetsList(): Promise<ToolsetInfo[]> {
+  const res = await fetch(`${API_BASE}/v1/toolsets`, { headers })
+  if (!res.ok) throw new Error('Failed to fetch toolsets')
+  return res.json()
 }
 
 // Re-export API_BASE for components that need it (e.g. SSE)

@@ -117,3 +117,40 @@ export interface CreateJobPayload {
   schedule: string
   deliver: string
 }
+
+// --- Wizard improvement types ---
+
+export interface ProviderOption {
+  id: string
+  name: string
+  model: string
+  base_url: string
+  is_default: boolean
+}
+
+export interface ProvidersResponse {
+  default_provider: string | null
+  default_model: string | null
+  options: ProviderOption[]
+}
+
+export interface DeliveryChannel {
+  id: string
+  name: string
+  icon: string
+  description: string
+  supports_chat_id?: boolean
+  supports_thread_id?: boolean
+}
+
+export interface SkillInfo {
+  name: string
+  description: string
+  category: string
+}
+
+export interface ToolsetInfo {
+  name: string
+  description: string
+  enabled: boolean
+}
