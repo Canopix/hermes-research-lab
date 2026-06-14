@@ -95,23 +95,24 @@ echo ""
 read -p "  Nombre del agente [$TPL_NAME]: " AGENT_NAME
 AGENT_NAME="${AGENT_NAME:-$TPL_NAME}"
 
-# Parámetros dinámicos
-declare -A CONFIG
-PARAMS=$(echo "$SELECTED_TPL" | jq -c '.params[]' 2>/dev/null || echo "")
+# Build config JSON using jq (more reliable than bash associative arrays)
+CONFIG_JSON="{}"
 
-if [ -n "$PARAMS" ]; then
+# Parámetros dinámicos
+PARAMS_COUNT=$(echo "$SELECTED_TPL" | jq '.params | length')
+
+if [ "$PARAMS_COUNT" -gt 0 ]; then
     echo ""
     echo -e "  ${BOLD}Parámetros del template:${NC}"
     echo ""
 
-    while IFS= read -r param; do
-        [ -z "$param" ] && continue
-        P_NAME=$(echo "$param" | jq -r '.name')
-        P_LABEL=$(echo "$param" | jq -r '.label // .description')
-        P_TYPE=$(echo "$param" | jq -r '.type')
-        P_REQUIRED=$(echo "$param" | jq -r '.required // false')
-        P_DEFAULT=$(echo "$param" | jq -r '.default // ""')
-        P_OPTIONS=$(echo "$param" | jq -c '.options // []' 2>/dev/null)
+    for i in $(seq 0 $((PARAMS_COUNT - 1))); do
+        P_NAME=$(echo "$SELECTED_TPL" | jq -r ".params[$i].name")
+        P_LABEL=$(echo "$SELECTED_TPL" | jq -r ".params[$i].label // .params[$i].description")
+        P_TYPE=$(echo "$SELECTED_TPL" | jq -r ".params[$i].type")
+        P_REQUIRED=$(echo "$SELECTED_TPL" | jq -r ".params[$i].required // false")
+        P_DEFAULT=$(echo "$SELECTED_TPL" | jq -r ".params[$i].default // \"\"")
+        P_OPTIONS=$(echo "$SELECTED_TPL" | jq -c ".params[$i].options // []" 2>/dev/null)
 
         REQUIRED_MARK=""
         [ "$P_REQUIRED" = "true" ] && REQUIRED_MARK=" ${RED}*${NC}"
@@ -127,39 +128,50 @@ if [ -n "$PARAMS" ]; then
             done
             read -p "  Elige (1-$OPTIONS_COUNT) [$P_DEFAULT]: " OPT_CHOICE
             if [ -z "$OPT_CHOICE" ]; then
-                CONFIG[$P_NAME]="$P_DEFAULT"
+                CONFIG_JSON=$(echo "$CONFIG_JSON" | jq --arg k "$P_NAME" --arg v "$P_DEFAULT" '.[$k] = $v')
             elif [[ "$OPT_CHOICE" =~ ^[0-9]+$ ]] && [ "$OPT_CHOICE" -ge 1 ] && [ "$OPT_CHOICE" -le "$OPTIONS_COUNT" ]; then
-                CONFIG[$P_NAME]=$(echo "$P_OPTIONS" | jq -r ".[$((OPT_CHOICE-1))]")
+                VAL=$(echo "$P_OPTIONS" | jq -r ".[$((OPT_CHOICE-1))]")
+                CONFIG_JSON=$(echo "$CONFIG_JSON" | jq --arg k "$P_NAME" --arg v "$VAL" '.[$k] = $v')
             else
-                CONFIG[$P_NAME]="$OPT_CHOICE"
+                CONFIG_JSON=$(echo "$CONFIG_JSON" | jq --arg k "$P_NAME" --arg v "$OPT_CHOICE" '.[$k] = $v')
             fi
         elif [ "$P_TYPE" = "toggle" ]; then
             DEFAULT_BOOL="no"
             [ "$P_DEFAULT" = "true" ] && DEFAULT_BOOL="sí"
             read -p "  $P_LABEL? (sí/no) [$DEFAULT_BOOL]: " TOGGLE
             TOGGLE="${TOGGLE:-$DEFAULT_BOOL}"
-            [[ "$TOGGLE" =~ ^(s|sí|si|yes|y)$ ]] && CONFIG[$P_NAME]=true || CONFIG[$P_NAME]=false
+            if [[ "$TOGGLE" =~ ^(s|sí|si|yes|y)$ ]]; then
+                CONFIG_JSON=$(echo "$CONFIG_JSON" | jq --arg k "$P_NAME" --arg v "true" '.[$k] = $v')
+            else
+                CONFIG_JSON=$(echo "$CONFIG_JSON" | jq --arg k "$P_NAME" --arg v "false" '.[$k] = $v')
+            fi
         elif [ "$P_TYPE" = "number" ]; then
             if [ -n "$P_DEFAULT" ]; then
                 read -p "  $P_LABEL [$P_DEFAULT]: " VAL
-                CONFIG[$P_NAME]="${VAL:-$P_DEFAULT}"
+                VAL="${VAL:-$P_DEFAULT}"
             else
                 read -p "  $P_LABEL$REQUIRED_MARK: " VAL
-                [ "$P_REQUIRED" = "true" ] && [ -z "$VAL" ] && { log_err "$P_LABEL es obligatorio"; exit 1; }
-                CONFIG[$P_NAME]="$VAL"
+                if [ "$P_REQUIRED" = "true" ] && [ -z "$VAL" ]; then
+                    log_err "$P_LABEL es obligatorio"
+                    exit 1
+                fi
             fi
+            CONFIG_JSON=$(echo "$CONFIG_JSON" | jq --arg k "$P_NAME" --arg v "$VAL" '.[$k] = $v')
         else
             if [ -n "$P_DEFAULT" ]; then
                 read -p "  $P_LABEL [$P_DEFAULT]: " VAL
-                CONFIG[$P_NAME]="${VAL:-$P_DEFAULT}"
+                VAL="${VAL:-$P_DEFAULT}"
             else
                 read -p "  $P_LABEL$REQUIRED_MARK: " VAL
-                [ "$P_REQUIRED" = "true" ] && [ -z "$VAL" ] && { log_err "$P_LABEL es obligatorio"; exit 1; }
-                CONFIG[$P_NAME]="$VAL"
+                if [ "$P_REQUIRED" = "true" ] && [ -z "$VAL" ]; then
+                    log_err "$P_LABEL es obligatorio"
+                    exit 1
+                fi
             fi
+            CONFIG_JSON=$(echo "$CONFIG_JSON" | jq --arg k "$P_NAME" --arg v "$VAL" '.[$k] = $v')
         fi
         echo ""
-    done <<< "$PARAMS"
+    done
 fi
 
 # ── Paso 2b: Provider / Modelo ──────────────────────────────────────
@@ -269,11 +281,6 @@ echo ""
 # ── Paso 3: Preview ─────────────────────────────────────────────────
 log_step "Paso 3: Preview del prompt"
 
-CONFIG_JSON="{}"
-for key in "${!CONFIG[@]}"; do
-    CONFIG_JSON=$(echo "$CONFIG_JSON" | jq --arg k "$key" --arg v "${CONFIG[$key]}" '.[$k] = $v')
-done
-
 PREVIEW_PAYLOAD=$(jq -n \
     --arg name "$AGENT_NAME" \
     --arg template "$TPL_ID" \
@@ -288,7 +295,7 @@ PROMPT=$(echo "$PREVIEW" | jq -r '.rendered_prompt // "Error al generar preview"
 echo ""
 echo -e "  ${BOLD}Prompt generado:${NC}"
 echo -e "  ${YELLOW}────────────────────────────────────────${NC}"
-echo "$PROMPT" | head -30 | sed 's/^/  /'
+echo "$PROMPT" | sed 's/^/  /'
 echo -e "  ${YELLOW}────────────────────────────────────────${NC}"
 echo ""
 

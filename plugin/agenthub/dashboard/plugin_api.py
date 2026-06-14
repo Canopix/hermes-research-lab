@@ -41,6 +41,15 @@ def _is_valid_template_id(template_id: str) -> bool:
     except OSError:
         return False
 
+
+def _get_hermes_root() -> Path:
+    """Get the Hermes root directory (~/.hermes/), not the profile directory."""
+    hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+    # If HERMES_HOME points to a profile (parent is 'profiles'), go up to root
+    if hermes_home.parent.name == "profiles":
+        return hermes_home.parent.parent
+    return hermes_home
+
 # ── Known Hermes toolsets ────────────────────────────────────────────────
 KNOWN_TOOLSETS: list[dict] = [
     {"id": "web", "name": "Web", "description": "Fetch and read web pages, follow links, extract content", "category": "research"},
@@ -179,7 +188,7 @@ def _read_skill_body(template_id: str) -> str | None:
 
 def _load_config() -> dict:
     """Load hermes config.yaml, returning empty dict on error."""
-    hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+    hermes_home = _get_hermes_root()
     config_path = hermes_home / "config.yaml"
     if not config_path.exists():
         return {}
@@ -278,7 +287,7 @@ def _parse_skill_md(path: Path) -> dict | None:
 @router.get("/skills")
 def list_skills():
     """Scan skill directories for SKILL.md files and return parsed metadata."""
-    hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+    hermes_home = _get_hermes_root()
     skills = []
     seen: set[str] = set()
 
@@ -462,7 +471,7 @@ class CreateAgentRequest(BaseModel):
 
 @router.post("/create-agent")
 def create_agent(req: CreateAgentRequest):
-    hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+    hermes_home = _get_hermes_root()
     # Sanitize name for profile: lowercase slug, strip anything that isn't
     # [a-z0-9-] so "../" / "/" path-traversal payloads can't escape profiles/.
     safe_name = re.sub(r"-+", "-", re.sub(r"[^a-z0-9-]", "-", req.name.lower())).strip("-")
@@ -483,7 +492,10 @@ def create_agent(req: CreateAgentRequest):
     profile_created = False
     if not profile_dir.exists():
         create_cmd = ["hermes", "profile", "create", profile_name, "--clone"]
-        result = subprocess.run(create_cmd, capture_output=True, text=True, timeout=30)
+        # Pass HERMES_HOME=root so hermes finds all profiles
+        env = os.environ.copy()
+        env["HERMES_HOME"] = str(hermes_home)
+        result = subprocess.run(create_cmd, capture_output=True, text=True, timeout=30, env=env)
         if result.returncode != 0:
             return {"profile": profile_name, "profile_created": False,
                     "job_created": False, "error": f"Profile create failed: {result.stderr.strip()}"}
@@ -542,7 +554,7 @@ def create_agent(req: CreateAgentRequest):
     for skill in selected_skills:
         cmd.extend(["--skill", skill])
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, env=env)
     except subprocess.TimeoutExpired:
         return {"profile": profile_name, "profile_created": profile_created,
                 "job_created": False, "error": "Hermes cron create timed out after 60s"}
