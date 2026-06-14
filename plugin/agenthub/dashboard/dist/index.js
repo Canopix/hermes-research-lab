@@ -224,7 +224,26 @@
     });
     var groups = CATEGORY_ORDER.filter(function (c) { return grouped[c]; })
       .concat(Object.keys(grouped).filter(function (c) { return CATEGORY_ORDER.indexOf(c) === -1; }))
-      .map(function (c) { return { key: c, label: CATEGORY_LABELS[c] || c, items: grouped[c] }; });
+      .map(function (c) {
+        // Sort: selected skills first, then alphabetical
+        grouped[c].sort(function (a, b) {
+          var aSel = selected.indexOf(a.name) !== -1 ? 0 : 1;
+          var bSel = selected.indexOf(b.name) !== -1 ? 0 : 1;
+          if (aSel !== bSel) return aSel - bSel;
+          return a.name.localeCompare(b.name);
+        });
+        return { key: c, label: CATEGORY_LABELS[c] || c, items: grouped[c] };
+      });
+
+    // Extract selected skills into a separate "Selected" group at the top
+    var selectedItems = [];
+    var nonSelectedGroups = [];
+    groups.forEach(function (g) {
+      var sel = g.items.filter(function (s) { return selected.indexOf(s.name) !== -1; });
+      var rest = g.items.filter(function (s) { return selected.indexOf(s.name) === -1; });
+      if (sel.length > 0) selectedItems = selectedItems.concat(sel);
+      if (rest.length > 0) nonSelectedGroups.push({ key: g.key, label: g.label, items: rest });
+    });
 
     return h("div", null,
       h("div", { style: { marginBottom: "12px" } },
@@ -236,22 +255,39 @@
       ),
       groups.length === 0
         ? h("div", { style: EMPTY_STATE }, q ? "No skills match your search." : "No skills available.")
-        : groups.map(function (g) {
-            return h("div", { key: g.key },
-              h("div", { style: { fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#888", marginTop: "12px", marginBottom: "6px" } }, g.label),
-              g.items.map(function (s) {
-                var isOn = selected.indexOf(s.name) !== -1;
-                var rowStyle = Object.assign({}, CHECKBOX_ROW, isOn ? CHECKBOX_ROW_SELECTED : {});
+        : h("div", null,
+            // Selected skills section at the top
+            selectedItems.length > 0 ? h("div", { key: "__selected" },
+              h("div", { style: { fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-success, #4ade80)", marginTop: "12px", marginBottom: "6px" } }, "✓ Selected"),
+              selectedItems.map(function (s) {
+                var rowStyle = Object.assign({}, CHECKBOX_ROW, CHECKBOX_ROW_SELECTED);
                 return h("div", { key: s.name, style: rowStyle, onClick: function () { onToggle(s.name); } },
-                  h(Checkbox, { checked: isOn }),
+                  h(Checkbox, { checked: true }),
                   h("div", null,
                     h("div", { style: { fontWeight: 500, fontSize: "13px" } }, s.name),
                     s.description ? h("div", { style: { fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)" } }, s.description) : null
                   )
                 );
               })
-            );
-          })
+            ) : null,
+            // Remaining skills by category
+            nonSelectedGroups.map(function (g) {
+              return h("div", { key: g.key },
+                h("div", { style: { fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#888", marginTop: "12px", marginBottom: "6px" } }, g.label),
+                g.items.map(function (s) {
+                  var isOn = selected.indexOf(s.name) !== -1;
+                  var rowStyle = Object.assign({}, CHECKBOX_ROW, isOn ? CHECKBOX_ROW_SELECTED : {});
+                  return h("div", { key: s.name, style: rowStyle, onClick: function () { onToggle(s.name); } },
+                    h(Checkbox, { checked: isOn }),
+                    h("div", null,
+                      h("div", { style: { fontWeight: 500, fontSize: "13px" } }, s.name),
+                      s.description ? h("div", { style: { fontSize: "11px", color: "var(--color-text-tertiary, #b8942e)" } }, s.description) : null
+                    )
+                  );
+                })
+              );
+            })
+          )
     );
   }
 
