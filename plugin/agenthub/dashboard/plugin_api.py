@@ -478,7 +478,6 @@ def create_agent(req: CreateAgentRequest):
         if req.model_name:
             model_block["default"] = req.model_name
         config_content = {"model": model_block}
-        import io
         profile_config.write_text(yaml.dump(config_content, default_flow_style=False), encoding="utf-8")
 
     # 5. Resolve schedule
@@ -517,7 +516,7 @@ def create_agent(req: CreateAgentRequest):
         "template_id": req.template_id,
         "agent_name": agent_name,
         "profile": profile_name,
-        "skills": all_skills,
+        "skills": req.skills,
         "enabled_toolsets": req.enabled_toolsets,
         "model_override": {"provider": req.model_provider, "model": req.model_name}
         if req.model_provider or req.model_name else None,
