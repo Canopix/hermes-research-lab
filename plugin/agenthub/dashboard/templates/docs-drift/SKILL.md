@@ -13,6 +13,9 @@ tags:
   - drift
   - github
   - development
+default_skills:
+  - github
+  - cron-jobs
 ---
 
 # Docs Drift Detection

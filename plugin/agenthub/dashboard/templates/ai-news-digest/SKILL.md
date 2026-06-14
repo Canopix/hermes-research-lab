@@ -35,6 +35,10 @@ tags:
   - news
   - digest
   - weekly
+default_skills:
+  - xurl
+  - mlops
+  - cron-jobs
 ---
 
 Generate a weekly AI news digest. Follow these steps:

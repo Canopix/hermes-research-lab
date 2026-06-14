@@ -33,6 +33,8 @@ tags:
   - competitors
   - web
   - changes
+default_skills:
+  - cron-jobs
 ---
 
 # Competitor Watcher

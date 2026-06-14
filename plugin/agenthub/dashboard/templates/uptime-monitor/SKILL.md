@@ -12,6 +12,9 @@ tags:
   - monitoring
   - uptime
   - health
+default_skills:
+  - serve-debug
+  - cron-jobs
 ---
 
 # Uptime Monitor

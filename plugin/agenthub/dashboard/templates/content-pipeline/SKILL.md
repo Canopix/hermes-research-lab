@@ -18,6 +18,10 @@ tags:
   - blog
   - pipeline
   - research
+default_skills:
+  - creative
+  - xurl
+  - cron-jobs
 ---
 
 # Content Pipeline

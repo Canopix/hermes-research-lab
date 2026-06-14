@@ -27,6 +27,9 @@ tags:
   - papers
   - research
   - summary
+default_skills:
+  - mlops
+  - cron-jobs
 ---
 
 # Paper Summarizer

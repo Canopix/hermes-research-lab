@@ -27,6 +27,10 @@ tags:
   - research
   - ai
   - daily
+default_skills:
+  - xurl
+  - mlops
+  - cron-jobs
 ---
 
 # AI Researcher

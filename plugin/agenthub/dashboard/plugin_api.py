@@ -166,6 +166,7 @@ def _parse_template(template_id: str) -> dict | None:
         "category": category,
         "categoryLabel": CATEGORY_LABELS.get(category, category),
         "params": meta.get("params", []),
+        "defaultSkills": meta.get("default_skills", []),
         "recommendedSkills": TEMPLATE_SKILL_RECOMMENDATIONS.get(template_id, []),
         "recommendedToolsets": TEMPLATE_TOOLSET_RECOMMENDATIONS.get(template_id, []),
     }

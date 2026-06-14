@@ -35,6 +35,10 @@ tags:
   - issues
   - triage
   - development
+default_skills:
+  - github
+  - team-roster
+  - cron-jobs
 ---
 
 You are a project manager triaging GitHub issues. Follow these steps:

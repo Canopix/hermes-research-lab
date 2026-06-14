@@ -463,6 +463,14 @@
     var s11 = useState(""), skillSearch = s11[0], setSkillSearch = s11[1];
     var s12 = useState(""), toolsetSearch = s12[0], setToolsetSearch = s12[1];
 
+    // Pre-select default skills when template changes
+    var useEffect = SDK.React.useEffect;
+    useEffect(function() {
+      if (tpl && tpl.defaultSkills && tpl.defaultSkills.length > 0) {
+        setSkillsSel(tpl.defaultSkills.slice());
+      }
+    }, [tpl ? tpl.id : null]);
+
     function toggleSkill(name) {
       setSkillsSel(function (prev) {
         return prev.indexOf(name) !== -1 ? prev.filter(function (n) { return n !== name; }) : prev.concat([name]);
@@ -613,7 +621,7 @@
           ) : null,
           result ? h("div", { "data-testid": "create-result",
             style: result.job_created ? RESULT_SUCCESS : RESULT_ERROR },
-            result.job_created ? "✓ Agent created successfully" : "Error: " + (result.error || "unknown")
+            result.job_created ? "✓ Agente creado correctamente" : "Error: " + (result.error || "unknown")
           ) : null
         )
       )
@@ -1126,12 +1134,12 @@
     style.id = "agenthub-styles";
     style.textContent = [
       "@keyframes agenthub-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }",
-      "@keyframes agenthub-toast-in { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }",
-      "@keyframes agenthub-toast-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-20px); opacity: 0; } }",
-      ".agenthub-toast { position: fixed; bottom: 24px; right: 24px; z-index: 99999; padding: 14px 22px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25); animation: agenthub-toast-in 0.25s ease-out; pointer-events: auto; max-width: 380px; line-height: 1.4; }",
-      ".agenthub-toast.agenthub-toast-success { background: #15803d; color: #fff; border: 2px solid #22c55e; }",
-      ".agenthub-toast.agenthub-toast-error { background: #b91c1c; color: #fff; border: 2px solid #ef4444; }",
-      ".agenthub-toast.agenthub-toast-info { background: #1d4ed8; color: #fff; border: 2px solid #60a5fa; }",
+      "@keyframes agenthub-toast-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }",
+      "@keyframes agenthub-toast-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(16px); } }",
+      ".agenthub-toast { position: fixed; top: 4rem; right: 1rem; z-index: 50; padding: 10px 16px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: agenthub-toast-in 0.2s ease-out; pointer-events: auto; max-width: 380px; line-height: 1.4; border-width: 1px; border-style: solid; }",
+      ".agenthub-toast.agenthub-toast-success { background: color-mix(in srgb, var(--color-success, #4ade80) 15%, transparent); color: var(--color-success, #4ade80); border-color: color-mix(in srgb, var(--color-success, #4ade80) 30%, transparent); }",
+      ".agenthub-toast.agenthub-toast-error { background: color-mix(in srgb, var(--color-destructive, #fb2c36) 15%, transparent); color: var(--color-destructive, #fb2c36); border-color: color-mix(in srgb, var(--color-destructive, #fb2c36) 30%, transparent); }",
+      ".agenthub-toast.agenthub-toast-info { background: color-mix(in srgb, var(--color-midground, #ffac02) 15%, transparent); color: var(--color-midground, #ffac02); border-color: color-mix(in srgb, var(--color-midground, #ffac02) 30%, transparent); }",
       ".agenthub-toast.agenthub-toast-leaving { animation: agenthub-toast-out 0.2s ease-in forwards; }"
     ].join("\n");
     document.head.appendChild(style);
