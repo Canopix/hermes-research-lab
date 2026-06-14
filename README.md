@@ -148,9 +148,9 @@ npx playwright test
 
 ## Colaboradores
 
-- **[nrocaalh](https://github.com/nrocaalh)** — Arquitectura, wizard, templates, docs
 - **[Canopix](https://github.com/Canopix)** — Plugin dashboard + agent endpoints
 - **[jmagdalena](https://github.com/jmagdalena)** — Security hardening + install-plugin
+- **[nrocaalh](https://github.com/nrocaalh)** — Arquitectura, wizard, templates, docs
 
 ## License
 
