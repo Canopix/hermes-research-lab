@@ -102,7 +102,7 @@
       return h(Select, { value: value || "", onChange: function (e) { onChange(e.target.value); } }, opts);
     }
     if (p.type === "toggle") {
-      return h(Checkbox, { checked: !!value, onChange: function (e) { onChange(e.target.checked); } });
+      return h(Checkbox, { checked: !!value, onCheckedChange: function (checked) { onChange(checked); } });
     }
     if (p.type === "number") {
       return h(Input, { type: "number", value: (value === undefined || value === null) ? "" : String(value),
@@ -323,7 +323,7 @@
       h(Separator, { style: { margin: "12px 0" } }),
       h("div", { style: SECTION_TITLE }, "Custom cron expression"),
       h("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" } },
-        h(Checkbox, { checked: isCustom, onChange: function (e) { onIsCustomChange(e.target.checked); } }),
+        h(Checkbox, { checked: isCustom, onCheckedChange: function (checked) { onIsCustomChange(checked); } }),
         h("span", { style: { fontSize: "13px" } }, "Use custom cron schedule")
       ),
       isCustom ? h("div", null,
