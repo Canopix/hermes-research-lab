@@ -488,13 +488,14 @@ def create_agent(req: CreateAgentRequest):
     if tpl is None:
         raise HTTPException(status_code=404, detail="Template not found")
 
+    # Prepare env for all subprocess calls (HERMES_HOME must point to root, not profile)
+    env = os.environ.copy()
+    env["HERMES_HOME"] = str(hermes_home)
+
     # 1. Create profile with --clone (copies config.yaml, .env, SOUL.md from current)
     profile_created = False
     if not profile_dir.exists():
         create_cmd = ["hermes", "profile", "create", profile_name, "--clone"]
-        # Pass HERMES_HOME=root so hermes finds all profiles
-        env = os.environ.copy()
-        env["HERMES_HOME"] = str(hermes_home)
         result = subprocess.run(create_cmd, capture_output=True, text=True, timeout=30, env=env)
         if result.returncode != 0:
             return {"profile": profile_name, "profile_created": False,
