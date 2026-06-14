@@ -21,6 +21,10 @@ tags:
   - scouting
   - competitors
   - intelligence
+default_skills:
+  - github
+  - ai-agent-tools
+  - cron-jobs
 ---
 
 Scout AI agent repositories for notable activity. For each repo in {repos}, run:

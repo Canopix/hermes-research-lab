@@ -20,6 +20,10 @@ tags:
   - security
   - audit
   - pipeline
+default_skills:
+  - github
+  - simplify-code
+  - cron-jobs
 ---
 
 Run comprehensive security audit. Follow these steps:

@@ -32,6 +32,9 @@ tags:
   - monitoring
   - prs
   - issues
+default_skills:
+  - github
+  - cron-jobs
 ---
 
 # Repository Monitor

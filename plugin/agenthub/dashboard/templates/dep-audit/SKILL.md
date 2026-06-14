@@ -17,6 +17,9 @@ tags:
   - security
   - dependencies
   - audit
+default_skills:
+  - github
+  - cron-jobs
 ---
 
 # Dependency Security Audit
