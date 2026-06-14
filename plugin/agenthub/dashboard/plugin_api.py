@@ -5,10 +5,30 @@ import yaml
 import subprocess
 import os
 import json
+import re
 
 router = APIRouter()
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+# A template/agent id is a plain slug. Used to reject path-traversal payloads
+# (e.g. "../../etc/foo") before they reach the filesystem.
+_SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+# A schedule is either a "every N{h,d,m}" expression or a 5-field cron line.
+_EVERY_RE = re.compile(r"^every \d+[hdm]$")
+_CRON_RE = re.compile(r"^[\d*/,\- ]+$")
+
+
+def _is_valid_template_id(template_id: str) -> bool:
+    """Reject path traversal: a template id must be a bare slug whose resolved
+    SKILL.md actually lives directly under TEMPLATES_DIR."""
+    if not _SLUG_RE.match(template_id):
+        return False
+    try:
+        resolved = (TEMPLATES_DIR / template_id).resolve()
+        return resolved.parent == TEMPLATES_DIR.resolve()
+    except OSError:
+        return False
 
 # ── Known Hermes toolsets ────────────────────────────────────────────────
 KNOWN_TOOLSETS: list[dict] = [
@@ -100,6 +120,8 @@ CATEGORY_LABELS: dict[str, str] = {
 
 
 def _parse_template(template_id: str) -> dict | None:
+    if not _is_valid_template_id(template_id):
+        return None
     skill_path = TEMPLATES_DIR / template_id / "SKILL.md"
     if not skill_path.exists():
         return None
@@ -130,6 +152,8 @@ def _parse_template(template_id: str) -> dict | None:
 
 
 def _read_skill_body(template_id: str) -> str | None:
+    if not _is_valid_template_id(template_id):
+        return None
     skill_path = TEMPLATES_DIR / template_id / "SKILL.md"
     if not skill_path.exists():
         return None
@@ -428,10 +452,17 @@ class CreateAgentRequest(BaseModel):
 @router.post("/create-agent")
 def create_agent(req: CreateAgentRequest):
     hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
-    # Sanitize name for profile (lowercase, hyphens only)
-    safe_name = req.name.lower().replace(" ", "-").replace("_", "-")
+    # Sanitize name for profile: lowercase slug, strip anything that isn't
+    # [a-z0-9-] so "../" / "/" path-traversal payloads can't escape profiles/.
+    safe_name = re.sub(r"-+", "-", re.sub(r"[^a-z0-9-]", "-", req.name.lower())).strip("-")
+    if not safe_name:
+        raise HTTPException(status_code=400, detail="Invalid agent name")
     profile_name = f"agent-{safe_name}"
-    profile_dir = hermes_home / "profiles" / profile_name
+    profiles_root = (hermes_home / "profiles").resolve()
+    profile_dir = profiles_root / profile_name
+    # Defence in depth: the resolved profile dir must sit directly under profiles/.
+    if profile_dir.resolve().parent != profiles_root:
+        raise HTTPException(status_code=400, detail="Invalid agent name")
 
     tpl = _parse_template(req.template_id)
     if tpl is None:
