@@ -17,6 +17,10 @@ HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 
 PLUGIN_DST="$HERMES_HOME/plugins/agenthub"
 
+# Idempotent install: wipe any previous copy so re-installs / upgrades don't
+# fail with "cp: cannot create directory ... File exists" and never leave a
+# mix of stale + new files behind.
+rm -rf "$PLUGIN_DST"
 mkdir -p "$PLUGIN_DST"
 cp -r "$PLUGIN_SRC/"* "$PLUGIN_DST/"
 echo "Installed to: $PLUGIN_DST"
