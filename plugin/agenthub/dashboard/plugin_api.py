@@ -588,29 +588,20 @@ def create_agent(req: CreateAgentRequest):
         return {"profile": profile_name, "profile_created": profile_created,
                 "job_created": False, "error": result.stderr.strip(), "metadata": metadata}
 
-    # 8. Start Hermes scheduler for the new profile (so cron jobs actually fire)
+    # 8. Start Hermes gateway for the new profile (so cron jobs actually fire)
     scheduler_started = False
-    scheduler_port = None
     try:
-        import socket as _sock
-        for _port in range(9120, 9200):
-            with _sock.socket(_sock.AF_INET, _sock.SOCK_STREAM) as _s:
-                if _s.connect_ex(("127.0.0.1", _port)) != 0:
-                    scheduler_port = _port
-                    break
-        if scheduler_port:
-            scheduler_cmd = ["hermes", "-p", profile_name, "dashboard",
-                             "--no-open", "--insecure", "--port", str(scheduler_port)]
-            proc = subprocess.Popen(scheduler_cmd, env=env,
-                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                    start_new_session=True)
-            scheduler_started = proc.poll() is None  # still running = started ok
+        scheduler_cmd = ["hermes", "-p", profile_name, "gateway", "run", "-q"]
+        proc = subprocess.Popen(scheduler_cmd, env=env,
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                start_new_session=True)
+        scheduler_started = proc.poll() is None  # still running = started ok
     except Exception:
         pass  # non-critical — agent+job created, scheduler may need manual start
 
     return {"profile": profile_name, "profile_created": profile_created,
             "job_created": True, "metadata": metadata,
-            "scheduler_started": scheduler_started, "scheduler_port": scheduler_port}
+            "scheduler_started": scheduler_started}
 
 
 def _parse_cron_list_output(text: str) -> list[dict]:
