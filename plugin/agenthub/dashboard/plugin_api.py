@@ -588,8 +588,20 @@ def create_agent(req: CreateAgentRequest):
         return {"profile": profile_name, "profile_created": profile_created,
                 "job_created": False, "error": result.stderr.strip(), "metadata": metadata}
 
+    # 8. Start Hermes gateway for the new profile (so cron jobs actually fire)
+    scheduler_started = False
+    try:
+        scheduler_cmd = ["hermes", "-p", profile_name, "gateway", "run", "-q"]
+        proc = subprocess.Popen(scheduler_cmd, env=env,
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                start_new_session=True)
+        scheduler_started = proc.poll() is None  # still running = started ok
+    except Exception:
+        pass  # non-critical — agent+job created, scheduler may need manual start
+
     return {"profile": profile_name, "profile_created": profile_created,
-            "job_created": True, "metadata": metadata}
+            "job_created": True, "metadata": metadata,
+            "scheduler_started": scheduler_started}
 
 
 def _parse_cron_list_output(text: str) -> list[dict]:
